@@ -1,0 +1,42 @@
+/* Temporary technical styles for PHASE 1. The design system arrives in PHASE 2. */
+:root {
+  color-scheme: light;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  color: #202721;
+  background: #f7f6f0;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem;
+}
+
+h1 {
+  color: #103c2f;
+  letter-spacing: 0.08em;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.5rem 1rem;
+}
+
+dt {
+  color: #69716b;
+}
+
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

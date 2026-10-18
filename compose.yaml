@@ -1,0 +1,81 @@
+# Local stack: `docker compose up -d --build`, then open http://localhost:3000.
+# Only the web service is published to the host; PostgreSQL and the API stay on the internal network.
+name: svetly
+
+x-build-args: &build-args
+  GIT_SHA: ${GIT_SHA:-unknown}
+  BUILD_TIME: ${BUILD_TIME:-unknown}
+
+x-database-url: &database-url postgresql://${POSTGRES_USER:-svetly}:${POSTGRES_PASSWORD:-svetly_local_dev_only}@db:5432/${POSTGRES_DB:-svetly}?schema=public
+
+services:
+  db:
+    image: postgres:18.6-alpine3.24
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-svetly}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-svetly_local_dev_only}
+      POSTGRES_DB: ${POSTGRES_DB:-svetly}
+    volumes:
+      # PostgreSQL 18 images keep data under /var/lib/postgresql/<major>/docker.
+      - pgdata:/var/lib/postgresql
+    networks: [backend]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  migrate:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+      target: migrate
+    environment:
+      DATABASE_URL: *database-url
+    networks: [backend]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+      target: runtime
+      args: *build-args
+    restart: unless-stopped
+    environment:
+      SVETLY_ENV: ${SVETLY_ENV:-local}
+      API_PORT: 4000
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: *database-url
+    networks: [backend]
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/web.Dockerfile
+      args:
+        <<: *build-args
+        API_INTERNAL_URL: http://api:4000
+    restart: unless-stopped
+    ports:
+      - '${WEB_PORT:-3000}:3000'
+    networks: [backend]
+    depends_on:
+      api:
+        condition: service_healthy
+
+networks:
+  backend:
+
+volumes:
+  pgdata:
