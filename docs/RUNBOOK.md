@@ -4,10 +4,18 @@
 
 ```bash
 docker compose up -d --build
-docker compose ps        # db, api, web — healthy; migrate — Exited (0)
+docker compose ps        # db, api, web, mailpit — healthy; migrate — Exited (0)
 ```
 
-Приложение: <http://localhost:3000>.
+Приложение: <http://localhost:3000>. Локальная почта (Mailpit): <http://127.0.0.1:8025>.
+
+Первый Super Admin (один раз, пароль вводится интерактивно):
+
+```bash
+docker compose exec api node dist/cli.js admin:create --email you@example.com
+```
+
+Подробнее — `docs/AUTH.md` и `docs/RBAC.md`.
 
 Если порт 3000 занят, задайте `WEB_PORT=3001` в `.env`. Основной сценарий всё равно рассчитан на 3000.
 
@@ -35,11 +43,11 @@ docker compose ps        # db, api, web — healthy; migrate — Exited (0)
 
 ## Остановка и данные
 
-| Команда                           | Что происходит с данными                                   |
-| --------------------------------- | ---------------------------------------------------------- |
-| `docker compose stop` / `restart` | сохраняются                                                |
-| `docker compose down`             | контейнеры удаляются, volume `svetly_pgdata` сохраняется   |
-| `docker compose down -v`          | **все данные БД удаляются безвозвратно**; только осознанно |
+| Команда                           | Что происходит с данными                                                         |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| `docker compose stop` / `restart` | сохраняются                                                                      |
+| `docker compose down`             | контейнеры удаляются, volumes `svetly_pgdata` и `svetly_api-secrets` сохраняются |
+| `docker compose down -v`          | **все данные БД удаляются безвозвратно**; только осознанно                       |
 
 ## Миграции
 
@@ -55,11 +63,27 @@ git pull
 docker compose up -d --build
 ```
 
-Откат: `git checkout <предыдущий-commit> && docker compose up -d --build`. Миграции схемы Prisma не откатывает. Перед миграциями, которые меняют или удаляют данные, обязателен backup; механизм backup/restore будет добавлен в отдельной фазе до появления пользовательских данных. Пока можно сделать ручной дамп:
+Откат: `git checkout <предыдущий-commit> && docker compose up -d --build`. Миграции схемы Prisma не откатывает. Перед обновлением с миграциями обязателен backup (ниже).
+
+## Backup и восстановление
+
+Скрипты требуют bash (Linux, macOS, Git Bash или WSL) и запущенный стек.
 
 ```bash
-docker compose exec -T db pg_dump -U svetly -d svetly -Fc > svetly.dump
+bash infra/scripts/backup.sh                       # backups/svetly-db-<UTC>.dump + .sha256 (папка в .gitignore)
+bash infra/scripts/restore-test.sh backups/<файл>.dump   # проверка: восстановление в изолированный проект
+bash infra/scripts/restore.sh backups/<файл>.dump        # РАЗРУШИТЕЛЬНО: замена данных текущей БД
 ```
+
+- `backup.sh`: `pg_dump -Fc` из контейнера `db`, SHA-256, проверка читаемости архива `pg_restore --list`.
+- `restore-test.sh`: проверяет SHA-256, поднимает отдельный compose-проект `svetly-restore-test` (свой volume и сеть),
+  восстанавливает дамп, проверяет миграции, роли и триггер аудита, затем удаляет **только** тестовый проект.
+  Живой стек и `svetly_pgdata` не затрагиваются. Backup считается проверенным только после успешного restore-test.
+- `restore.sh`: проверяет SHA-256, требует ввести имя БД для подтверждения, останавливает `api`/`web`, выполняет
+  `pg_restore --clean --if-exists --single-transaction` и снова запускает сервисы. Перед ним сделайте свежий backup.
+- Секрет авторизации (локально) хранится в volume `svetly_api-secrets`. Если он потерян, все пользователи просто
+  войдут заново; в production секрет задаётся переменной `BETTER_AUTH_SECRET` и хранится вне сервера.
+- Храните копии вне сервера; расписание (cron) и шифрование внешних копий — задача фазы production-развёртывания.
 
 ## Production (подготовлено, не развёрнуто)
 

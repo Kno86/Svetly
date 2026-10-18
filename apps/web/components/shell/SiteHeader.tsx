@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Logo } from '../brand/Logo';
+import { AccountLink } from './AccountLink';
 import { primaryNav } from './navigation';
 import styles from './shell.module.css';
 
@@ -43,16 +44,19 @@ export function SiteHeader() {
             ))}
           </ul>
         </nav>
-        <button
-          type="button"
-          className={styles.menuButton}
-          aria-expanded={open}
-          aria-controls="mobile-nav"
-          onClick={() => setOpen((v) => !v)}
-        >
-          <span className={styles.menuIcon} data-open={open} aria-hidden="true" />
-          <span className="visually-hidden">{open ? 'Закрыть меню' : 'Открыть меню'}</span>
-        </button>
+        <div className={styles.headerActions}>
+          <AccountLink />
+          <button
+            type="button"
+            className={styles.menuButton}
+            aria-expanded={open}
+            aria-controls="mobile-nav"
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span className={styles.menuIcon} data-open={open} aria-hidden="true" />
+            <span className="visually-hidden">{open ? 'Закрыть меню' : 'Открыть меню'}</span>
+          </button>
+        </div>
       </div>
       <nav
         id="mobile-nav"

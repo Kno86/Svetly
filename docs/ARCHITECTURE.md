@@ -40,6 +40,8 @@ Production (compose.yaml + compose.prod.yaml)
 | `GET /api/version`      | Сервис, версия пакета, `GIT_SHA`, `BUILD_TIME`                                          |
 | `GET /healthz` (web)    | Web-процесс жив, метаданные сборки                                                      |
 
+Начиная с PHASE 3 добавлены `/api/auth/*` (Better Auth), `GET /api/me` и staff API `/api/admin/*` — см. `docs/AUTH.md` и `docs/RBAC.md`. Сервис `mailpit` (только локально) перехватывает письма.
+
 При первом запуске API создаёт в таблице `settings` запись `instance` (UUID и время инициализации). Повторные запуски её не перезаписывают, поэтому она служит проверкой сохранности данных после перезапуска.
 
 ## Зафиксированные версии
@@ -78,7 +80,13 @@ apps/api/src
 ├─ prisma/    PrismaService (глобальный)
 ├─ health/    live/ready, проверка миграций
 ├─ instance/  постоянная запись instance (проверка сохранности данных)
-└─ version/   /api/version
+├─ version/   /api/version
+├─ audit/     AuditService (журнал только на добавление)
+├─ auth/      Better Auth (мост Fastify → Fetch), почта, SessionGuard/PermissionGuard, /api/me, /api/admin
+├─ rbac/      роли и права (единственный источник истины, засевается миграцией)
+└─ cli.ts     node dist/cli.js admin:create
 ```
 
-Бизнес-модули (пользователи, контент, модерация и т. д.) появятся в утверждённых фазах. Модель данных описана в отчёте PHASE 0.
+Зависимости авторизации (зафиксированы): `better-auth` 1.7.10, `@node-rs/argon2` 2.2.2, `nodemailer` 10.0.16, `zod` 4.6.7; Mailpit `axllent/mailpit:v1.29.6`.
+
+Контентные модули, модерация и админ-платформа появятся в утверждённых фазах. Модель данных описана в отчёте PHASE 0.
