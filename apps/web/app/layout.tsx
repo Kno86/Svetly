@@ -1,17 +1,32 @@
-import type { Metadata } from 'next';
+import '@fontsource-variable/manrope/wght.css';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
+import { SiteFooter } from '../components/shell/SiteFooter';
+import { SiteHeader } from '../components/shell/SiteHeader';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'SVETLY',
-  description: 'SVETLY — цифровая платформа территории (в разработке).',
+  metadataBase: new URL(process.env.SVETLY_PUBLIC_URL ?? 'http://localhost:3000'),
+  title: { default: 'SVETLY', template: '%s — SVETLY' },
+  description:
+    'SVETLY — цифровая платформа жителей посёлка Октябрьский и жилого района Светлый (в разработке).',
   robots: { index: false, follow: false },
+  openGraph: { title: 'SVETLY', images: ['/brand/og-image.png'], locale: 'ru_RU', type: 'website' },
 };
+
+export const viewport: Viewport = { themeColor: '#103C2F' };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ru">
-      <body>{children}</body>
+      <body>
+        <a href="#main" className="skip-link">
+          Перейти к содержанию
+        </a>
+        <SiteHeader />
+        {children}
+        <SiteFooter />
+      </body>
     </html>
   );
 }
