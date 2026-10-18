@@ -17,3 +17,164 @@ model Setting {
 
   @@map("settings")
 }
+
+// ---------------------------------------------------------------------------
+// Authentication (managed by Better Auth; field names follow its schema)
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false) @map("email_verified")
+  image         String?
+  /// Set by staff; a blocked user cannot sign in and all sessions are revoked.
+  blockedAt     DateTime? @map("blocked_at") @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  sessions   Session[]
+  accounts   Account[]
+  roles      UserRole[] @relation("UserRoles")
+  rolesGiven UserRole[] @relation("UserRolesGrantedBy")
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  token     String   @unique
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+/// Credentials per provider. For email/password `providerId = "credential"` and `password` holds an argon2id hash.
+model Account {
+  id                    String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id") @db.Uuid
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(6)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(6)
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+/// Email verification and password reset tokens.
+model Verification {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([identifier])
+  @@map("verifications")
+}
+
+/// Request counters for rate limiting (shared by all API instances, no Redis required).
+model RateLimit {
+  id          String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  key         String @unique
+  count       Int
+  lastRequest BigInt @map("last_request")
+
+  @@map("rate_limits")
+}
+
+// ---------------------------------------------------------------------------
+// RBAC: roles and permissions live in the database; permission codes are declared in code
+// (src/rbac/permissions.ts) and synchronised by migrations.
+// ---------------------------------------------------------------------------
+
+model Role {
+  code        String   @id
+  name        String
+  description String
+  /// Lower number = more privileged. Used to stop staff granting roles at or above their own level.
+  rank        Int
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  permissions RolePermission[]
+  users       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  code        String @id
+  description String
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleCode       String @map("role_code")
+  permissionCode String @map("permission_code")
+
+  role       Role       @relation(fields: [roleCode], references: [code], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionCode], references: [code], onDelete: Cascade)
+
+  @@id([roleCode, permissionCode])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId      String   @map("user_id") @db.Uuid
+  roleCode    String   @map("role_code")
+  grantedById String?  @map("granted_by_id") @db.Uuid
+  grantedAt   DateTime @default(now()) @map("granted_at") @db.Timestamptz(6)
+
+  user      User  @relation("UserRoles", fields: [userId], references: [id], onDelete: Cascade)
+  role      Role  @relation(fields: [roleCode], references: [code])
+  grantedBy User? @relation("UserRolesGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@id([userId, roleCode])
+  @@map("user_roles")
+}
+
+// ---------------------------------------------------------------------------
+// Audit log: append-only. UPDATE/DELETE/TRUNCATE are rejected by a database trigger.
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  occurredAt DateTime @default(now()) @map("occurred_at") @db.Timestamptz(6)
+  /// No FK: entries must survive user deletion/anonymisation.
+  actorId    String?  @map("actor_id") @db.Uuid
+  action     String
+  entityType String?  @map("entity_type")
+  entityId   String?  @map("entity_id")
+  outcome    String
+  ipAddress  String?  @map("ip_address")
+  requestId  String?  @map("request_id")
+  metadata   Json     @default("{}")
+
+  @@index([occurredAt])
+  @@index([actorId, occurredAt])
+  @@index([action, occurredAt])
+  @@map("audit_log")
+}

@@ -9,6 +9,14 @@ services:
   api:
     environment:
       SVETLY_ENV: production
+      SVETLY_PUBLIC_URL: https://${SVETLY_DOMAIN:?SVETLY_DOMAIN must be set for production}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET must be set for production}
+      SMTP_URL: ${SMTP_URL:?SMTP_URL must be set for production (real SMTP, not Mailpit)}
+      MAIL_FROM: ${MAIL_FROM:?MAIL_FROM must be set for production}
+
+  # Mailpit is a local development tool only.
+  mailpit:
+    profiles: [local-only]
 
   web:
     ports: !reset []

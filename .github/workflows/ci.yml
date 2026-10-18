@@ -24,6 +24,7 @@ jobs:
           --health-interval 5s --health-timeout 3s --health-retries 20
     env:
       DATABASE_URL: postgresql://svetly:svetly_local_dev_only@localhost:5432/svetly_test?schema=public
+      AUTH_SECRET_FILE: ${{ runner.temp }}/svetly-auth-secret
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -53,6 +54,10 @@ jobs:
           docker compose up -d --wait --wait-timeout 120
           after=$(docker compose exec -T db psql -U svetly -d svetly -tAc "select value->>'id' from settings where key='instance'")
           test -n "$before" && test "$before" = "$after"
+      - name: Backup and verified restore into an isolated project
+        run: |
+          bash infra/scripts/backup.sh
+          bash infra/scripts/restore-test.sh "$(ls -t backups/*.dump | head -n1)"
       - if: failure()
         run: docker compose logs --no-color
       - if: always()

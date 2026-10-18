@@ -20,6 +20,11 @@
 .desktopNav {
   display: none;
 }
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
 .navList {
   display: flex;
   gap: var(--space-1);

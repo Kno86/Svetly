@@ -52,12 +52,30 @@ services:
       API_PORT: 4000
       LOG_LEVEL: ${LOG_LEVEL:-info}
       DATABASE_URL: *database-url
+      SVETLY_PUBLIC_URL: ${SVETLY_PUBLIC_URL:-http://localhost:3000}
+      # Empty locally: a random secret is generated once into the api-secrets volume.
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
+      # Local default delivers to Mailpit (http://127.0.0.1:8025). Production: real SMTP URL.
+      SMTP_URL: ${SMTP_URL-smtp://mailpit:1025}
+      MAIL_FROM: ${MAIL_FROM:-SVETLY <no-reply@svetly.local>}
+    volumes:
+      - api-secrets:/var/lib/svetly
     networks: [backend]
     depends_on:
       db:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+
+  # Local-only SMTP sink: captures every email, nothing leaves the machine. UI bound to localhost.
+  mailpit:
+    image: axllent/mailpit:v1.29.6
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: 500
+    ports:
+      - '127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025'
+    networks: [backend]
 
   web:
     build:
@@ -79,3 +97,4 @@ networks:
 
 volumes:
   pgdata:
+  api-secrets:
