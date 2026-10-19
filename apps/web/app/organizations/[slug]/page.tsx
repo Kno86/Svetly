@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
+import { ReportButton } from '../../../components/content/ReportButton';
 import { notFound } from 'next/navigation';
-import { Alert, Badge } from '../../../components/ui/Feedback';
+import { Badge } from '../../../components/ui/Feedback';
 import { LoadError, PageHead, styles } from '../../../components/content/Blocks';
 import { VerificationBadge } from '../../../components/content/OrganizationList';
 import { apiGet, formatDate, paragraphs, type CategoryRef } from '../../../lib/content';
@@ -8,6 +9,7 @@ import { apiGet, formatDate, paragraphs, type CategoryRef } from '../../../lib/c
 export const dynamic = 'force-dynamic';
 
 interface Org {
+  id: string;
   kind: 'organization' | 'service';
   name: string;
   description: string;
@@ -130,12 +132,7 @@ export default async function OrganizationPage({ params }: Props) {
           <dt>Проверено</dt>
           <dd>{o.checkedAt ? formatDate(o.checkedAt) : 'нет данных'}</dd>
         </dl>
-        <div style={{ marginTop: 'var(--space-6)' }}>
-          <Alert tone="info" title="Нашли ошибку в карточке?">
-            Форма жалоб на карточки появится вместе с админ-платформой и модерацией (следующая
-            фаза).
-          </Alert>
-        </div>
+        <ReportButton entityType="organization" entityId={o.id} />
       </article>
     </main>
   );

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ReportButton } from '../../../components/content/ReportButton';
 import { notFound } from 'next/navigation';
 import { Alert, Badge } from '../../../components/ui/Feedback';
 import { LoadError, PageHead, styles } from '../../../components/content/Blocks';
@@ -13,6 +14,7 @@ import {
 export const dynamic = 'force-dynamic';
 
 interface Announcement {
+  id: string;
   slug: string;
   title: string;
   description: string;
@@ -100,6 +102,7 @@ export default async function AnnouncementPage({ params }: Props) {
             жителями.
           </Alert>
         </div>
+        <ReportButton entityType="announcement" entityId={a.id} />
       </article>
     </main>
   );

@@ -359,3 +359,23 @@ model DirectoryEntry {
   @@index([status, position])
   @@map("directory_entries")
 }
+
+/// Resident report about published content; reviewed by staff with `complaints.manage`.
+model Complaint {
+  id             String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  reporterId     String    @map("reporter_id") @db.Uuid
+  entityType     String    @map("entity_type")
+  entityId       String    @map("entity_id") @db.Uuid
+  reason         String
+  details        String    @default("")
+  status         String    @default("open")
+  resolutionNote String?   @map("resolution_note")
+  resolvedById   String?   @map("resolved_by_id") @db.Uuid
+  resolvedAt     DateTime? @map("resolved_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([status, createdAt])
+  @@index([entityType, entityId])
+  @@index([reporterId])
+  @@map("complaints")
+}
