@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import styles from '../../components/auth/auth.module.css';
@@ -129,6 +130,11 @@ function Profile({ me, onSaved }: { me: Me; onSaved: (name: string) => void }) {
         <dt>Роли</dt>
         <dd>{me.roles.length ? me.roles.map((r) => ROLE_NAMES[r] ?? r).join(', ') : 'Житель'}</dd>
       </dl>
+      {me.permissions.length > 0 && (
+        <p>
+          <Link href="/admin">Открыть админ-платформу</Link>
+        </p>
+      )}
       <form className={styles.form} onSubmit={onSubmit}>
         {status && <Alert tone={status.tone} title={status.text} />}
         <TextField

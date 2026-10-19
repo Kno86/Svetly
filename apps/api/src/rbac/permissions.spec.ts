@@ -14,6 +14,7 @@ describe('RBAC policy', () => {
   it('merges permissions of several roles', () => {
     expect([...permissionsForRoles(['support', 'moderator'])]).toEqual([
       'users.read',
+      'complaints.manage',
       'moderation.announcements',
     ]);
   });

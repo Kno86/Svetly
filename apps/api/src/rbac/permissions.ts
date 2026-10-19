@@ -16,6 +16,9 @@ export const PERMISSIONS = {
   'content.directory.manage': 'Управление полезным справочником',
   'content.categories.manage': 'Управление категориями модулей',
   'moderation.announcements': 'Модерация объявлений жителей (одобрение, отклонение, снятие)',
+  'complaints.manage': 'Рассмотрение жалоб на контент',
+  'organizations.verify': 'Подтверждение проверки данных организаций',
+  'settings.manage': 'Изменение настроек платформы (порог доверия модерации)',
 } as const;
 
 const CONTENT: readonly PermissionCode[] = [
@@ -50,6 +53,9 @@ export const ROLES = {
       ...CONTENT,
       'content.categories.manage',
       'moderation.announcements',
+      'complaints.manage',
+      'organizations.verify',
+      'settings.manage',
     ],
   },
   admin: {
@@ -66,13 +72,16 @@ export const ROLES = {
       ...CONTENT,
       'content.categories.manage',
       'moderation.announcements',
+      'complaints.manage',
+      'organizations.verify',
+      'settings.manage',
     ],
   },
   moderator: {
     name: 'Модератор',
     description: 'Модерация объявлений, контента и жалоб.',
     rank: 40,
-    permissions: ['users.read', 'moderation.announcements'],
+    permissions: ['users.read', 'moderation.announcements', 'complaints.manage'],
   },
   editor: {
     name: 'Редактор',
@@ -84,7 +93,7 @@ export const ROLES = {
     name: 'Поддержка',
     description: 'Поиск пользователей и обработка обращений с минимально необходимыми данными.',
     rank: 40,
-    permissions: ['users.read'],
+    permissions: ['users.read', 'complaints.manage'],
   },
 } as const satisfies Record<string, RoleDefinition>;
 

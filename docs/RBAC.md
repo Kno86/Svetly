@@ -56,3 +56,11 @@ IP, `request_id`, `metadata` (без паролей, токенов и email). �
 
 **Только добавление:** триггеры `audit_log_no_update_delete` и `audit_log_no_truncate` отклоняют UPDATE, DELETE и
 TRUNCATE на уровне PostgreSQL (проверено тестом и вручную). Отдельная роль БД без прав на изменение — рекомендация для production.
+
+## Права PHASE 5
+
+- `complaints.manage` — super_admin, admin, moderator, support.
+- `organizations.verify` — super_admin, admin.
+- `settings.manage` — super_admin, admin.
+
+Матрица разделов админки — в [ADMIN.md](ADMIN.md).

@@ -426,4 +426,176 @@ describe('core content platform against a real PostgreSQL database', () => {
       (await req('GET', '/api/directory')).json().map((e: { id: string }) => e.id),
     ).not.toContain(d.id);
   });
+
+  describe('admin platform (PHASE 5)', () => {
+    const newsBody = (title: string, status: string) => ({
+      title,
+      excerpt: 'Кратко',
+      body: 'Текст новости для проверки жалоб.',
+      status,
+    });
+
+    it('accepts complaints only on published content and lets staff resolve them with a note', async () => {
+      const editor = await user('cmp-editor', 'editor');
+      const resident = await user('cmp-resident');
+      const moderator = await user('cmp-mod', 'moderator');
+      const published = (
+        await req('POST', '/api/staff/news', {
+          cookie: editor.cookie,
+          body: newsBody(`Жалоба опубликованная ${run}`, 'published'),
+        })
+      ).json();
+      const draft = (
+        await req('POST', '/api/staff/news', {
+          cookie: editor.cookie,
+          body: newsBody(`Жалоба черновик ${run}`, 'draft'),
+        })
+      ).json();
+      const complaint = { entityType: 'news', entityId: published.id, reason: 'wrong_info' };
+
+      expect((await req('POST', '/api/complaints', { body: complaint })).statusCode).toBe(401);
+      expect(
+        (
+          await req('POST', '/api/complaints', {
+            cookie: resident.cookie,
+            body: { ...complaint, entityId: draft.id },
+          })
+        ).statusCode,
+      ).toBe(404);
+      const first = await req('POST', '/api/complaints', {
+        cookie: resident.cookie,
+        body: complaint,
+      });
+      expect(first.statusCode).toBe(201);
+      const again = await req('POST', '/api/complaints', {
+        cookie: resident.cookie,
+        body: complaint,
+      });
+      expect(again.json().id).toBe(first.json().id);
+
+      expect(
+        (await req('GET', '/api/admin/complaints', { cookie: resident.cookie })).statusCode,
+      ).toBe(403);
+      const queue = await req('GET', '/api/admin/complaints', { cookie: moderator.cookie });
+      expect(queue.statusCode).toBe(200);
+      const entry = queue.json().find((c: { id: string }) => c.id === first.json().id);
+      expect(entry.target.title).toBe(published.title);
+
+      const url = `/api/admin/complaints/${first.json().id}/resolve`;
+      expect(
+        (await req('POST', url, { cookie: moderator.cookie, body: { decision: 'resolved' } }))
+          .statusCode,
+      ).toBe(400);
+      expect(
+        (
+          await req('POST', url, {
+            cookie: moderator.cookie,
+            body: { decision: 'resolved', note: 'Исправлено редакцией' },
+          })
+        ).statusCode,
+      ).toBe(200);
+      expect(
+        (
+          await req('POST', url, {
+            cookie: moderator.cookie,
+            body: { decision: 'dismissed', note: 'Повтор' },
+          })
+        ).statusCode,
+      ).toBe(404);
+      const audit = await prisma.auditLog.findFirst({
+        where: { action: 'complaint.resolved', entityId: first.json().id },
+      });
+      expect(audit?.actorId).toBe(moderator.id);
+    });
+
+    it('lets admins change the trusted threshold, which immediately affects premoderation', async () => {
+      const admin = await user('set-admin', 'admin');
+      const moderator = await user('set-mod', 'moderator');
+      expect(
+        (await req('GET', '/api/admin/settings', { cookie: moderator.cookie })).statusCode,
+      ).toBe(403);
+      expect(
+        (
+          await req('PATCH', '/api/admin/settings', {
+            cookie: admin.cookie,
+            body: { trustedThreshold: -1 },
+          })
+        ).statusCode,
+      ).toBe(400);
+      const res = await req('PATCH', '/api/admin/settings', {
+        cookie: admin.cookie,
+        body: { trustedThreshold: 0 },
+      });
+      expect(res.statusCode).toBe(200);
+      try {
+        const author = await user('set-author');
+        const created = await req('POST', '/api/announcements', {
+          cookie: author.cookie,
+          body: ad(await categoryId('announcements', 'prodam'), { title: `Сразу ${run}` }),
+        });
+        expect(created.json().status).toBe('published');
+      } finally {
+        await req('PATCH', '/api/admin/settings', {
+          cookie: admin.cookie,
+          body: { trustedThreshold: 3 },
+        });
+      }
+      expect(
+        (await req('GET', '/api/admin/settings', { cookie: admin.cookie })).json().trustedThreshold,
+      ).toBe(3);
+    });
+
+    it('manages categories and organization verification with separate permissions', async () => {
+      const admin = await user('cat-admin', 'admin');
+      const editor = await user('cat-editor', 'editor');
+      const slug = `test-${run}`;
+      const body = { module: 'news', slug, name: 'Тестовая категория' };
+      expect(
+        (await req('POST', '/api/admin/categories', { cookie: editor.cookie, body })).statusCode,
+      ).toBe(403);
+      const created = await req('POST', '/api/admin/categories', { cookie: admin.cookie, body });
+      expect(created.statusCode).toBe(201);
+      expect(
+        (await req('POST', '/api/admin/categories', { cookie: admin.cookie, body })).statusCode,
+      ).toBe(409);
+      const patched = await req('PATCH', `/api/admin/categories/${created.json().id}`, {
+        cookie: admin.cookie,
+        body: { active: false },
+      });
+      expect(patched.json().active).toBe(false);
+
+      const org = (
+        await req('POST', '/api/staff/organizations', {
+          cookie: editor.cookie,
+          body: { name: `Проверка ${run}`, description: 'Описание', status: 'published' },
+        })
+      ).json();
+      expect(org.verification).toBe('unverified');
+      const url = `/api/admin/organizations/${org.id}/verification`;
+      expect(
+        (await req('POST', url, { cookie: editor.cookie, body: { verification: 'verified' } }))
+          .statusCode,
+      ).toBe(403);
+      const verified = await req('POST', url, {
+        cookie: admin.cookie,
+        body: { verification: 'verified', sourceName: 'Звонок в организацию' },
+      });
+      expect(verified.json().verification).toBe('verified');
+      expect(verified.json().checkedAt).toBeTruthy();
+    });
+
+    it('shows dashboard counters only for permissions the caller holds', async () => {
+      const resident = await user('dash-resident');
+      const moderator = await user('dash-mod', 'moderator');
+      expect(
+        (await req('GET', '/api/admin/dashboard', { cookie: resident.cookie })).statusCode,
+      ).toBe(403);
+      const res = await req('GET', '/api/admin/dashboard', { cookie: moderator.cookie });
+      expect(res.statusCode).toBe(200);
+      const { counters } = res.json();
+      expect(counters).toHaveProperty('pendingAnnouncements');
+      expect(counters).toHaveProperty('openComplaints');
+      expect(counters).not.toHaveProperty('draftNews');
+    });
+  });
 });

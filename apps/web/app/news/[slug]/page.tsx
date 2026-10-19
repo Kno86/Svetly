@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ReportButton } from '../../../components/content/ReportButton';
 import { notFound } from 'next/navigation';
 import { Badge } from '../../../components/ui/Feedback';
 import { LoadError, PageHead, styles } from '../../../components/content/Blocks';
@@ -7,6 +8,7 @@ import { apiGet, formatDate, paragraphs, type CategoryRef } from '../../../lib/c
 export const dynamic = 'force-dynamic';
 
 interface News {
+  id: string;
   slug: string;
   title: string;
   excerpt: string;
@@ -78,6 +80,7 @@ export default async function NewsArticlePage({ params }: Props) {
             <dt>Обновлено</dt>
             <dd>{formatDate(res.data.updatedAt, true)}</dd>
           </dl>
+          <ReportButton entityType="news" entityId={res.data.id} />
         </article>
       )}
     </main>
