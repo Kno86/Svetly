@@ -13,6 +13,7 @@ describe('loadConfig', () => {
       publicUrl: 'http://localhost:3000',
       authSecret: undefined,
       authSecretFile: '/var/lib/svetly/auth-secret',
+      mediaDir: '/var/lib/svetly/media',
       smtpUrl: undefined,
       mailFrom: 'SVETLY <no-reply@svetly.local>',
     });

@@ -43,11 +43,11 @@ docker compose exec api node dist/cli.js admin:create --email you@example.com
 
 ## Остановка и данные
 
-| Команда                           | Что происходит с данными                                                         |
-| --------------------------------- | -------------------------------------------------------------------------------- |
-| `docker compose stop` / `restart` | сохраняются                                                                      |
-| `docker compose down`             | контейнеры удаляются, volumes `svetly_pgdata` и `svetly_api-secrets` сохраняются |
-| `docker compose down -v`          | **все данные БД удаляются безвозвратно**; только осознанно                       |
+| Команда                           | Что происходит с данными                                                                         |
+| --------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `docker compose stop` / `restart` | сохраняются                                                                                      |
+| `docker compose down`             | контейнеры удаляются, volumes `svetly_pgdata`, `svetly_api-secrets` и `svetly_media` сохраняются |
+| `docker compose down -v`          | **все данные БД удаляются безвозвратно**; только осознанно                                       |
 
 ## Миграции
 
@@ -84,6 +84,14 @@ bash infra/scripts/restore.sh backups/<файл>.dump        # РАЗРУШИТ�
 - Секрет авторизации (локально) хранится в volume `svetly_api-secrets`. Если он потерян, все пользователи просто
   войдут заново; в production секрет задаётся переменной `BETTER_AUTH_SECRET` и хранится вне сервера.
 - Храните копии вне сервера; расписание (cron) и шифрование внешних копий — задача фазы production-развёртывания.
+
+### Загруженные изображения
+
+`backup.sh` сохраняет только БД. Изображения лежат в volume `svetly_media`; копия:
+
+```bash
+docker run --rm -v svetly_media:/media:ro -v "$PWD/backups:/out" alpine tar czf /out/media-$(date +%Y%m%d-%H%M%S).tar.gz -C /media .
+```
 
 ## Production (подготовлено, не развёрнуто)
 

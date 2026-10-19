@@ -17,7 +17,13 @@ export function SiteFooter({ status }: { status?: string }) {
           <ul className={styles.footerList}>
             {primaryNav.map((item) => (
               <li key={item.href}>
-                {item.label} <span className={styles.soonDark}>скоро</span>
+                {item.available ? (
+                  <Link href={item.href}>{item.label}</Link>
+                ) : (
+                  <>
+                    {item.label} <span className={styles.soonDark}>скоро</span>
+                  </>
+                )}
               </li>
             ))}
           </ul>
@@ -25,6 +31,12 @@ export function SiteFooter({ status }: { status?: string }) {
         <div>
           <h2 className={styles.footerHeading}>Платформа</h2>
           <ul className={styles.footerList}>
+            <li>
+              <Link href="/search">Поиск</Link>
+            </li>
+            <li>
+              <Link href="/submit">Разместить</Link>
+            </li>
             <li>
               <Link href="/design-system">Дизайн-система</Link>
             </li>

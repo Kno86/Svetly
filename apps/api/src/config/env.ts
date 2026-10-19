@@ -10,6 +10,8 @@ export interface AppConfig {
   /** Explicit secret (required in production). Locally a generated secret is persisted to `authSecretFile`. */
   authSecret: string | undefined;
   authSecretFile: string;
+  /** Local media storage root (Docker volume `svetly_media`). */
+  mediaDir: string;
   /** SMTP connection URL. Without it, email sending reports "not configured" instead of pretending. */
   smtpUrl: string | undefined;
   mailFrom: string;
@@ -64,6 +66,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     publicUrl: parsedPublicUrl.origin,
     authSecret,
     authSecretFile: env.AUTH_SECRET_FILE ?? '/var/lib/svetly/auth-secret',
+    mediaDir: env.MEDIA_DIR ?? '/var/lib/svetly/media',
     smtpUrl: env.SMTP_URL || undefined,
     mailFrom: env.MAIL_FROM ?? 'SVETLY <no-reply@svetly.local>',
   };

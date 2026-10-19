@@ -1,20 +1,28 @@
+import Link from 'next/link';
 import { Badge, Card } from '../components/ui/Feedback';
 import { ButtonLink } from '../components/ui/Button';
 import { primaryNav } from '../components/shell/navigation';
 import { fetchApiStatus, type ApiStatus } from '../lib/api-status';
 import { getWebBuildInfo } from '../lib/build-info';
+import { apiGet, formatDate, formatPrice } from '../lib/content';
 import styles from './page.module.css';
 
 export const dynamic = 'force-dynamic';
 
 const sectionInfo: Record<string, string> = {
   '/news': 'Новости посёлка и района: события, объявления администрации, важное рядом.',
-  '/ads': 'Частные объявления жителей: продать, купить, отдать, найти.',
+  '/announcements': 'Частные объявления жителей: продать, купить, отдать, найти.',
   '/services': 'Местные мастера и услуги — от ремонта до репетиторов.',
   '/organizations': 'Магазины, школы, медицина и сервисы территории.',
   '/events': 'Праздники, встречи, секции и мероприятия.',
   '/directory': 'Полезные телефоны, адреса и экстренные службы.',
 };
+
+interface HomeFeed {
+  news: Array<{ slug: string; title: string; publishedAt: string }>;
+  announcements: Array<{ slug: string; title: string; price: number | null }>;
+  events: Array<{ slug: string; title: string; startsAt: string }>;
+}
 
 function describeApi(status: ApiStatus): string {
   switch (status.state) {
@@ -48,7 +56,36 @@ function HeroArt() {
 
 export default async function HomePage() {
   const build = getWebBuildInfo();
-  const api = await fetchApiStatus(process.env.API_INTERNAL_URL ?? 'http://api:4000');
+  const [api, home] = await Promise.all([
+    fetchApiStatus(process.env.API_INTERNAL_URL ?? 'http://api:4000'),
+    apiGet<HomeFeed>('/api/home'),
+  ]);
+  const feed = home.ok ? home.data : undefined;
+  const latest = feed
+    ? [
+        ...feed.news.map((n) => ({
+          key: `n-${n.slug}`,
+          href: `/news/${n.slug}`,
+          title: n.title,
+          kind: 'Новость',
+          meta: formatDate(n.publishedAt),
+        })),
+        ...feed.events.map((e) => ({
+          key: `e-${e.slug}`,
+          href: `/events/${e.slug}`,
+          title: e.title,
+          kind: 'Событие',
+          meta: formatDate(e.startsAt, true),
+        })),
+        ...feed.announcements.map((a) => ({
+          key: `a-${a.slug}`,
+          href: `/announcements/${a.slug}`,
+          title: a.title,
+          kind: 'Объявление',
+          meta: formatPrice(a.price),
+        })),
+      ]
+    : [];
 
   return (
     <main id="main">
@@ -64,11 +101,11 @@ export default async function HomePage() {
               объявления, услуги, организации и события рядом с домом.
             </p>
             <div className={styles.actions}>
-              <ButtonLink href="#sections" size="lg">
-                Какие будут разделы
+              <ButtonLink href="/announcements/new" size="lg">
+                Подать объявление
               </ButtonLink>
-              <ButtonLink href="/design-system" variant="secondary" size="lg">
-                Дизайн-система
+              <ButtonLink href="/search" variant="secondary" size="lg">
+                Поиск по платформе
               </ButtonLink>
             </div>
           </div>
@@ -82,22 +119,50 @@ export default async function HomePage() {
         <div className="container">
           <div className={styles.sectionHead}>
             <h2>Разделы платформы</h2>
-            <p>Разделы откроются поэтапно, после утверждения каждой фазы разработки.</p>
+            <p>Записи публикуют жители и редакция. Мы не заполняем разделы выдуманными данными.</p>
           </div>
           <div className="grid">
             {primaryNav.map((item) => (
-              <Card key={item.href}>
+              <Card key={item.href} interactive={item.available}>
                 <div className={styles.cardHead}>
                   <span className={styles.cardIcon} aria-hidden="true">
                     {item.label.charAt(0)}
                   </span>
-                  <Badge>скоро</Badge>
+                  {!item.available && <Badge>скоро</Badge>}
                 </div>
-                <h3>{item.label}</h3>
+                <h3>{item.available ? <Link href={item.href}>{item.label}</Link> : item.label}</h3>
                 <p className={styles.cardText}>{sectionInfo[item.href]}</p>
               </Card>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className={styles.section} aria-labelledby="latest-heading">
+        <div className="container">
+          <div className={styles.sectionHead}>
+            <h2 id="latest-heading">Свежее</h2>
+          </div>
+          {!feed ? (
+            <p>Не удалось загрузить свежие публикации. Обновите страницу через минуту.</p>
+          ) : latest.length === 0 ? (
+            <p>
+              Пока публикаций нет.{' '}
+              <Link href="/announcements/new">Разместите первое объявление</Link>.
+            </p>
+          ) : (
+            <div className="grid">
+              {latest.map((item) => (
+                <Card key={item.key} interactive>
+                  <Badge>{item.kind}</Badge>
+                  <h3>
+                    <Link href={item.href}>{item.title}</Link>
+                  </h3>
+                  <p className={styles.cardText}>{item.meta}</p>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

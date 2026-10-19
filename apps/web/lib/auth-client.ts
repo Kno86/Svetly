@@ -11,15 +11,20 @@ export interface ApiResult<T> {
 
 export async function apiRequest<T>(
   path: string,
-  init: { method?: 'GET' | 'POST'; body?: unknown } = {},
+  init: { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown; file?: Blob } = {},
 ): Promise<ApiResult<T>> {
   let res: Response;
+  const hasBody = init.body !== undefined || init.file !== undefined;
   try {
     res = await fetch(path, {
-      method: init.method ?? (init.body === undefined ? 'GET' : 'POST'),
+      method: init.method ?? (hasBody ? 'POST' : 'GET'),
       credentials: 'same-origin',
-      headers: init.body === undefined ? undefined : { 'content-type': 'application/json' },
-      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+      headers: init.file
+        ? { 'content-type': init.file.type }
+        : init.body === undefined
+          ? undefined
+          : { 'content-type': 'application/json' },
+      body: init.file ?? (init.body === undefined ? undefined : JSON.stringify(init.body)),
     });
   } catch {
     return { ok: false, status: 0, code: 'NETWORK_ERROR' };
@@ -47,6 +52,14 @@ const MESSAGES: Record<string, string> = {
   INVALID_TOKEN: 'Ссылка недействительна или устарела. Запросите новую.',
   USER_BLOCKED: 'Учётная запись заблокирована. Обратитесь в поддержку.',
   EMAIL_NOT_CONFIGURED: 'Отправка писем пока не настроена. Обратитесь к администратору.',
+  VALIDATION_FAILED: 'Проверьте заполнение полей.',
+  INVALID_CATEGORY: 'Выберите категорию.',
+  INVALID_MEDIA: 'Можно прикреплять только свои изображения.',
+  UNSUPPORTED_MEDIA: 'Подходят только изображения JPEG, PNG или WebP.',
+  MEDIA_TOO_LARGE: 'Изображение больше 5 МБ.',
+  TOO_MANY_PENDING: 'У вас слишком много объявлений на проверке. Дождитесь решения модератора.',
+  EVENT_FULL: 'Свободных мест больше нет.',
+  EVENT_STARTED: 'Запись закрыта: событие уже началось.',
   CSRF_ORIGIN_MISMATCH: 'Запрос отклонён из соображений безопасности. Обновите страницу.',
 };
 

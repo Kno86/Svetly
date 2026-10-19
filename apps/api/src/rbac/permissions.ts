@@ -10,7 +10,20 @@ export const PERMISSIONS = {
   'roles.read': 'Просмотр ролей и назначений',
   'roles.assign': 'Назначение и снятие ролей ниже собственного уровня',
   'audit.read': 'Просмотр журнала аудита',
+  'content.news.manage': 'Создание, редактирование и публикация новостей',
+  'content.events.manage': 'Создание, редактирование и публикация событий',
+  'content.organizations.manage': 'Управление карточками организаций и услуг',
+  'content.directory.manage': 'Управление полезным справочником',
+  'content.categories.manage': 'Управление категориями модулей',
+  'moderation.announcements': 'Модерация объявлений жителей (одобрение, отклонение, снятие)',
 } as const;
+
+const CONTENT: readonly PermissionCode[] = [
+  'content.news.manage',
+  'content.events.manage',
+  'content.organizations.manage',
+  'content.directory.manage',
+];
 
 export type PermissionCode = keyof typeof PERMISSIONS;
 
@@ -34,6 +47,9 @@ export const ROLES = {
       'roles.read',
       'roles.assign',
       'audit.read',
+      ...CONTENT,
+      'content.categories.manage',
+      'moderation.announcements',
     ],
   },
   admin: {
@@ -47,20 +63,22 @@ export const ROLES = {
       'roles.read',
       'roles.assign',
       'audit.read',
+      ...CONTENT,
+      'content.categories.manage',
+      'moderation.announcements',
     ],
   },
   moderator: {
     name: 'Модератор',
-    description: 'Модерация контента и жалоб (права модулей добавляются в PHASE 5).',
+    description: 'Модерация объявлений, контента и жалоб.',
     rank: 40,
-    permissions: ['users.read'],
+    permissions: ['users.read', 'moderation.announcements'],
   },
   editor: {
     name: 'Редактор',
-    description:
-      'Новости, CMS-страницы, справочник (права модулей добавляются в фазах контента и CMS).',
+    description: 'Новости, события, организации и справочник.',
     rank: 40,
-    permissions: [],
+    permissions: [...CONTENT],
   },
   support: {
     name: 'Поддержка',

@@ -25,6 +25,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://svetly:svetly_local_dev_only@localhost:5432/svetly_test?schema=public
       AUTH_SECRET_FILE: /tmp/svetly-ci/auth-secret
+      MEDIA_DIR: /tmp/svetly-ci/media
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

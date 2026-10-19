@@ -8,6 +8,6 @@ import { MeController } from './me.controller.js';
 @Module({
   providers: [AuthService, MailerService, SessionGuard, PermissionGuard],
   controllers: [MeController, AdminController],
-  exports: [AuthService],
+  exports: [AuthService, SessionGuard, PermissionGuard],
 })
 export class AuthModule {}
