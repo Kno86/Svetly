@@ -133,17 +133,20 @@ const MAX_PENDING = 10;
 /** Author is trusted after N approved posts across all resident modules with no rejections. */
 export async function isTrustedAuthor(prisma: PrismaService, authorId: string): Promise<boolean> {
   const approved = { authorId, publishedAt: { not: null } };
-  const [a, j, l, rejected] = await Promise.all([
+  const rejectedOrRemoved = { authorId, status: { in: ['rejected', 'removed'] } };
+  const [a, j, l, posts, rejected] = await Promise.all([
     prisma.announcement.count({ where: approved }),
     prisma.job.count({ where: approved }),
     prisma.lostFoundItem.count({ where: approved }),
+    prisma.post.count({ where: approved }),
     Promise.all([
       prisma.announcement.count({ where: { authorId, status: 'rejected' } }),
       prisma.job.count({ where: { authorId, status: 'rejected' } }),
       prisma.lostFoundItem.count({ where: { authorId, status: 'rejected' } }),
+      prisma.post.count({ where: rejectedOrRemoved }),
     ]).then((r) => r.reduce((x, y) => x + y, 0)),
   ]);
-  return a + j + l >= (await trustedThreshold(prisma)) && rejected === 0;
+  return a + j + l + posts >= (await trustedThreshold(prisma)) && rejected === 0;
 }
 
 function communityController(cfg: KindConfig): Type<unknown> {

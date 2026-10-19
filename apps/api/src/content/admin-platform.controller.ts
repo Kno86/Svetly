@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import { z } from 'zod';
 import { Prisma } from '../generated/prisma/client.js';
+import { TARGET_TYPES, isVisibleTarget } from './visibility.js';
 import { AuditService } from '../audit/audit.service.js';
 import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guards.js';
 import type { Principal } from '../auth/principal.js';
@@ -22,14 +23,7 @@ import { parse } from '../common/validation.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { trustedThreshold } from './announcements.controller.js';
 
-const ENTITY_TYPES = [
-  'announcement',
-  'organization',
-  'news',
-  'event',
-  'job',
-  'lost_found',
-] as const;
+const ENTITY_TYPES = TARGET_TYPES;
 type EntityType = (typeof ENTITY_TYPES)[number];
 const MODULES = [
   'news',
@@ -90,7 +84,7 @@ export class AdminPlatformController {
   @HttpCode(201)
   async complain(@Body() body: unknown, @CurrentPrincipal() p: Principal) {
     const data = parse(complaintBody, body);
-    if (!(await this.isPublished(data.entityType, data.entityId)))
+    if (!(await this.isPublished(data.entityType, data.entityId, p.userId)))
       throw new NotFoundException({ code: 'NOT_FOUND' });
     const existing = await this.prisma.complaint.findFirst({
       where: {
@@ -345,32 +339,8 @@ export class AdminPlatformController {
     });
   }
 
-  private async isPublished(type: EntityType, id: string): Promise<boolean> {
-    const where = { id, status: 'published' };
-    switch (type) {
-      case 'announcement':
-        return (
-          (await this.prisma.announcement.count({
-            where: { ...where, expiresAt: { gt: new Date() } },
-          })) > 0
-        );
-      case 'organization':
-        return (await this.prisma.organization.count({ where })) > 0;
-      case 'news':
-        return (await this.prisma.newsArticle.count({ where })) > 0;
-      case 'event':
-        return (await this.prisma.event.count({ where })) > 0;
-      case 'job':
-        return (
-          (await this.prisma.job.count({ where: { ...where, expiresAt: { gt: new Date() } } })) > 0
-        );
-      case 'lost_found':
-        return (
-          (await this.prisma.lostFoundItem.count({
-            where: { ...where, expiresAt: { gt: new Date() } },
-          })) > 0
-        );
-    }
+  private isPublished(type: EntityType, id: string, userId: string): Promise<boolean> {
+    return isVisibleTarget(this.prisma, type, id, userId);
   }
 
   private async describeTargets(items: Array<{ entityType: string; entityId: string }>) {
@@ -418,6 +388,31 @@ export class AdminPlatformController {
         where: { id: { in: ids('lost_found') } },
         select: { ...sel, title: true },
       }),
+    );
+    put(
+      'group',
+      await this.prisma.group.findMany({
+        where: { id: { in: ids('group') } },
+        select: { id: true, slug: true, status: true, name: true },
+      }),
+    );
+    put(
+      'post',
+      (
+        await this.prisma.post.findMany({
+          where: { id: { in: ids('post') } },
+          select: { id: true, status: true, body: true },
+        })
+      ).map((r) => ({ id: r.id, slug: r.id, status: r.status, title: r.body.slice(0, 80) })),
+    );
+    put(
+      'comment',
+      (
+        await this.prisma.comment.findMany({
+          where: { id: { in: ids('comment') } },
+          select: { id: true, status: true, body: true, postId: true },
+        })
+      ).map((r) => ({ id: r.id, slug: r.postId, status: r.status, title: r.body.slice(0, 80) })),
     );
     put(
       'organization',
