@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ReportButton } from '../../../components/content/ReportButton';
+import { FavoriteButton } from '../../../components/content/FavoriteButton';
 import { notFound } from 'next/navigation';
 import { Badge } from '../../../components/ui/Feedback';
 import { LoadError, PageHead, styles } from '../../../components/content/Blocks';
@@ -80,6 +81,7 @@ export default async function NewsArticlePage({ params }: Props) {
             <dt>Обновлено</dt>
             <dd>{formatDate(res.data.updatedAt, true)}</dd>
           </dl>
+          <FavoriteButton entityType="news" entityId={res.data.id} />
           <ReportButton entityType="news" entityId={res.data.id} />
         </article>
       )}

@@ -187,7 +187,7 @@ export class SocialController {
       items: rows.map(({ _count, ...g }) => ({ ...g, members: _count.members })),
       total,
       page: n,
-      pageSize: size,
+      limit: size,
     };
   }
 

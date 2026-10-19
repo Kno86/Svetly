@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ReportButton } from '../../../components/content/ReportButton';
+import { FavoriteButton } from '../../../components/content/FavoriteButton';
 import { InquiryButton } from '../../../components/content/InquiryButton';
 import { notFound } from 'next/navigation';
 import { Badge } from '../../../components/ui/Feedback';
@@ -135,6 +136,7 @@ export default async function OrganizationPage({ params }: Props) {
           <dd>{o.checkedAt ? formatDate(o.checkedAt) : 'нет данных'}</dd>
         </dl>
         {o.acceptsInquiries && <InquiryButton organizationId={o.id} />}
+        <FavoriteButton entityType="organization" entityId={o.id} />
         <ReportButton entityType="organization" entityId={o.id} />
       </article>
     </main>

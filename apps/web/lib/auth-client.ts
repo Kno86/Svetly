@@ -11,7 +11,7 @@ export interface ApiResult<T> {
 
 export async function apiRequest<T>(
   path: string,
-  init: { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown; file?: Blob } = {},
+  init: { method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; body?: unknown; file?: Blob } = {},
 ): Promise<ApiResult<T>> {
   let res: Response;
   const hasBody = init.body !== undefined || init.file !== undefined;

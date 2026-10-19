@@ -12,6 +12,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin/moderation', label: 'Модерация', permission: 'moderation.announcements' },
   { href: '/admin/complaints', label: 'Жалобы', permission: 'complaints.manage' },
   { href: '/admin/community', label: 'Вакансии и находки', permission: 'moderation.community' },
+  { href: '/admin/social', label: 'Лента и группы', permission: 'moderation.community' },
   { href: '/admin/issues', label: 'Обращения', permission: 'issues.manage' },
   { href: '/admin/business', label: 'Заявки бизнеса', permission: 'business.review' },
   { href: '/admin/polls', label: 'Опросы', permission: 'polls.manage' },
@@ -256,4 +257,9 @@ export const COMPLAINT_TARGETS: Record<string, { label: string; path: string }> 
   news: { label: 'Новость', path: '/news' },
   event: { label: 'Событие', path: '/events' },
   organization: { label: 'Организация', path: '/organizations' },
+  job: { label: 'Вакансия', path: '/jobs' },
+  lost_found: { label: 'Потеряно и найдено', path: '/lost-found' },
+  group: { label: 'Группа', path: '/groups' },
+  post: { label: 'Пост', path: '/feed' },
+  comment: { label: 'Комментарий', path: '/feed' },
 };

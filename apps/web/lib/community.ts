@@ -34,6 +34,7 @@ export const POST_STATUS: Record<string, { label: string; tone: Tone }> = {
   resolved: { label: 'Нашлось', tone: 'success' },
   closed: { label: 'Снято', tone: 'neutral' },
   archived: { label: 'В архиве', tone: 'neutral' },
+  removed: { label: 'Снято модератором', tone: 'error' },
 };
 
 export const ORG_STATUS: Record<string, { label: string; tone: Tone }> = {

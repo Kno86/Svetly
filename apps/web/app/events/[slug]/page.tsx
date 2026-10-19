@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ReportButton } from '../../../components/content/ReportButton';
+import { FavoriteButton } from '../../../components/content/FavoriteButton';
 import { notFound } from 'next/navigation';
 import { Alert, Badge } from '../../../components/ui/Feedback';
 import { ButtonLink, LoadError, PageHead, styles } from '../../../components/content/Blocks';
@@ -93,6 +94,7 @@ export default async function EventPage({ params }: Props) {
             />
           )}
         </div>
+        <FavoriteButton entityType="event" entityId={e.id} />
         <ReportButton entityType="event" entityId={e.id} />
       </article>
     </main>
