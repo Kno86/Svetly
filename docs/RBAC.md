@@ -63,4 +63,14 @@ TRUNCATE на уровне PostgreSQL (проверено тестом и вру
 - `organizations.verify` — super_admin, admin.
 - `settings.manage` — super_admin, admin.
 
+## Права PHASE 6
+
+- `moderation.community` — super_admin, admin, moderator (вакансии, «Потеряно и найдено»).
+- `issues.manage` — super_admin, admin, moderator, support (статусы, приоритет, ответственный, внутренние заметки).
+- `issues.respond` — super_admin, admin (публичный ответ платформы по обращению).
+- `polls.manage` — super_admin, admin, editor.
+- `business.review` — super_admin, admin (заявки бизнеса и изменения карточек владельцами).
+
+Владелец карточки — не роль: доступ к `/api/business/*` проверяется по `organizations.owner_id`. Подробнее — [COMMUNITY.md](COMMUNITY.md), [BUSINESS.md](BUSINESS.md).
+
 Матрица разделов админки — в [ADMIN.md](ADMIN.md).

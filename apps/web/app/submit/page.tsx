@@ -32,10 +32,39 @@ export default function SubmitPage() {
           </ButtonLink>
         </Card>
         <Card>
-          <h2 className={styles.cardTitle}>Организация, событие или новость</h2>
+          <h2 className={styles.cardTitle}>Организация или услуга</h2>
           <p className={styles.excerpt}>
-            Пока их публикует редакция по проверенным данным. Кабинет предпринимателя и предложение
-            новостей от жителей появятся в следующих фазах.
+            Подайте заявку в кабинете бизнеса. Карточка появится в каталоге после проверки
+            администратором.
+          </p>
+          <ButtonLink href="/business" variant="secondary">
+            Кабинет бизнеса
+          </ButtonLink>
+        </Card>
+        <Card>
+          <h2 className={styles.cardTitle}>Вакансия, потеря или находка</h2>
+          <p className={styles.excerpt}>Публикуются после проверки модератором.</p>
+          <ButtonLink href="/jobs/new" variant="secondary">
+            Вакансия
+          </ButtonLink>{' '}
+          <ButtonLink href="/lost-found/new" variant="secondary">
+            Потеряно и найдено
+          </ButtonLink>
+        </Card>
+        <Card>
+          <h2 className={styles.cardTitle}>Проблема в посёлке</h2>
+          <p className={styles.excerpt}>
+            Обращение получают сотрудники платформы. Вы видите его номер и историю статусов.
+          </p>
+          <ButtonLink href="/issues/new" variant="secondary">
+            Сообщить о проблеме
+          </ButtonLink>
+        </Card>
+        <Card>
+          <h2 className={styles.cardTitle}>Событие или новость</h2>
+          <p className={styles.excerpt}>
+            Пока их публикует редакция по проверенным данным. Предложить новость можно будет в
+            следующих фазах.
           </p>
         </Card>
       </div>

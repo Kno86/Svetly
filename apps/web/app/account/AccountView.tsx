@@ -130,6 +130,11 @@ function Profile({ me, onSaved }: { me: Me; onSaved: (name: string) => void }) {
         <dt>Роли</dt>
         <dd>{me.roles.length ? me.roles.map((r) => ROLE_NAMES[r] ?? r).join(', ') : 'Житель'}</dd>
       </dl>
+      <p>
+        <Link href="/account/announcements">Мои объявления</Link> ·{' '}
+        <Link href="/account/community">Обращения, вакансии и находки</Link> ·{' '}
+        <Link href="/business">Кабинет бизнеса</Link>
+      </p>
       {me.permissions.length > 0 && (
         <p>
           <Link href="/admin">Открыть админ-платформу</Link>

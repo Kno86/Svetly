@@ -19,6 +19,11 @@ export const PERMISSIONS = {
   'complaints.manage': 'Рассмотрение жалоб на контент',
   'organizations.verify': 'Подтверждение проверки данных организаций',
   'settings.manage': 'Изменение настроек платформы (порог доверия модерации)',
+  'moderation.community': 'Модерация вакансий и раздела «Потеряно и найдено»',
+  'issues.manage': 'Работа с обращениями жителей: статусы, приоритет, ответственный, комментарии',
+  'issues.respond': 'Публичный ответ платформы по обращению',
+  'polls.manage': 'Создание и проведение опросов',
+  'business.review': 'Рассмотрение заявок бизнеса и изменений карточек владельцами',
 } as const;
 
 const CONTENT: readonly PermissionCode[] = [
@@ -56,6 +61,11 @@ export const ROLES = {
       'complaints.manage',
       'organizations.verify',
       'settings.manage',
+      'moderation.community',
+      'issues.manage',
+      'issues.respond',
+      'polls.manage',
+      'business.review',
     ],
   },
   admin: {
@@ -75,25 +85,36 @@ export const ROLES = {
       'complaints.manage',
       'organizations.verify',
       'settings.manage',
+      'moderation.community',
+      'issues.manage',
+      'issues.respond',
+      'polls.manage',
+      'business.review',
     ],
   },
   moderator: {
     name: 'Модератор',
     description: 'Модерация объявлений, контента и жалоб.',
     rank: 40,
-    permissions: ['users.read', 'moderation.announcements', 'complaints.manage'],
+    permissions: [
+      'users.read',
+      'moderation.announcements',
+      'complaints.manage',
+      'moderation.community',
+      'issues.manage',
+    ],
   },
   editor: {
     name: 'Редактор',
     description: 'Новости, события, организации и справочник.',
     rank: 40,
-    permissions: [...CONTENT],
+    permissions: [...CONTENT, 'polls.manage'],
   },
   support: {
     name: 'Поддержка',
     description: 'Поиск пользователей и обработка обращений с минимально необходимыми данными.',
     rank: 40,
-    permissions: ['users.read', 'complaints.manage'],
+    permissions: ['users.read', 'complaints.manage', 'issues.manage'],
   },
 } as const satisfies Record<string, RoleDefinition>;
 

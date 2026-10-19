@@ -218,11 +218,13 @@ export class PublicContentController {
         checkedAt: true,
         updatedAt: true,
         isDemo: true,
+        ownerId: true,
         category,
       },
     });
     if (!item) throw new NotFoundException({ code: 'NOT_FOUND' });
-    return item;
+    const { ownerId, ...rest } = item;
+    return { ...rest, acceptsInquiries: ownerId !== null };
   }
 
   @Get('events')
