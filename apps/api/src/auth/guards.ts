@@ -122,6 +122,29 @@ export class PermissionGuard implements CanActivate {
   }
 }
 
+/** Attaches the principal when a valid session exists; anonymous requests pass through. Read-only routes only. */
+@Injectable()
+export class OptionalSessionGuard implements CanActivate {
+  constructor(private readonly session: SessionGuard) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    try {
+      await this.session.canActivate(context);
+    } catch {
+      context.switchToHttp().getRequest<FastifyRequest>().principal = undefined;
+    }
+    return true;
+  }
+}
+
+/** Optional sign-in for GET routes whose response depends on the viewer (e.g. closed groups). */
+export const OptionalAuth = () => UseGuards(OptionalSessionGuard);
+
+export const OptionalPrincipal = createParamDecorator(
+  (_: unknown, context: ExecutionContext): Principal | undefined =>
+    context.switchToHttp().getRequest<FastifyRequest>().principal,
+);
+
 /** Requires a signed-in user. */
 export const Authenticated = () => UseGuards(SessionGuard);
 

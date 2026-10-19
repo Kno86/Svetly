@@ -14,7 +14,16 @@ export function ReportButton({
   entityType,
   entityId,
 }: {
-  entityType: 'announcement' | 'news' | 'event' | 'organization' | 'job' | 'lost_found';
+  entityType:
+    | 'announcement'
+    | 'news'
+    | 'event'
+    | 'organization'
+    | 'job'
+    | 'lost_found'
+    | 'group'
+    | 'post'
+    | 'comment';
   entityId: string;
 }) {
   const [open, setOpen] = useState(false);

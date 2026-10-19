@@ -133,6 +133,8 @@ function Profile({ me, onSaved }: { me: Me; onSaved: (name: string) => void }) {
       <p>
         <Link href="/account/announcements">Мои объявления</Link> ·{' '}
         <Link href="/account/community">Обращения, вакансии и находки</Link> ·{' '}
+        <Link href="/favorites">Избранное</Link> ·{' '}
+        <Link href="/groups/mine">Мои группы и посты</Link> ·{' '}
         <Link href="/business">Кабинет бизнеса</Link>
       </p>
       {me.permissions.length > 0 && (

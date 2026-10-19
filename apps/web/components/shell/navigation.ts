@@ -16,4 +16,6 @@ export const primaryNav: NavItem[] = [
   { label: 'Находки', href: '/lost-found', available: true },
   { label: 'Обращения', href: '/issues', available: true },
   { label: 'Опросы', href: '/polls', available: true },
+  { label: 'Лента', href: '/feed', available: true },
+  { label: 'Группы', href: '/groups', available: true },
 ];

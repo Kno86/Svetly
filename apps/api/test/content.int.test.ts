@@ -20,7 +20,7 @@ describe('core content platform against a real PostgreSQL database', () => {
   const email = (name: string) => `${name}-${run}@example.test`;
 
   async function req(
-    method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     url: string,
     opts: {
       cookie?: string;
@@ -896,6 +896,292 @@ describe('core content platform against a real PostgreSQL database', () => {
       ).toBe(200);
       const sent = (await req('GET', '/api/me/inquiries', { cookie: resident.cookie })).json();
       expect(sent[0].reply).toBe('Да, приходите.');
+    });
+  });
+  describe('social modules (PHASE 7a)', () => {
+    it('premoderates new authors, keeps closed groups private and enforces group roles', async () => {
+      const owner = await user('p7-owner');
+      const outsider = await user('p7-out');
+      const joiner = await user('p7-join');
+      const mod = await user('p7-mod', 'moderator');
+
+      const g = await req('POST', '/api/groups', {
+        cookie: owner.cookie,
+        body: {
+          name: 'Соседи тестовой улицы',
+          description: 'Группа для проверки.',
+          topic: 'neighbors',
+          visibility: 'closed',
+        },
+      });
+      expect(g.statusCode).toBe(201);
+      expect(g.json().status).toBe('pending');
+      const { id: groupId, slug } = g.json();
+      expect((await req('GET', `/api/groups/${slug}`)).statusCode).toBe(404);
+      expect(
+        (
+          await req('POST', `/api/moderation/groups/${groupId}/approve`, {
+            cookie: owner.cookie,
+            body: {},
+          })
+        ).statusCode,
+      ).toBe(403);
+      expect(
+        (
+          await req('POST', `/api/moderation/groups/${groupId}/approve`, {
+            cookie: mod.cookie,
+            body: {},
+          })
+        ).statusCode,
+      ).toBe(200);
+
+      expect(
+        (await req('POST', `/api/groups/${slug}/join`, { cookie: joiner.cookie, body: {} })).json()
+          .status,
+      ).toBe('pending');
+      expect(
+        (await req('GET', `/api/groups/${slug}/posts`, { cookie: joiner.cookie })).statusCode,
+      ).toBe(403);
+      expect(
+        (await req('GET', `/api/groups/${slug}/members`, { cookie: joiner.cookie })).statusCode,
+      ).toBe(404);
+      expect(
+        (
+          await req('POST', `/api/groups/${slug}/members/${joiner.id}/approve`, {
+            cookie: outsider.cookie,
+            body: {},
+          })
+        ).statusCode,
+      ).toBe(404);
+      expect(
+        (
+          await req('POST', `/api/groups/${slug}/members/${joiner.id}/approve`, {
+            cookie: owner.cookie,
+            body: {},
+          })
+        ).statusCode,
+      ).toBe(200);
+      expect(
+        (
+          await req('POST', `/api/groups/${slug}/members/${owner.id}/ban`, {
+            cookie: owner.cookie,
+            body: {},
+          })
+        ).statusCode,
+      ).toBe(403);
+      expect(
+        (await req('POST', `/api/groups/${slug}/leave`, { cookie: owner.cookie, body: {} }))
+          .statusCode,
+      ).toBe(409);
+
+      expect(
+        (
+          await req('POST', '/api/posts', {
+            cookie: outsider.cookie,
+            body: { groupId, body: 'Чужой пост' },
+          })
+        ).statusCode,
+      ).toBe(403);
+      const post = await req('POST', '/api/posts', {
+        cookie: joiner.cookie,
+        body: { groupId, body: 'Пост участника' },
+      });
+      expect(post.json().status).toBe('pending');
+      const postId = post.json().id;
+      expect(
+        (await req('GET', `/api/posts/${postId}`, { cookie: outsider.cookie })).statusCode,
+      ).toBe(404);
+      expect(
+        (await req('GET', `/api/posts/${postId}`, { cookie: joiner.cookie })).json().mine,
+      ).toBe(true);
+      expect(
+        (
+          await req('POST', `/api/moderation/posts/${postId}/reject`, {
+            cookie: mod.cookie,
+            body: {},
+          })
+        ).statusCode,
+      ).toBe(400);
+      expect(
+        (
+          await req('POST', `/api/moderation/posts/${postId}/approve`, {
+            cookie: mod.cookie,
+            body: {},
+          })
+        ).statusCode,
+      ).toBe(200);
+
+      const feed = (await req('GET', '/api/feed')).json();
+      expect(feed.items.some((x: { id: string }) => x.id === postId)).toBe(false);
+      const mine = (await req('GET', '/api/feed?scope=groups', { cookie: joiner.cookie })).json();
+      const item = mine.items.find((x: { id: string }) => x.id === postId);
+      expect(item).toBeDefined();
+      expect(item).not.toHaveProperty('authorId');
+      expect((await req('GET', `/api/posts/${postId}`)).statusCode).toBe(404);
+      expect(
+        (
+          await req('POST', '/api/complaints', {
+            cookie: outsider.cookie,
+            body: { entityType: 'post', entityId: postId, reason: 'spam' },
+          })
+        ).statusCode,
+      ).toBe(404);
+      expect(
+        (
+          await req('POST', '/api/favorites', {
+            cookie: outsider.cookie,
+            body: { entityType: 'post', entityId: postId },
+          })
+        ).statusCode,
+      ).toBe(404);
+      expect(
+        (await req('PUT', `/api/posts/${postId}/reaction`, { cookie: outsider.cookie })).statusCode,
+      ).toBe(404);
+      expect(
+        (
+          await req('POST', `/api/posts/${postId}/comments`, {
+            cookie: outsider.cookie,
+            body: { body: 'Привет' },
+          })
+        ).statusCode,
+      ).toBe(404);
+
+      expect(
+        (await req('POST', `/api/posts/${postId}/pin`, { cookie: joiner.cookie, body: {} }))
+          .statusCode,
+      ).toBe(404);
+      expect(
+        (await req('POST', `/api/posts/${postId}/pin`, { cookie: owner.cookie, body: {} })).json()
+          .pinned,
+      ).toBe(true);
+      expect(
+        (
+          await req('POST', `/api/posts/${postId}/remove`, {
+            cookie: owner.cookie,
+            body: { note: 'Не по теме группы' },
+          })
+        ).statusCode,
+      ).toBe(200);
+      expect((await req('GET', `/api/posts/${postId}`, { cookie: owner.cookie })).statusCode).toBe(
+        404,
+      );
+      expect(
+        (await req('GET', '/api/me/posts', { cookie: joiner.cookie })).json()[0].moderationNote,
+      ).toBe('Не по теме группы');
+    });
+
+    it('limits comments, toggles one reaction per user and keeps favorites private', async () => {
+      const author = await user('p7-feed');
+      const reader = await user('p7-reader');
+      const mod = await user('p7-feedmod', 'moderator');
+      const post = await req('POST', '/api/posts', {
+        cookie: author.cookie,
+        body: { body: 'Общий пост', link: 'https://example.org/x' },
+      });
+      const id = post.json().id;
+      expect(
+        (
+          await req('POST', '/api/posts', {
+            cookie: author.cookie,
+            body: { body: 'Ссылка', link: 'javascript:alert(1)' },
+          })
+        ).statusCode,
+      ).toBe(400);
+      await req('POST', `/api/moderation/posts/${id}/approve`, { cookie: mod.cookie, body: {} });
+      expect((await req('GET', `/api/posts/${id}`)).json().canComment).toBe(false);
+
+      expect(
+        (await req('PUT', `/api/posts/${id}/reaction`, { cookie: reader.cookie })).json(),
+      ).toEqual({ liked: true, reactions: 1 });
+      expect(
+        (await req('PUT', `/api/posts/${id}/reaction`, { cookie: reader.cookie })).json().reactions,
+      ).toBe(1);
+      expect(
+        (await req('DELETE', `/api/posts/${id}/reaction`, { cookie: reader.cookie })).json()
+          .reactions,
+      ).toBe(0);
+
+      const c = await req('POST', `/api/posts/${id}/comments`, {
+        cookie: reader.cookie,
+        body: { body: 'Первый' },
+      });
+      expect(c.statusCode).toBe(201);
+      const reply = await req('POST', `/api/posts/${id}/comments`, {
+        cookie: author.cookie,
+        body: { body: 'Ответ', parentId: c.json().id },
+      });
+      expect(
+        (
+          await req('POST', `/api/posts/${id}/comments`, {
+            cookie: reader.cookie,
+            body: { body: 'Вложенный', parentId: reply.json().id },
+          })
+        ).statusCode,
+      ).toBe(400);
+      expect(
+        (
+          await req('PATCH', `/api/comments/${c.json().id}`, {
+            cookie: author.cookie,
+            body: { body: 'Чужая правка' },
+          })
+        ).statusCode,
+      ).toBe(404);
+      expect(
+        (
+          await req('POST', `/api/comments/${c.json().id}/remove`, {
+            cookie: author.cookie,
+            body: { note: 'Удалить' },
+          })
+        ).statusCode,
+      ).toBe(404);
+      expect(
+        (
+          await req('POST', `/api/comments/${c.json().id}/remove`, {
+            cookie: mod.cookie,
+            body: { note: 'Оскорбление' },
+          })
+        ).statusCode,
+      ).toBe(200);
+      for (let n = 0; n < 9; n++)
+        await req('POST', `/api/posts/${id}/comments`, {
+          cookie: reader.cookie,
+          body: { body: `Комментарий ${n}` },
+        });
+      expect(
+        (
+          await req('POST', `/api/posts/${id}/comments`, {
+            cookie: reader.cookie,
+            body: { body: 'Лишний' },
+          })
+        ).statusCode,
+      ).toBe(429);
+      const detail = (await req('GET', `/api/posts/${id}`, { cookie: reader.cookie })).json();
+      expect(detail.commentList.some((x: { body: string }) => x.body === 'Первый')).toBe(false);
+      expect(detail.commentList[0]).not.toHaveProperty('authorId');
+
+      expect(
+        (
+          await req('POST', '/api/favorites', {
+            cookie: reader.cookie,
+            body: { entityType: 'post', entityId: id },
+          })
+        ).json().saved,
+      ).toBe(true);
+      expect(
+        (
+          await req('GET', `/api/me/favorites/check?entityType=post&entityId=${id}`, {
+            cookie: author.cookie,
+          })
+        ).json().saved,
+      ).toBe(false);
+      const favs = (await req('GET', '/api/me/favorites', { cookie: reader.cookie })).json();
+      expect(favs[0]).toMatchObject({ entityType: 'post', available: true, href: `/feed/${id}` });
+      expect((await req('DELETE', `/api/posts/${id}`, { cookie: author.cookie })).statusCode).toBe(
+        200,
+      );
+      expect(
+        (await req('GET', '/api/me/favorites', { cookie: reader.cookie })).json()[0].available,
+      ).toBe(false);
     });
   });
 });
