@@ -1,5 +1,8 @@
-import { permanentRedirect } from 'next/navigation';
+import type { Metadata } from 'next';
+import { BusinessDashboard } from './BusinessDashboard';
+
+export const metadata: Metadata = { title: 'Кабинет бизнеса', robots: { index: false } };
 
 export default function BusinessPage() {
-  permanentRedirect('/organizations');
+  return <BusinessDashboard />;
 }

@@ -598,4 +598,304 @@ describe('core content platform against a real PostgreSQL database', () => {
       expect(counters).not.toHaveProperty('draftNews');
     });
   });
+
+  describe('business cabinet and community (PHASE 6)', () => {
+    it('premoderates jobs and lost & found, hides phones in lists and enforces moderation rights', async () => {
+      const author = await user('p6-author');
+      const mod = await user('p6-mod', 'moderator');
+      const job = await req('POST', '/api/jobs', {
+        cookie: author.cookie,
+        body: {
+          title: 'Продавец в магазин',
+          employer: 'Магазин у дома',
+          description: 'Работа в смену, обучение на месте.',
+          contactPhone: '+7 900 000-00-00',
+        },
+      });
+      expect(job.statusCode).toBe(201);
+      expect(job.json().status).toBe('pending');
+      expect((await req('GET', `/api/jobs/${job.json().slug}`)).statusCode).toBe(404);
+      expect((await req('GET', '/api/moderation/jobs', { cookie: author.cookie })).statusCode).toBe(
+        403,
+      );
+      expect(
+        (
+          await req('POST', `/api/moderation/jobs/${job.json().id}/reject`, {
+            cookie: mod.cookie,
+            body: {},
+          })
+        ).statusCode,
+      ).toBe(400);
+      expect(
+        (
+          await req('POST', `/api/moderation/jobs/${job.json().id}/approve`, {
+            cookie: mod.cookie,
+            body: {},
+          })
+        ).statusCode,
+      ).toBe(204);
+      const list = (await req('GET', '/api/jobs')).json();
+      const listed = list.items.find((j: { slug: string }) => j.slug === job.json().slug);
+      expect(listed).toBeDefined();
+      expect(listed).not.toHaveProperty('contactPhone');
+      const detail = (await req('GET', `/api/jobs/${job.json().slug}`)).json();
+      expect(detail.contactPhone).toBe('+7 900 000-00-00');
+      expect(detail).not.toHaveProperty('authorId');
+
+      const lost = await req('POST', '/api/lost-found', {
+        cookie: author.cookie,
+        body: {
+          kind: 'lost',
+          subject: 'animal',
+          title: 'Пропал рыжий кот',
+          description: 'Ушёл вечером, откликается на Барсик.',
+        },
+      });
+      expect(lost.statusCode).toBe(201);
+      const other = await user('p6-other');
+      expect(
+        (await req('POST', `/api/lost-found/${lost.json().id}/close`, { cookie: other.cookie }))
+          .statusCode,
+      ).toBe(404);
+      await req('POST', `/api/moderation/lost-found/${lost.json().id}/approve`, {
+        cookie: mod.cookie,
+        body: {},
+      });
+      expect(
+        (await req('POST', `/api/lost-found/${lost.json().id}/resolve`, { cookie: author.cookie }))
+          .statusCode,
+      ).toBe(204);
+      expect((await req('GET', `/api/lost-found/${lost.json().slug}`)).statusCode).toBe(404);
+    });
+
+    it('keeps issues private by default and limits public answers to issues.respond', async () => {
+      const resident = await user('p6-resident');
+      const support = await user('p6-support', 'support');
+      const admin = await user('p6-admin', 'admin');
+      const priv = await req('POST', '/api/issues', {
+        cookie: resident.cookie,
+        body: {
+          category: 'lighting',
+          title: 'Не горит фонарь',
+          description: 'Фонарь у остановки не горит неделю.',
+          contact: 'tg @resident',
+        },
+      });
+      expect(priv.statusCode).toBe(201);
+      expect((await req('GET', `/api/issues/${priv.json().number}`)).statusCode).toBe(404);
+      const pub = await req('POST', '/api/issues', {
+        cookie: resident.cookie,
+        body: {
+          category: 'roads',
+          title: 'Яма на дороге',
+          description: 'Глубокая яма на въезде в посёлок.',
+          isPublic: true,
+          contact: 'secret',
+        },
+      });
+      const shown = (await req('GET', `/api/issues/${pub.json().number}`)).json();
+      expect(shown).not.toHaveProperty('contact');
+      expect(shown).not.toHaveProperty('reporterId');
+      expect((await req('GET', '/api/admin/issues', { cookie: resident.cookie })).statusCode).toBe(
+        403,
+      );
+      const id = pub.json().id;
+      expect(
+        (
+          await req('PATCH', `/api/admin/issues/${id}`, {
+            cookie: support.cookie,
+            body: { status: 'rejected' },
+          })
+        ).statusCode,
+      ).toBe(400);
+      expect(
+        (
+          await req('PATCH', `/api/admin/issues/${id}`, {
+            cookie: support.cookie,
+            body: { status: 'in_progress', note: 'Передано мастеру' },
+          })
+        ).statusCode,
+      ).toBe(200);
+      expect(
+        (
+          await req('POST', `/api/admin/issues/${id}/comments`, {
+            cookie: support.cookie,
+            body: { body: 'Внутренняя заметка' },
+          })
+        ).statusCode,
+      ).toBe(201);
+      expect(
+        (
+          await req('POST', `/api/admin/issues/${id}/comments`, {
+            cookie: support.cookie,
+            body: { body: 'Публичный ответ', public: true },
+          })
+        ).statusCode,
+      ).toBe(403);
+      expect(
+        (
+          await req('POST', `/api/admin/issues/${id}/comments`, {
+            cookie: admin.cookie,
+            body: { body: 'Ответ платформы', public: true },
+          })
+        ).statusCode,
+      ).toBe(201);
+      const mine = (await req('GET', `/api/me/issues/${id}`, { cookie: resident.cookie })).json();
+      expect(mine.status).toBe('in_progress');
+      expect(mine.updates.map((u: { kind: string }) => u.kind)).toEqual([
+        'created',
+        'status',
+        'official',
+      ]);
+      expect(
+        (await req('GET', `/api/me/issues/${id}`, { cookie: support.cookie })).statusCode,
+      ).toBe(404);
+    });
+
+    it('allows one vote per account, hides results until close and voters in anonymous mode', async () => {
+      const editor = await user('p6-editor', 'editor');
+      const voter = await user('p6-voter');
+      const now = Date.now();
+      expect(
+        (await req('POST', '/api/staff/polls', { cookie: voter.cookie, body: {} })).statusCode,
+      ).toBe(403);
+      const poll = await req('POST', '/api/staff/polls', {
+        cookie: editor.cookie,
+        body: {
+          title: 'Где поставить лавочки?',
+          opensAt: new Date(now - 60_000).toISOString(),
+          closesAt: new Date(now + 86_400_000).toISOString(),
+          status: 'published',
+          options: ['У школы', 'У пруда'],
+        },
+      });
+      expect(poll.statusCode).toBe(201);
+      const { slug, id, options } = poll.json();
+      expect((await req('GET', `/api/polls/${slug}`)).json().results).toBeNull();
+      expect(
+        (await req('POST', `/api/polls/${slug}/vote`, { body: { optionId: options[0].id } }))
+          .statusCode,
+      ).toBe(401);
+      const first = await req('POST', `/api/polls/${slug}/vote`, {
+        cookie: voter.cookie,
+        body: { optionId: options[0].id },
+      });
+      expect(first.statusCode).toBe(200);
+      expect(first.json().results.total).toBe(1);
+      expect(
+        (
+          await req('POST', `/api/polls/${slug}/vote`, {
+            cookie: voter.cookie,
+            body: { optionId: options[1].id },
+          })
+        ).statusCode,
+      ).toBe(409);
+      expect(
+        (
+          await req('PATCH', `/api/staff/polls/${id}`, {
+            cookie: editor.cookie,
+            body: { options: ['А', 'Б'] },
+          })
+        ).statusCode,
+      ).toBe(409);
+      expect(
+        (await req('GET', `/api/staff/polls/${id}/results`, { cookie: editor.cookie })).json()
+          .voters,
+      ).toBeNull();
+    });
+
+    it('publishes business cards and owner changes only after review', async () => {
+      const owner = await user('p6-owner');
+      const resident = await user('p6-client');
+      const admin = await user('p6-reviewer', 'admin');
+      const app = await req('POST', '/api/business/organizations', {
+        cookie: owner.cookie,
+        body: {
+          kind: 'service',
+          name: 'Ремонт обуви',
+          description: 'Ремонт и чистка обуви, замена набоек и молний.',
+          phone: '+7 900 111-22-33',
+        },
+      });
+      expect(app.statusCode).toBe(201);
+      const { id, slug } = app.json();
+      expect((await req('GET', `/api/organizations/${slug}`)).statusCode).toBe(404);
+      expect(
+        (await req('GET', `/api/business/organizations/${id}`, { cookie: resident.cookie }))
+          .statusCode,
+      ).toBe(404);
+      expect(
+        (await req('GET', '/api/admin/business/applications', { cookie: owner.cookie })).statusCode,
+      ).toBe(403);
+      expect(
+        (
+          await req('POST', `/api/admin/business/applications/${id}/reject`, {
+            cookie: admin.cookie,
+            body: {},
+          })
+        ).statusCode,
+      ).toBe(400);
+      expect(
+        (
+          await req('POST', `/api/admin/business/applications/${id}/approve`, {
+            cookie: admin.cookie,
+            body: {},
+          })
+        ).statusCode,
+      ).toBe(200);
+      const card = (await req('GET', `/api/organizations/${slug}`)).json();
+      expect(card.acceptsInquiries).toBe(true);
+      expect(card).not.toHaveProperty('ownerId');
+
+      const edit = await req('PATCH', `/api/business/organizations/${id}`, {
+        cookie: owner.cookie,
+        body: {
+          kind: 'service',
+          name: 'Ремонт обуви и сумок',
+          description: 'Ремонт и чистка обуви, замена набоек и молний.',
+        },
+      });
+      expect(edit.json().pendingChanges).toBe(true);
+      expect((await req('GET', `/api/organizations/${slug}`)).json().name).toBe('Ремонт обуви');
+      await req('POST', `/api/admin/business/applications/${id}/approve`, {
+        cookie: admin.cookie,
+        body: {},
+      });
+      expect((await req('GET', `/api/organizations/${slug}`)).json().name).toBe(
+        'Ремонт обуви и сумок',
+      );
+
+      const inq = await req('POST', `/api/organizations/${id}/inquiries`, {
+        cookie: resident.cookie,
+        body: { message: 'Можно ли заменить молнию на куртке?' },
+      });
+      expect(inq.statusCode).toBe(201);
+      expect(
+        (
+          await req('POST', `/api/organizations/${id}/inquiries`, {
+            cookie: owner.cookie,
+            body: { message: 'Сам себе пишу заявку' },
+          })
+        ).statusCode,
+      ).toBe(403);
+      expect(
+        (
+          await req('POST', `/api/business/inquiries/${inq.json().id}/reply`, {
+            cookie: resident.cookie,
+            body: { reply: 'Ответ' },
+          })
+        ).statusCode,
+      ).toBe(404);
+      expect(
+        (
+          await req('POST', `/api/business/inquiries/${inq.json().id}/reply`, {
+            cookie: owner.cookie,
+            body: { reply: 'Да, приходите.' },
+          })
+        ).statusCode,
+      ).toBe(200);
+      const sent = (await req('GET', '/api/me/inquiries', { cookie: resident.cookie })).json();
+      expect(sent[0].reply).toBe('Да, приходите.');
+    });
+  });
 });

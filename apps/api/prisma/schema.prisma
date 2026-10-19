@@ -288,13 +288,19 @@ model Organization {
   status         String    @default("draft")
   isDemo         Boolean   @default(false) @map("is_demo")
   ownerId        String?   @map("owner_id") @db.Uuid
+  /// Owner-submitted edits of a published card, applied only after staff review.
+  pendingChanges Json?     @map("pending_changes")
+  reviewNote     String?   @map("review_note")
+  submittedAt    DateTime? @map("submitted_at") @db.Timestamptz(6)
   createdById    String?   @map("created_by_id") @db.Uuid
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  category Category? @relation(fields: [categoryId], references: [id])
+  category  Category?         @relation(fields: [categoryId], references: [id])
+  inquiries BusinessInquiry[]
 
   @@index([status, kind])
+  @@index([ownerId])
   @@map("organizations")
 }
 
@@ -378,4 +384,166 @@ model Complaint {
   @@index([entityType, entityId])
   @@index([reporterId])
   @@map("complaints")
+}
+
+/// Resident request to a business that has an owner account; visible to the sender and the owner only.
+model BusinessInquiry {
+  id             String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  senderId       String    @map("sender_id") @db.Uuid
+  message        String
+  contact        String?
+  status         String    @default("new")
+  reply          String?
+  repliedAt      DateTime? @map("replied_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([senderId])
+  @@map("business_inquiries")
+}
+
+model Job {
+  id             String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  slug           String    @unique
+  title          String
+  employer       String
+  description    String
+  conditions     String    @default("")
+  requirements   String    @default("")
+  salary         String?
+  schedule       String?
+  area           String?
+  contactPhone   String?   @map("contact_phone")
+  contactNote    String?   @map("contact_note")
+  status         String    @default("pending")
+  moderationNote String?   @map("moderation_note")
+  authorId       String    @map("author_id") @db.Uuid
+  publishedAt    DateTime? @map("published_at") @db.Timestamptz(6)
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([status, publishedAt])
+  @@index([authorId])
+  @@map("jobs")
+}
+
+model LostFoundItem {
+  id             String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  slug           String    @unique
+  kind           String
+  subject        String
+  title          String
+  description    String
+  area           String?
+  happenedOn     DateTime? @map("happened_on") @db.Date
+  imageIds       String[]  @default([]) @map("image_ids") @db.Uuid
+  contactPhone   String?   @map("contact_phone")
+  status         String    @default("pending")
+  moderationNote String?   @map("moderation_note")
+  authorId       String    @map("author_id") @db.Uuid
+  publishedAt    DateTime? @map("published_at") @db.Timestamptz(6)
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([status, publishedAt])
+  @@index([authorId])
+  @@map("lost_found")
+}
+
+/// Resident report about a problem in the territory. Handled by platform staff; no automatic hand-off to authorities.
+model Issue {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  number      Int      @unique @default(autoincrement())
+  reporterId  String   @map("reporter_id") @db.Uuid
+  category    String
+  title       String
+  description String
+  address     String?
+  imageIds    String[] @default([]) @map("image_ids") @db.Uuid
+  isPublic    Boolean  @default(false) @map("is_public")
+  contact     String?
+  status      String   @default("received")
+  priority    String   @default("normal")
+  assigneeId  String?  @map("assignee_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  updates IssueUpdate[]
+
+  @@index([status, createdAt])
+  @@index([reporterId])
+  @@map("issues")
+}
+
+model IssueUpdate {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  issueId    String   @map("issue_id") @db.Uuid
+  authorId   String?  @map("author_id") @db.Uuid
+  kind       String
+  fromStatus String?  @map("from_status")
+  toStatus   String?  @map("to_status")
+  body       String   @default("")
+  internal   Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@index([issueId, createdAt])
+  @@map("issue_updates")
+}
+
+/// Community poll. Not an official vote; one ballot per account is enforced by a unique index.
+model Poll {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  slug        String   @unique
+  title       String
+  description String   @default("")
+  mode        String   @default("anonymous")
+  allowRevote Boolean  @default(false) @map("allow_revote")
+  opensAt     DateTime @map("opens_at") @db.Timestamptz(6)
+  closesAt    DateTime @map("closes_at") @db.Timestamptz(6)
+  status      String   @default("draft")
+  createdById String?  @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  options PollOption[]
+  votes   PollVote[]
+
+  @@index([status, opensAt])
+  @@map("polls")
+}
+
+model PollOption {
+  id       String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  pollId   String @map("poll_id") @db.Uuid
+  label    String
+  position Int    @default(0)
+
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes PollVote[]
+
+  @@index([pollId])
+  @@map("poll_options")
+}
+
+model PollVote {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  pollId    String   @map("poll_id") @db.Uuid
+  optionId  String   @map("option_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId])
+  @@index([optionId])
+  @@map("poll_votes")
 }

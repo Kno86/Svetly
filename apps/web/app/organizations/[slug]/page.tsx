@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ReportButton } from '../../../components/content/ReportButton';
+import { InquiryButton } from '../../../components/content/InquiryButton';
 import { notFound } from 'next/navigation';
 import { Badge } from '../../../components/ui/Feedback';
 import { LoadError, PageHead, styles } from '../../../components/content/Blocks';
@@ -26,6 +27,7 @@ interface Org {
   checkedAt: string | null;
   updatedAt: string;
   isDemo: boolean;
+  acceptsInquiries?: boolean;
   category: CategoryRef | null;
 }
 type Props = { params: Promise<{ slug: string }> };
@@ -132,6 +134,7 @@ export default async function OrganizationPage({ params }: Props) {
           <dt>Проверено</dt>
           <dd>{o.checkedAt ? formatDate(o.checkedAt) : 'нет данных'}</dd>
         </dl>
+        {o.acceptsInquiries && <InquiryButton organizationId={o.id} />}
         <ReportButton entityType="organization" entityId={o.id} />
       </article>
     </main>

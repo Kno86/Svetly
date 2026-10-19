@@ -14,7 +14,7 @@ export function ReportButton({
   entityType,
   entityId,
 }: {
-  entityType: 'announcement' | 'news' | 'event' | 'organization';
+  entityType: 'announcement' | 'news' | 'event' | 'organization' | 'job' | 'lost_found';
   entityId: string;
 }) {
   const [open, setOpen] = useState(false);

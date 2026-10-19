@@ -11,6 +11,10 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin', label: 'Обзор', permission: null },
   { href: '/admin/moderation', label: 'Модерация', permission: 'moderation.announcements' },
   { href: '/admin/complaints', label: 'Жалобы', permission: 'complaints.manage' },
+  { href: '/admin/community', label: 'Вакансии и находки', permission: 'moderation.community' },
+  { href: '/admin/issues', label: 'Обращения', permission: 'issues.manage' },
+  { href: '/admin/business', label: 'Заявки бизнеса', permission: 'business.review' },
+  { href: '/admin/polls', label: 'Опросы', permission: 'polls.manage' },
   { href: '/admin/content/news', label: 'Новости', permission: 'content.news.manage' },
   { href: '/admin/content/events', label: 'События', permission: 'content.events.manage' },
   {

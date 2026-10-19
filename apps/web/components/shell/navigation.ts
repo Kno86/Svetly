@@ -12,4 +12,8 @@ export const primaryNav: NavItem[] = [
   { label: 'Организации', href: '/organizations', available: true },
   { label: 'События', href: '/events', available: true },
   { label: 'Справочник', href: '/directory', available: true },
+  { label: 'Вакансии', href: '/jobs', available: true },
+  { label: 'Находки', href: '/lost-found', available: true },
+  { label: 'Обращения', href: '/issues', available: true },
+  { label: 'Опросы', href: '/polls', available: true },
 ];

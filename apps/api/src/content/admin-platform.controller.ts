@@ -14,6 +14,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { z } from 'zod';
+import { Prisma } from '../generated/prisma/client.js';
 import { AuditService } from '../audit/audit.service.js';
 import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guards.js';
 import type { Principal } from '../auth/principal.js';
@@ -21,7 +22,14 @@ import { parse } from '../common/validation.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { trustedThreshold } from './announcements.controller.js';
 
-const ENTITY_TYPES = ['announcement', 'organization', 'news', 'event'] as const;
+const ENTITY_TYPES = [
+  'announcement',
+  'organization',
+  'news',
+  'event',
+  'job',
+  'lost_found',
+] as const;
 type EntityType = (typeof ENTITY_TYPES)[number];
 const MODULES = [
   'news',
@@ -298,6 +306,31 @@ export class AdminPlatformController {
         }),
       );
     if (can('users.read')) add('users', this.prisma.user.count());
+    if (can('moderation.community'))
+      add(
+        'pendingCommunity',
+        Promise.all([
+          this.prisma.job.count({ where: { status: 'pending' } }),
+          this.prisma.lostFoundItem.count({ where: { status: 'pending' } }),
+        ]).then(([a, b]) => a + b),
+      );
+    if (can('issues.manage'))
+      add(
+        'openIssues',
+        this.prisma.issue.count({
+          where: { status: { notIn: ['resolved', 'closed', 'rejected'] } },
+        }),
+      );
+    if (can('business.review'))
+      add(
+        'businessApplications',
+        this.prisma.organization.count({
+          where: {
+            ownerId: { not: null },
+            OR: [{ status: 'pending' }, { pendingChanges: { not: Prisma.AnyNull } }],
+          },
+        }),
+      );
     await Promise.all(jobs);
     return { counters: out, permissions: [...p.permissions].sort() };
   }
@@ -327,6 +360,16 @@ export class AdminPlatformController {
         return (await this.prisma.newsArticle.count({ where })) > 0;
       case 'event':
         return (await this.prisma.event.count({ where })) > 0;
+      case 'job':
+        return (
+          (await this.prisma.job.count({ where: { ...where, expiresAt: { gt: new Date() } } })) > 0
+        );
+      case 'lost_found':
+        return (
+          (await this.prisma.lostFoundItem.count({
+            where: { ...where, expiresAt: { gt: new Date() } },
+          })) > 0
+        );
     }
   }
 
@@ -359,6 +402,20 @@ export class AdminPlatformController {
       'event',
       await this.prisma.event.findMany({
         where: { id: { in: ids('event') } },
+        select: { ...sel, title: true },
+      }),
+    );
+    put(
+      'job',
+      await this.prisma.job.findMany({
+        where: { id: { in: ids('job') } },
+        select: { ...sel, title: true },
+      }),
+    );
+    put(
+      'lost_found',
+      await this.prisma.lostFoundItem.findMany({
+        where: { id: { in: ids('lost_found') } },
         select: { ...sel, title: true },
       }),
     );
