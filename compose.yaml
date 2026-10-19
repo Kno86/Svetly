@@ -60,6 +60,7 @@ services:
       MAIL_FROM: ${MAIL_FROM:-SVETLY <no-reply@svetly.local>}
     volumes:
       - api-secrets:/var/lib/svetly
+      - media:/var/lib/svetly/media
     networks: [backend]
     depends_on:
       db:
@@ -98,3 +99,4 @@ networks:
 volumes:
   pgdata:
   api-secrets:
+  media:

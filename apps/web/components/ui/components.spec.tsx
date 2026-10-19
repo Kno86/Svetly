@@ -85,13 +85,13 @@ describe('Logo', () => {
 });
 
 describe('SiteHeader', () => {
-  it('toggles the mobile menu and marks unreleased sections as disabled', () => {
+  it('toggles the mobile menu and links released sections', () => {
     render(<SiteHeader />);
     const toggle = screen.getByRole('button', { name: 'Открыть меню' });
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(toggle);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(document.getElementById('mobile-nav')?.hidden).toBe(false);
-    expect(screen.queryAllByRole('link', { name: 'Новости' })).toHaveLength(0);
+    expect(screen.getAllByRole('link', { name: 'Новости' })[0]?.getAttribute('href')).toBe('/news');
   });
 });

@@ -84,9 +84,11 @@ apps/api/src
 ├─ audit/     AuditService (журнал только на добавление)
 ├─ auth/      Better Auth (мост Fastify → Fetch), почта, SessionGuard/PermissionGuard, /api/me, /api/admin
 ├─ rbac/      роли и права (единственный источник истины, засевается миграцией)
+├─ common/    валидация входных данных (zod → 400 VALIDATION_FAILED)
+├─ content/   публичный контент, объявления и модерация, staff CRUD, события, медиа, поиск
 └─ cli.ts     node dist/cli.js admin:create
 ```
 
 Зависимости авторизации (зафиксированы): `better-auth` 1.7.10, `@node-rs/argon2` 2.2.2, `nodemailer` 10.0.16, `zod` 4.6.7; Mailpit `axllent/mailpit:v1.29.6`.
 
-Контентные модули, модерация и админ-платформа появятся в утверждённых фазах. Модель данных описана в отчёте PHASE 0.
+С PHASE 4 добавлены контентные модули — см. `docs/CONTENT.md`. Админ-платформа (UI модерации и CMS) — PHASE 5.

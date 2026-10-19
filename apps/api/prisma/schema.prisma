@@ -178,3 +178,184 @@ model AuditLog {
   @@index([action, occurredAt])
   @@map("audit_log")
 }
+
+// ---------- PHASE 4: core content ----------
+// Statuses are plain strings guarded by CHECK constraints in the migration:
+//   content status: draft | pending | published | rejected | archived
+
+model Category {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  module    String
+  slug      String
+  name      String
+  position  Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  news          NewsArticle[]
+  announcements Announcement[]
+  organizations Organization[]
+  events        Event[]
+  directory     DirectoryEntry[]
+
+  @@unique([module, slug])
+  @@map("categories")
+}
+
+model MediaAsset {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  ownerId    String?  @map("owner_id") @db.Uuid
+  storageKey String   @unique @map("storage_key")
+  mime       String
+  size       Int
+  alt        String   @default("")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([ownerId])
+  @@map("media_assets")
+}
+
+model NewsArticle {
+  id          String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  slug        String    @unique
+  title       String
+  excerpt     String    @default("")
+  body        String
+  coverId     String?   @map("cover_id") @db.Uuid
+  categoryId  String?   @map("category_id") @db.Uuid
+  status      String    @default("draft")
+  pinned      Boolean   @default(false)
+  sourceName  String?   @map("source_name")
+  sourceUrl   String?   @map("source_url")
+  isDemo      Boolean   @default(false) @map("is_demo")
+  authorId    String?   @map("author_id") @db.Uuid
+  updatedById String?   @map("updated_by_id") @db.Uuid
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  category Category? @relation(fields: [categoryId], references: [id])
+
+  @@index([status, publishedAt])
+  @@map("news_articles")
+}
+
+model Announcement {
+  id             String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  slug           String    @unique
+  title          String
+  description    String
+  categoryId     String    @map("category_id") @db.Uuid
+  price          Int?
+  condition      String?
+  area           String?
+  contactPhone   String?   @map("contact_phone")
+  imageIds       String[]  @default([]) @map("image_ids") @db.Uuid
+  status         String    @default("pending")
+  moderationNote String?   @map("moderation_note")
+  isDemo         Boolean   @default(false) @map("is_demo")
+  authorId       String    @map("author_id") @db.Uuid
+  publishedAt    DateTime? @map("published_at") @db.Timestamptz(6)
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@index([status, publishedAt])
+  @@index([authorId])
+  @@map("announcements")
+}
+
+model Organization {
+  id             String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  slug           String    @unique
+  kind           String    @default("organization")
+  name           String
+  description    String
+  services       String    @default("")
+  categoryId     String?   @map("category_id") @db.Uuid
+  phone          String?
+  website        String?
+  address        String?
+  serviceArea    String?   @map("service_area")
+  hours          String?
+  hoursCheckedAt DateTime? @map("hours_checked_at") @db.Timestamptz(6)
+  verification   String    @default("unverified")
+  sourceName     String?   @map("source_name")
+  sourceUrl      String?   @map("source_url")
+  checkedAt      DateTime? @map("checked_at") @db.Timestamptz(6)
+  status         String    @default("draft")
+  isDemo         Boolean   @default(false) @map("is_demo")
+  ownerId        String?   @map("owner_id") @db.Uuid
+  createdById    String?   @map("created_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  category Category? @relation(fields: [categoryId], references: [id])
+
+  @@index([status, kind])
+  @@map("organizations")
+}
+
+model Event {
+  id              String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  slug            String    @unique
+  title           String
+  description     String
+  organizer       String
+  location        String
+  startsAt        DateTime  @map("starts_at") @db.Timestamptz(6)
+  endsAt          DateTime? @map("ends_at") @db.Timestamptz(6)
+  timezone        String    @default("Asia/Novosibirsk")
+  registrationUrl String?   @map("registration_url")
+  capacity        Int?
+  categoryId      String?   @map("category_id") @db.Uuid
+  status          String    @default("draft")
+  isDemo          Boolean   @default(false) @map("is_demo")
+  createdById     String?   @map("created_by_id") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  category      Category?           @relation(fields: [categoryId], references: [id])
+  registrations EventRegistration[]
+
+  @@index([status, startsAt])
+  @@map("events")
+}
+
+model EventRegistration {
+  eventId   String   @map("event_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, userId])
+  @@index([userId])
+  @@map("event_registrations")
+}
+
+model DirectoryEntry {
+  id         String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  slug       String    @unique
+  title      String
+  kind       String    @default("contact")
+  body       String    @default("")
+  phone      String?
+  url        String?
+  categoryId String?   @map("category_id") @db.Uuid
+  sourceName String?   @map("source_name")
+  sourceUrl  String?   @map("source_url")
+  checkedAt  DateTime? @map("checked_at") @db.Timestamptz(6)
+  status     String    @default("draft")
+  position   Int       @default(0)
+  isDemo     Boolean   @default(false) @map("is_demo")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  category Category? @relation(fields: [categoryId], references: [id])
+
+  @@index([status, position])
+  @@map("directory_entries")
+}

@@ -26,6 +26,14 @@ export async function createApp(logLevel = 'info'): Promise<NestFastifyApplicati
   app.setGlobalPrefix('api');
   const { auth, config } = app.get(AuthService);
   registerAuthRoutes(app.getHttpAdapter().getInstance(), auth, config.publicUrl);
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .addContentTypeParser(
+      ['image/jpeg', 'image/png', 'image/webp'],
+      { parseAs: 'buffer', bodyLimit: 5 * 1024 * 1024 },
+      (_req, body, done) => done(null, body),
+    );
   app.enableShutdownHooks();
   return app;
 }

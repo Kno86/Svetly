@@ -12,7 +12,10 @@ describe('RBAC policy', () => {
   });
 
   it('merges permissions of several roles', () => {
-    expect([...permissionsForRoles(['support', 'editor'])]).toEqual(['users.read']);
+    expect([...permissionsForRoles(['support', 'moderator'])]).toEqual([
+      'users.read',
+      'moderation.announcements',
+    ]);
   });
 
   it('nobody can grant super_admin through the API', () => {

@@ -35,7 +35,7 @@ ENV NODE_ENV=production \
 WORKDIR /app
 COPY --from=deploy --chown=node:node /out ./
 # Locally generated auth secret lives here (named volume); production passes BETTER_AUTH_SECRET instead.
-RUN mkdir -p /var/lib/svetly && chown node:node /var/lib/svetly && chmod 700 /var/lib/svetly
+RUN mkdir -p /var/lib/svetly/media && chown -R node:node /var/lib/svetly && chmod 700 /var/lib/svetly
 USER node
 EXPOSE 4000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=5 \
