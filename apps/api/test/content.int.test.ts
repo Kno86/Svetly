@@ -1706,4 +1706,26 @@ describe('core content platform against a real PostgreSQL database', () => {
       expect((await req('GET', '/api/groups')).statusCode).toBe(200);
     });
   });
+
+  describe('PHASE 12: territories', () => {
+    it('exposes only the active default locality publicly and the full tree to admins', async () => {
+      const pub = (await req('GET', '/api/territories')).json();
+      expect(pub.current.slug).toBe('oktyabrsky-svetly');
+      expect(pub.current.path.map((p: { slug: string }) => p.slug)).toEqual([
+        'novosibirsk-oblast',
+        'moshkovsky-rayon',
+      ]);
+      expect(pub.available).toHaveLength(1);
+      const resident = await user('p12-resident');
+      expect(
+        (await req('GET', '/api/admin/territories', { cookie: resident.cookie })).statusCode,
+      ).toBe(403);
+      const admin = await user('p12-admin', 'admin');
+      const all = (await req('GET', '/api/admin/territories', { cookie: admin.cookie })).json();
+      expect(all.items).toHaveLength(3);
+      await expect(
+        prisma.territory.update({ where: { slug: 'moshkovsky-rayon' }, data: { isDefault: true } }),
+      ).rejects.toThrow();
+    });
+  });
 });
