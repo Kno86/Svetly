@@ -28,7 +28,13 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const res = await apiGet<EventDetail>(`/api/events/${encodeURIComponent((await params).slug)}`);
-  return { title: res.ok ? res.data.title : 'Событие' };
+  if (!res.ok) return { title: 'Событие' };
+  const description = res.data.description.slice(0, 160);
+  return {
+    title: res.data.title,
+    description,
+    openGraph: { title: res.data.title, description, type: 'article' },
+  };
 }
 
 export default async function EventPage({ params }: Props) {

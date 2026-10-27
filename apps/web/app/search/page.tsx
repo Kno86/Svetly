@@ -1,28 +1,16 @@
 import type { Metadata } from 'next';
 import { Badge, EmptyState } from '../../components/ui/Feedback';
-import { Select, TextField } from '../../components/ui/Field';
+import { Select } from '../../components/ui/Field';
+import { SearchField } from '../../components/search/SearchField';
 import { Button } from '../../components/ui/Button';
-import { ItemCard, LoadError, PageHead, styles } from '../../components/content/Blocks';
+import { ItemCard, LoadError, PageHead, Pager, styles } from '../../components/content/Blocks';
 import { apiGet, formatDate, param, query } from '../../lib/content';
+import { isSearchType, SEARCH_SORT, SEARCH_TYPES, type SearchHit } from '../../lib/search';
+
+const LIMIT = 20;
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Поиск', robots: { index: false } };
-
-interface Hit {
-  type: 'news' | 'announcements' | 'organizations' | 'events' | 'directory';
-  slug: string;
-  title: string;
-  snippet: string;
-  date: string | null;
-}
-
-export const TYPES: Record<Hit['type'], { label: string; href: (slug: string) => string }> = {
-  news: { label: 'Новость', href: (s) => `/news/${s}` },
-  announcements: { label: 'Объявление', href: (s) => `/announcements/${s}` },
-  organizations: { label: 'Организация', href: (s) => `/organizations/${s}` },
-  events: { label: 'Событие', href: (s) => `/events/${s}` },
-  directory: { label: 'Справочник', href: (s) => `/directory#${s}` },
-};
 
 export default async function SearchPage({
   searchParams,
@@ -32,32 +20,36 @@ export default async function SearchPage({
   const sp = await searchParams;
   const q = param(sp, 'q') ?? '';
   const rawType = param(sp, 'type');
-  const type = rawType && rawType in TYPES ? rawType : undefined;
+  const type = isSearchType(rawType) ? rawType : undefined;
+  const sort = param(sp, 'sort') === 'date' ? 'date' : undefined;
+  const page = Math.min(50, Math.max(1, Number(param(sp, 'page')) || 1));
   const res =
     q.length >= 2
-      ? await apiGet<{ items: Hit[] }>(`/api/search${query({ q, type, limit: 50 })}`)
+      ? await apiGet<{ items: SearchHit[]; total: number }>(
+          `/api/search${query({ q, type, sort, page: page > 1 ? page : undefined, limit: LIMIT })}`,
+        )
       : null;
   return (
     <main id="main" className={`container ${styles.page}`}>
       <PageHead
         title="Поиск"
-        description="По новостям, объявлениям, организациям, событиям и справочнику."
+        description="По новостям, объявлениям, организациям и услугам, событиям, справочнику, вакансиям, находкам, группам и постам. Ищем только опубликованное и доступное всем."
         crumbs={[{ label: 'Поиск' }]}
       />
       <form method="get" action="/search" className={styles.filters} role="search">
-        <TextField
-          label="Что ищем"
-          name="q"
-          type="search"
-          defaultValue={q}
-          minLength={2}
-          required
-        />
+        <SearchField defaultValue={q} />
         <Select label="Раздел" name="type" defaultValue={type ?? ''}>
           <option value="">Все разделы</option>
-          {Object.entries(TYPES).map(([k, v]) => (
+          {Object.entries(SEARCH_TYPES).map(([k, v]) => (
             <option key={k} value={k}>
               {v.label}
+            </option>
+          ))}
+        </Select>
+        <Select label="Порядок" name="sort" defaultValue={sort ?? 'relevance'}>
+          {Object.entries(SEARCH_SORT).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v}
             </option>
           ))}
         </Select>
@@ -77,20 +69,27 @@ export default async function SearchPage({
         />
       ) : (
         <>
-          <p aria-live="polite">Найдено: {res.data.items.length}</p>
+          <p aria-live="polite">Найдено: {res.data.total}</p>
           <div className={styles.list}>
             {res.data.items.map((h) => (
               <ItemCard
                 key={`${h.type}-${h.slug}`}
-                href={TYPES[h.type].href(h.slug)}
+                href={SEARCH_TYPES[h.type].href(h.slug)}
                 title={h.title}
-                badges={<Badge>{TYPES[h.type].label}</Badge>}
+                badges={<Badge>{SEARCH_TYPES[h.type].label}</Badge>}
                 meta={h.date && <time dateTime={h.date}>{formatDate(h.date)}</time>}
               >
                 {h.snippet && <p className={styles.excerpt}>{h.snippet}</p>}
               </ItemCard>
             ))}
           </div>
+          <Pager
+            path="/search"
+            page={page}
+            total={res.data.total}
+            limit={LIMIT}
+            params={{ q, type, sort }}
+          />
         </>
       )}
     </main>

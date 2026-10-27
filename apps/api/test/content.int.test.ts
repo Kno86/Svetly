@@ -1377,4 +1377,93 @@ describe('core content platform against a real PostgreSQL database', () => {
       expect(page.nextBefore).toBeNull();
     });
   });
+  describe('global search and sitemap (PHASE 8a)', () => {
+    it('searches only public content across modules, with paging, sort and suggestions', async () => {
+      const owner = await user('p8-owner');
+      const tag = `кварц${Date.now().toString(36)}`;
+      const future = new Date(Date.now() + 7 * 86_400_000);
+      const job = (slug: string, status: string, expiresAt = future) =>
+        prisma.job.create({
+          data: {
+            slug,
+            title: `Вакансия ${tag} ${slug}`,
+            employer: 'Работодатель',
+            description: 'Описание',
+            status,
+            authorId: owner.id,
+            publishedAt: new Date(),
+            expiresAt,
+          },
+        });
+      await job(`${tag}-pub`, 'published');
+      await job(`${tag}-pending`, 'pending');
+      await job(`${tag}-old`, 'published', new Date(Date.now() - 86_400_000));
+      const group = (slug: string, visibility: string) =>
+        prisma.group.create({
+          data: {
+            slug,
+            name: `Группа ${tag} ${slug}`,
+            topic: 'other',
+            visibility,
+            status: 'active',
+            createdById: owner.id,
+          },
+        });
+      const open = await group(`${tag}-open`, 'open');
+      const closed = await group(`${tag}-closed`, 'closed');
+      for (const g of [open, closed, null])
+        await prisma.post.create({
+          data: {
+            body: `Пост про ${tag} в ${g?.visibility ?? 'ленте'}`,
+            authorId: owner.id,
+            groupId: g?.id ?? null,
+            status: 'published',
+            publishedAt: new Date(),
+          },
+        });
+      await prisma.post.create({
+        data: { body: `Черновик ${tag}`, authorId: owner.id, status: 'pending' },
+      });
+
+      const all = (await req('GET', `/api/search?q=${encodeURIComponent(tag)}`)).json();
+      const kinds = all.items.map((i: { type: string; title: string }) => `${i.type}:${i.title}`);
+      expect(all.total).toBe(5);
+      expect(kinds.filter((k: string) => k.startsWith('jobs:'))).toEqual([
+        `jobs:Вакансия ${tag} ${tag}-pub`,
+      ]);
+      expect(kinds.filter((k: string) => k.startsWith('groups:'))).toHaveLength(2);
+      const posts = all.items.filter((i: { type: string }) => i.type === 'posts');
+      expect(posts.map((p: { snippet: string }) => p.snippet).sort()).toEqual(
+        [`Пост про ${tag} в open`, `Пост про ${tag} в ленте`].sort(),
+      );
+      expect(JSON.stringify(all)).not.toContain('Черновик');
+
+      const page2 = (
+        await req('GET', `/api/search?q=${encodeURIComponent(tag)}&limit=4&page=2&sort=date`)
+      ).json();
+      expect(page2).toMatchObject({ total: 5, page: 2, limit: 4 });
+      expect(page2.items).toHaveLength(1);
+      expect(
+        (await req('GET', `/api/search?q=${encodeURIComponent(tag)}&type=groups&category=x`)).json()
+          .total,
+      ).toBe(0);
+      expect(
+        (await req('GET', `/api/search?q=${encodeURIComponent(tag)}&type=secret`)).statusCode,
+      ).toBe(400);
+
+      const suggest = (await req('GET', `/api/search/suggest?q=${encodeURIComponent(tag)}`)).json()
+        .items;
+      expect(suggest.length).toBe(3);
+      expect(suggest.every((s: { type: string }) => s.type !== 'posts')).toBe(true);
+
+      const map = (await req('GET', '/api/sitemap')).json();
+      const jobSlugs = map.jobs.map((j: { slug: string }) => j.slug);
+      expect(jobSlugs).toContain(`${tag}-pub`);
+      expect(jobSlugs).not.toContain(`${tag}-pending`);
+      expect(jobSlugs).not.toContain(`${tag}-old`);
+      const groupSlugs = map.groups.map((g: { slug: string }) => g.slug);
+      expect(groupSlugs).toContain(`${tag}-open`);
+      expect(groupSlugs).not.toContain(`${tag}-closed`);
+    });
+  });
 });

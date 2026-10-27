@@ -31,7 +31,13 @@ const load = async (p: Props) =>
 
 export async function generateMetadata(p: Props): Promise<Metadata> {
   const res = await load(p);
-  return { title: res.ok ? res.data.title : 'Вакансия' };
+  if (!res.ok) return { title: 'Вакансия' };
+  const description = res.data.description.slice(0, 160);
+  return {
+    title: res.data.title,
+    description,
+    openGraph: { title: res.data.title, description, type: 'article' },
+  };
 }
 
 export default async function JobPage(p: Props) {

@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { SiteFooter } from '../components/shell/SiteFooter';
 import { SiteHeader } from '../components/shell/SiteHeader';
+import { indexingEnabled } from '../lib/seo';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
   title: { default: 'SVETLY', template: '%s — SVETLY' },
   description:
     'SVETLY — цифровая платформа жителей посёлка Октябрьский и жилого района Светлый (в разработке).',
-  robots: { index: false, follow: false },
+  robots: indexingEnabled() ? { index: true, follow: true } : { index: false, follow: false },
   openGraph: { title: 'SVETLY', images: ['/brand/og-image.png'], locale: 'ru_RU', type: 'website' },
 };
 

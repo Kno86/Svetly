@@ -26,7 +26,8 @@ const load = async (p: Props) =>
 
 export async function generateMetadata(p: Props): Promise<Metadata> {
   const res = await load(p);
-  return { title: res.ok ? res.data.title : 'Опрос' };
+  if (!res.ok) return { title: 'Опрос' };
+  return { title: res.data.title, openGraph: { title: res.data.title, type: 'article' } };
 }
 
 export default async function PollPage(p: Props) {

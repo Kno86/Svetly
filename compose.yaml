@@ -86,6 +86,9 @@ services:
         <<: *build-args
         API_INTERNAL_URL: http://api:4000
     restart: unless-stopped
+    environment:
+      SVETLY_PUBLIC_URL: ${SVETLY_PUBLIC_URL:-http://localhost:3000}
+      SVETLY_INDEXING: ${SVETLY_INDEXING:-disabled}
     ports:
       - '${WEB_PORT:-3000}:3000'
     networks: [backend]
