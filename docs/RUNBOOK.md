@@ -98,6 +98,8 @@ bash infra/scripts/restore.sh backups/<файл>.dump [backups/<media>.tar.gz]  
 
 Overlay включает `SVETLY_ENV=production` (API откажется стартовать с dev-паролем `*local_dev_only*`), убирает прямую публикацию web и добавляет Caddy с автоматическим HTTPS (`infra/caddy/Caddyfile.prod`).
 
+Полный чек-лист запуска, мониторинг, юридические пункты и нагрузочный тест — в `docs/LAUNCH.md`.
+
 ## Диагностика
 
 | Симптом                                 | Что проверить                                                                                                                                          |
