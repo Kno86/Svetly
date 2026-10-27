@@ -26,6 +26,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin/content/directory', label: 'Справочник', permission: 'content.directory.manage' },
   { href: '/admin/categories', label: 'Категории', permission: 'content.categories.manage' },
   { href: '/admin/users', label: 'Пользователи', permission: 'users.read' },
+  { href: '/admin/analytics', label: 'Аналитика', permission: 'analytics.read' },
   { href: '/admin/audit', label: 'Журнал аудита', permission: 'audit.read' },
   { href: '/admin/settings', label: 'Настройки', permission: 'settings.manage' },
 ];
@@ -263,4 +264,20 @@ export const COMPLAINT_TARGETS: Record<string, { label: string; path: string }> 
   post: { label: 'Пост', path: '/feed' },
   comment: { label: 'Комментарий', path: '/feed' },
   message: { label: 'Личное сообщение', path: '' },
+};
+
+export const EVENT_LABELS: Record<string, string> = {
+  page_view: 'Просмотр страницы',
+  contact_click: 'Клик по контакту',
+  client_error: 'Ошибка в браузере',
+  search: 'Поиск',
+  registration: 'Регистрация',
+  publication_submitted: 'Публикация отправлена',
+  publication_moderated: 'Решение модератора',
+  comment_created: 'Комментарий',
+  conversation_started: 'Новая переписка',
+  favorite_added: 'Добавлено в избранное',
+  event_registration: 'Запись на событие',
+  business_application: 'Заявка бизнеса на размещение',
+  business_inquiry: 'Заявка жителя организации',
 };

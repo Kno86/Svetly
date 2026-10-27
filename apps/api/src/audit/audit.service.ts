@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { actorHash, eventFromAudit } from '../analytics/events.js';
 
 export type AuditOutcome = 'success' | 'failure' | 'denied';
 
@@ -33,5 +34,18 @@ export class AuditService {
         metadata: entry.metadata ?? {},
       },
     });
+    const event =
+      entry.outcome === 'success' ? eventFromAudit(entry.action, entry.entityType) : null;
+    if (event)
+      await this.prisma.analyticsEvent
+        .create({
+          data: {
+            name: event.name,
+            actor: actorHash(entry.actorId),
+            entityType: event.entityType ?? entry.entityType ?? null,
+            meta: event.meta ?? {},
+          },
+        })
+        .catch(() => undefined);
   }
 }

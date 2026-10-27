@@ -2,6 +2,8 @@ import { Controller, Get, NotFoundException, Param, Query } from '@nestjs/common
 import { Prisma } from '../generated/prisma/client.js';
 import { z } from 'zod';
 import { parse } from '../common/validation.js';
+import { AnalyticsService } from '../analytics/analytics.service.js';
+import { sanitizeQuery } from '../analytics/events.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 const MODULES = [
@@ -89,7 +91,10 @@ function textFilter(q: string | undefined, fields: string[]) {
 
 @Controller()
 export class PublicContentController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly analytics: AnalyticsService,
+  ) {}
 
   @Get('categories')
   categories(@Query('module') module?: string) {
@@ -432,10 +437,17 @@ export class PublicContentController {
     >(
       Prisma.sql`SELECT *, count(*) OVER() AS total FROM (${Prisma.join(parts, ' UNION ALL ')}) AS results ORDER BY ${order} LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
     );
+    const total = Number(rows[0]?.total ?? 0);
+    if (page === 1)
+      await this.analytics.track('search', {
+        module: type ?? 'all',
+        query: sanitizeQuery(q),
+        results: total,
+      });
     return {
       q,
       items: rows.map(({ total: _total, ...r }) => ({ ...r, rank: Number(r.rank) })),
-      total: Number(rows[0]?.total ?? 0),
+      total,
       page,
       limit,
     };

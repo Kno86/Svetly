@@ -17,6 +17,7 @@ import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guar
 import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { NotificationsService } from './notifications.controller.js';
 import { uniqueSlug } from './slug.js';
 
 const ANNOUNCEMENT_TTL_DAYS = 30;
@@ -56,6 +57,7 @@ export class AnnouncementsController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   private async validateRefs(userId: string, categoryId: string, imageIds: string[]) {
@@ -272,6 +274,10 @@ export class AnnouncementsController {
     }
     const from = decision === 'unpublish' ? ['published'] : ['pending'];
     const now = new Date();
+    const target = await this.prisma.announcement.findUnique({
+      where: { id },
+      select: { authorId: true, slug: true },
+    });
     const result = await this.prisma.announcement.updateMany({
       where: { id, status: { in: from } },
       data:
@@ -288,5 +294,16 @@ export class AnnouncementsController {
       entityId: id,
       metadata: note ? { note } : {},
     });
+    if (target)
+      await this.notifications.notify(
+        [target.authorId],
+        decision === 'approve'
+          ? 'publication_approved'
+          : decision === 'reject'
+            ? 'publication_rejected'
+            : 'publication_unpublished',
+        decision === 'approve' ? `/announcements/${target.slug}` : '/account/announcements',
+        principal.userId,
+      );
   }
 }

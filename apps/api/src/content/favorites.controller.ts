@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { Authenticated, CurrentPrincipal } from '../auth/guards.js';
 import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
+import { AnalyticsService } from '../analytics/analytics.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { isVisibleTarget, visiblePostWhere } from './visibility.js';
 
@@ -43,7 +44,10 @@ const PATHS: Record<FavoriteType, string> = {
 /** Private bookmarks. Only currently visible items can be saved; hidden ones are listed as unavailable. */
 @Controller()
 export class FavoritesController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly analytics: AnalyticsService,
+  ) {}
 
   @Get('me/favorites')
   @Authenticated()
@@ -95,6 +99,7 @@ export class FavoritesController {
       create: { userId: p.userId, entityType, entityId },
       update: {},
     });
+    await this.analytics.track('favorite_added', { userId: p.userId, entityType });
     return { saved: true };
   }
 

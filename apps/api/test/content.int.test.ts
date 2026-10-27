@@ -1466,4 +1466,118 @@ describe('core content platform against a real PostgreSQL database', () => {
       expect(groupSlugs).not.toContain(`${tag}-closed`);
     });
   });
+  describe('notification center and analytics (PHASE 8b)', () => {
+    it('filters by category, honours opt-outs for optional categories only', async () => {
+      const author = await user('p8b-author');
+      const other = await user('p8b-other');
+      const mod = await user('p8b-mod', 'moderator');
+      const settings = (
+        await req('GET', '/api/me/notification-settings', { cookie: author.cookie })
+      ).json();
+      expect(settings.channels).toEqual({
+        inApp: true,
+        email: false,
+        push: false,
+        telegram: false,
+      });
+      const put = await req('PUT', '/api/me/notification-settings', {
+        cookie: author.cookie,
+        body: { categories: { comments: false, moderation: false } },
+      });
+      const cats = Object.fromEntries(
+        put.json().categories.map((c: { key: string; enabled: boolean }) => [c.key, c.enabled]),
+      );
+      expect(cats).toMatchObject({ comments: false, moderation: true });
+
+      const postId = (
+        await req('POST', '/api/posts', { cookie: author.cookie, body: { body: 'Пост 8b' } })
+      ).json().id as string;
+      await req('POST', `/api/moderation/posts/${postId}/approve`, {
+        cookie: mod.cookie,
+        body: {},
+      });
+      await req('POST', `/api/posts/${postId}/comments`, {
+        cookie: other.cookie,
+        body: { body: 'Комментарий 8b' },
+      });
+      const list = (await req('GET', '/api/me/notifications', { cookie: author.cookie })).json();
+      expect(list.items.map((n: { type: string }) => n.type)).toEqual(['post_approved']);
+      expect(list.unread).toEqual({ moderation: 1 });
+      const filtered = (
+        await req('GET', '/api/me/notifications?category=groups', { cookie: author.cookie })
+      ).json();
+      expect(filtered.items).toHaveLength(0);
+      expect(
+        (await req('GET', '/api/me/notifications?category=nope', { cookie: author.cookie }))
+          .statusCode,
+      ).toBe(400);
+      expect(
+        (
+          await req('POST', '/api/me/notifications/read', {
+            cookie: author.cookie,
+            body: { category: 'moderation' },
+          })
+        ).json().updated,
+      ).toBe(1);
+    });
+
+    it('stores privacy-minimal events and exposes aggregates only to analytics staff', async () => {
+      const resident = await user('p8b-res');
+      const admin = await user('p8b-admin', 'admin');
+      const marker = `/jobs/p8b-${Date.now().toString(36)}`;
+      expect(
+        (
+          await req('POST', '/api/analytics/events', {
+            body: {
+              name: 'page_view',
+              path: `${marker}?token=secret`,
+              referrer: 'https://vk.com/wall1',
+              utm: { source: 'VK', medium: 'social' },
+            },
+          })
+        ).statusCode,
+      ).toBe(204);
+      expect(
+        (await req('POST', '/api/analytics/events', { body: { name: 'registration', path: '/' } }))
+          .statusCode,
+      ).toBe(400);
+      const view = await prisma.analyticsEvent.findFirstOrThrow({ where: { path: marker } });
+      expect(view).toMatchObject({
+        module: 'jobs',
+        source: 'vk',
+        medium: 'social',
+        referrerHost: 'vk.com',
+        actor: null,
+      });
+      expect(JSON.stringify(view)).not.toContain('secret');
+
+      const before = new Date();
+      await req('GET', `/api/search?q=${encodeURIComponent('+7 913 555-12-34')}`);
+      const search = await prisma.analyticsEvent.findFirstOrThrow({
+        where: { name: 'search', occurredAt: { gte: before } },
+        orderBy: { occurredAt: 'desc' },
+      });
+      expect(search.query).toBeNull();
+      expect(search.results).toBe(0);
+      const reg = await prisma.analyticsEvent.count({
+        where: { name: 'registration', occurredAt: { gte: new Date(Date.now() - 600_000) } },
+      });
+      expect(reg).toBeGreaterThan(0);
+      const actors = await prisma.analyticsEvent.findMany({
+        where: { actor: { not: null } },
+        take: 5,
+      });
+      for (const a of actors) expect(a.actor).not.toBe(resident.id);
+
+      expect(
+        (await req('GET', '/api/admin/analytics', { cookie: resident.cookie })).statusCode,
+      ).toBe(403);
+      const summary = await req('GET', '/api/admin/analytics?days=7', { cookie: admin.cookie });
+      expect(summary.statusCode).toBe(200);
+      expect(summary.json()).toMatchObject({ timezone: 'Asia/Novosibirsk', days: 7 });
+      expect(summary.json().totals.some((t: { name: string }) => t.name === 'page_view')).toBe(
+        true,
+      );
+    });
+  });
 });

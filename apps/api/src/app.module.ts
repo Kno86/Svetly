@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AnalyticsModule } from './analytics/analytics.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { ContentModule } from './content/content.module.js';
@@ -13,6 +14,7 @@ import { VersionController } from './version/version.controller.js';
     ConfigModule,
     PrismaModule,
     AuditModule,
+    AnalyticsModule,
     InstanceModule,
     HealthModule,
     AuthModule,

@@ -1,6 +1,7 @@
 import '@fontsource-variable/manrope/wght.css';
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
+import { Analytics } from '../components/analytics/Analytics';
 import { SiteFooter } from '../components/shell/SiteFooter';
 import { SiteHeader } from '../components/shell/SiteHeader';
 import { indexingEnabled } from '../lib/seo';
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SiteHeader />
         {children}
         <SiteFooter />
+        <Analytics />
       </body>
     </html>
   );

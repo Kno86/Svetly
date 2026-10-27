@@ -21,6 +21,7 @@ import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guar
 import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { RETENTION_KEY, retentionDays } from '../analytics/analytics.service.js';
 import { trustedThreshold } from './announcements.controller.js';
 
 const ENTITY_TYPES = TARGET_TYPES;
@@ -51,7 +52,8 @@ const resolveBody = z.object({
   note: z.string().trim().min(3).max(1000),
 });
 const settingsBody = z.object({
-  trustedThreshold: z.number().int().min(0).max(50),
+  trustedThreshold: z.number().int().min(0).max(50).optional(),
+  analyticsRetentionDays: z.number().int().min(30).max(730).optional(),
 });
 const categoryBody = z.object({
   module: z.enum(MODULES),
@@ -165,28 +167,41 @@ export class AdminPlatformController {
   @Get('admin/settings')
   @RequirePermission('settings.manage')
   async settings() {
-    return { trustedThreshold: await trustedThreshold(this.prisma) };
+    return {
+      trustedThreshold: await trustedThreshold(this.prisma),
+      analyticsRetentionDays: await retentionDays(this.prisma),
+    };
   }
 
   @Patch('admin/settings')
   @RequirePermission('settings.manage')
   async updateSettings(@Body() body: unknown, @CurrentPrincipal() p: Principal) {
     const data = parse(settingsBody, body);
-    const before = await trustedThreshold(this.prisma);
-    await this.prisma.setting.upsert({
-      where: { key: 'moderation.trustedThreshold' },
-      create: { key: 'moderation.trustedThreshold', value: data.trustedThreshold },
-      update: { value: data.trustedThreshold },
-    });
-    await this.audit.record({
-      action: 'settings.updated',
-      outcome: 'success',
-      actorId: p.userId,
-      entityType: 'setting',
-      entityId: 'moderation.trustedThreshold',
-      metadata: { key: 'moderation.trustedThreshold', from: before, to: data.trustedThreshold },
-    });
-    return data;
+    const changes: Array<[string, number, number]> = [];
+    if (data.trustedThreshold !== undefined)
+      changes.push([
+        'moderation.trustedThreshold',
+        await trustedThreshold(this.prisma),
+        data.trustedThreshold,
+      ]);
+    if (data.analyticsRetentionDays !== undefined)
+      changes.push([RETENTION_KEY, await retentionDays(this.prisma), data.analyticsRetentionDays]);
+    for (const [key, from, to] of changes) {
+      await this.prisma.setting.upsert({
+        where: { key },
+        create: { key, value: to },
+        update: { value: to },
+      });
+      await this.audit.record({
+        action: 'settings.updated',
+        outcome: 'success',
+        actorId: p.userId,
+        entityType: 'setting',
+        entityId: key,
+        metadata: { key, from, to },
+      });
+    }
+    return this.settings();
   }
 
   // ---- categories

@@ -19,6 +19,7 @@ import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guar
 import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { NotificationsService } from './notifications.controller.js';
 
 export const ISSUE_CATEGORIES = [
   'roads',
@@ -101,6 +102,7 @@ export class IssuesController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   @Post('issues')
@@ -276,6 +278,14 @@ export class IssuesController {
       },
     });
     await this.log('updated', p.userId, id, { status: item.status, priority: item.priority });
+    if (data.status && data.status !== issue.status)
+      await this.notifications.notify(
+        [issue.reporterId],
+        'issue_status',
+        `/issues/${issue.number}`,
+        p.userId,
+        `issue:${id}:${issue.status}->${data.status}:${item.updatedAt.toISOString()}`,
+      );
     return item;
   }
 

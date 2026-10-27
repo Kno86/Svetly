@@ -39,6 +39,7 @@ export interface ConversationInfo {
 export interface NotificationItem {
   id: string;
   type: string;
+  category?: string;
   title: string;
   href: string | null;
   readAt: string | null;
