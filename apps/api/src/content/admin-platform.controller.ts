@@ -415,6 +415,21 @@ export class AdminPlatformController {
       ).map((r) => ({ id: r.id, slug: r.postId, status: r.status, title: r.body.slice(0, 80) })),
     );
     put(
+      'message',
+      (
+        await this.prisma.message.findMany({
+          where: { id: { in: ids('message') } },
+          select: { id: true, status: true, body: true },
+        })
+      ).map((r) => ({
+        id: r.id,
+        slug: '',
+        // Staff with complaint access see only the reported message, never the whole conversation.
+        status: r.status === 'sent' ? 'private' : r.status,
+        title: r.status === 'sent' ? r.body.slice(0, 500) : 'Сообщение удалено отправителем',
+      })),
+    );
+    put(
       'organization',
       await this.prisma.organization.findMany({
         where: { id: { in: ids('organization') } },
