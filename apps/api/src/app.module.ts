@@ -7,6 +7,7 @@ import { ConfigModule } from './config/config.module.js';
 import { HealthModule } from './health/health.module.js';
 import { InstanceModule } from './instance/instance.module.js';
 import { IntegrationsModule } from './integrations/integrations.module.js';
+import { TerritoriesModule } from './territories/territories.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { VersionController } from './version/version.controller.js';
 
@@ -20,6 +21,7 @@ import { VersionController } from './version/version.controller.js';
     HealthModule,
     AuthModule,
     IntegrationsModule,
+    TerritoriesModule,
     ContentModule,
   ],
   controllers: [VersionController],

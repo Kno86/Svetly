@@ -818,3 +818,22 @@ model HiddenItem {
   @@id([userId, entityType, entityId])
   @@map("hidden_items")
 }
+
+/// Territory hierarchy (region → district → locality). Only active localities are selectable; content is
+/// not yet scoped by territory because there is a single one (see docs/TERRITORIES.md).
+model Territory {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  slug      String   @unique
+  name      String
+  kind      String
+  parentId  String?  @map("parent_id") @db.Uuid
+  isActive  Boolean  @default(false) @map("is_active")
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  parent   Territory?  @relation("TerritoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children Territory[] @relation("TerritoryTree")
+
+  @@index([parentId])
+  @@map("territories")
+}
