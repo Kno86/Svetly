@@ -16,6 +16,7 @@ import { AuditService } from '../audit/audit.service.js';
 import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guards.js';
 import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
+import { AnalyticsService } from '../analytics/analytics.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { uniqueSlug } from './slug.js';
 
@@ -274,7 +275,10 @@ export class StaffContentController {
 /** Resident registration for events: capacity is enforced inside a serializable transaction. */
 @Controller('events')
 export class EventRegistrationController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly analytics: AnalyticsService,
+  ) {}
 
   @Get(':id/registration')
   @Authenticated()
@@ -289,7 +293,7 @@ export class EventRegistrationController {
   @HttpCode(204)
   @Authenticated()
   async register(@Param('id', ParseUUIDPipe) id: string, @CurrentPrincipal() p: Principal) {
-    await this.prisma.$transaction(
+    const created = await this.prisma.$transaction(
       async (tx) => {
         const event = await tx.event.findFirst({ where: { id, status: 'published' } });
         if (!event) throw new NotFoundException({ code: 'NOT_FOUND' });
@@ -302,16 +306,23 @@ export class EventRegistrationController {
         const exists = await tx.eventRegistration.count({
           where: { eventId: id, userId: p.userId },
         });
-        if (exists) return;
+        if (exists) return false;
         if (event.capacity !== null) {
           const taken = await tx.eventRegistration.count({ where: { eventId: id } });
           if (taken >= event.capacity)
             throw new BadRequestException({ code: 'EVENT_FULL', message: 'Мест больше нет' });
         }
         await tx.eventRegistration.create({ data: { eventId: id, userId: p.userId } });
+        return true;
       },
       { isolationLevel: 'Serializable' },
     );
+    if (created)
+      await this.analytics.track('event_registration', {
+        userId: p.userId,
+        entityType: 'event',
+        entityId: id,
+      });
   }
 
   @Delete(':id/registration')

@@ -18,6 +18,7 @@ import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guar
 import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { NotificationsService } from './notifications.controller.js';
 import { trustedThreshold } from './announcements.controller.js';
 import { uniqueSlug } from './slug.js';
 
@@ -157,6 +158,7 @@ function communityController(cfg: KindConfig): Type<unknown> {
     constructor(
       readonly prisma: PrismaService,
       readonly audit: AuditService,
+      readonly notifications: NotificationsService,
     ) {}
 
     get db() {
@@ -368,6 +370,10 @@ function communityController(cfg: KindConfig): Type<unknown> {
           code: 'NOTE_REQUIRED',
           message: 'Укажите причину для автора',
         });
+      const target = (await this.db.findFirst({
+        where: { id },
+        select: { authorId: true, slug: true },
+      })) as { authorId: string; slug: string } | null;
       const { count } = await this.db.updateMany({
         where: { id, status: { in: decision === 'unpublish' ? ['published'] : ['pending'] } },
         data:
@@ -384,6 +390,17 @@ function communityController(cfg: KindConfig): Type<unknown> {
         entityId: id,
         metadata: note ? { note } : {},
       });
+      if (target)
+        await this.notifications.notify(
+          [target.authorId],
+          decision === 'approve'
+            ? 'publication_approved'
+            : decision === 'reject'
+              ? 'publication_rejected'
+              : 'publication_unpublished',
+          decision === 'approve' ? `/${path}/${target.slug}` : '/account/community',
+          p.userId,
+        );
     }
   }
   Object.defineProperty(CommunityController, 'name', { value: `${entity}Controller` });

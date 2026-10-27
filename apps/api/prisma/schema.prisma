@@ -33,18 +33,19 @@ model User {
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  sessions         Session[]
-  accounts         Account[]
-  roles            UserRole[]           @relation("UserRoles")
-  rolesGiven       UserRole[]           @relation("UserRolesGrantedBy")
-  posts            Post[]
-  comments         Comment[]
-  groupMemberships GroupMember[]
-  conversations    ConversationMember[]
-  messages         Message[]
-  blocksMade       UserBlock[]          @relation("BlocksMade")
-  blocksReceived   UserBlock[]          @relation("BlocksReceived")
-  notifications    Notification[]
+  sessions          Session[]
+  accounts          Account[]
+  roles             UserRole[]               @relation("UserRoles")
+  rolesGiven        UserRole[]               @relation("UserRolesGrantedBy")
+  posts             Post[]
+  comments          Comment[]
+  groupMemberships  GroupMember[]
+  conversations     ConversationMember[]
+  messages          Message[]
+  blocksMade        UserBlock[]              @relation("BlocksMade")
+  blocksReceived    UserBlock[]              @relation("BlocksReceived")
+  notifications     Notification[]
+  notificationPrefs NotificationPreference[]
 
   @@map("users")
 }
@@ -736,11 +737,51 @@ model Notification {
   type      String
   title     String
   href      String?
+  category  String    @default("system")
+  dedupeKey String?   @map("dedupe_key")
   readAt    DateTime? @map("read_at") @db.Timestamptz(6)
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, dedupeKey])
   @@index([userId, createdAt])
+  @@index([userId, category, createdAt])
   @@map("notifications")
+}
+
+/// Opt-outs for non-essential in-app notification categories; absence of a row means "enabled".
+model NotificationPreference {
+  userId    String   @map("user_id") @db.Uuid
+  category  String
+  enabled   Boolean
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, category])
+  @@map("notification_preferences")
+}
+
+/// Privacy-minimal analytics: no IP, no user agent, no raw user id (only a pseudonymous `actor`).
+model AnalyticsEvent {
+  id           String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name         String
+  occurredAt   DateTime @default(now()) @map("occurred_at") @db.Timestamptz(6)
+  module       String?
+  path         String?
+  entityType   String?  @map("entity_type")
+  entityId     String?  @map("entity_id")
+  actor        String?
+  source       String?
+  medium       String?
+  campaign     String?
+  referrerHost String?  @map("referrer_host")
+  query        String?
+  results      Int?
+  meta         Json     @default("{}")
+
+  @@index([occurredAt])
+  @@index([name, occurredAt])
+  @@map("analytics_events")
 }

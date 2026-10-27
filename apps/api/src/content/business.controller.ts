@@ -18,6 +18,7 @@ import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guar
 import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { NotificationsService } from './notifications.controller.js';
 import { uniqueSlug } from './slug.js';
 
 const optText = (max: number) => z.string().trim().max(max).nullable().optional();
@@ -86,6 +87,7 @@ export class BusinessController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   private async checkCategory(card: Card) {
@@ -250,6 +252,13 @@ export class BusinessController {
       select: { id: true, status: true },
     });
     await this.log('business.inquiry_sent', p.userId, item.id, { organizationId: id });
+    await this.notifications.notify(
+      [org.ownerId!],
+      'business_inquiry',
+      '/business',
+      p.userId,
+      `inquiry:${item.id}`,
+    );
     return item;
   }
 
@@ -350,6 +359,7 @@ export class BusinessController {
       id,
       note ? { note } : {},
     );
+    await this.notifications.notify([org.ownerId!], 'business_reviewed', '/business', p.userId);
     return updated;
   }
 
