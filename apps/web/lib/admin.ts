@@ -29,6 +29,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin/analytics', label: 'Аналитика', permission: 'analytics.read' },
   { href: '/admin/audit', label: 'Журнал аудита', permission: 'audit.read' },
   { href: '/admin/settings', label: 'Настройки', permission: 'settings.manage' },
+  { href: '/admin/integrations', label: 'Интеграции и функции', permission: 'settings.manage' },
 ];
 
 export function navFor(permissions: readonly string[]): AdminNavItem[] {

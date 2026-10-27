@@ -3,6 +3,8 @@ export interface NavItem {
   label: string;
   href: string;
   available: boolean;
+  /** Hidden when this feature flag is switched off (the API refuses the module too). */
+  feature?: string;
 }
 
 export const primaryNav: NavItem[] = [
@@ -17,6 +19,6 @@ export const primaryNav: NavItem[] = [
   { label: 'Находки', href: '/lost-found', available: true },
   { label: 'Обращения', href: '/issues', available: true },
   { label: 'Опросы', href: '/polls', available: true },
-  { label: 'Лента', href: '/feed', available: true },
-  { label: 'Группы', href: '/groups', available: true },
+  { label: 'Лента', href: '/feed', available: true, feature: 'groups' },
+  { label: 'Группы', href: '/groups', available: true, feature: 'groups' },
 ];

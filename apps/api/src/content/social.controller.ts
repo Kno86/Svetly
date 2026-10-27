@@ -33,6 +33,7 @@ import { isTrustedAuthor } from './community.controller.js';
 import { NotificationsService } from './notifications.controller.js';
 import { uniqueSlug } from './slug.js';
 import { visiblePostWhere } from './visibility.js';
+import { Feature } from '../integrations/feature.guard.js';
 
 export const GROUP_TOPICS = [
   'neighbors',
@@ -142,6 +143,7 @@ const cursorArgs = (cursor?: string): { cursor?: { id: string }; skip?: number }
 
 /** Groups, feed, comments and reactions (PHASE 7a). Every access rule is enforced here. */
 @Controller()
+@Feature('groups')
 export class SocialController {
   constructor(
     private readonly prisma: PrismaService,
