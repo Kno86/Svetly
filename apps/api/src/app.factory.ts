@@ -34,6 +34,12 @@ export async function createApp(logLevel = 'info'): Promise<NestFastifyApplicati
       { parseAs: 'buffer', bodyLimit: 5 * 1024 * 1024 },
       (_req, body, done) => done(null, body),
     );
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .addHook('onSend', async (req, reply) => {
+      reply.header('x-request-id', req.id);
+    });
   app.enableShutdownHooks();
   return app;
 }

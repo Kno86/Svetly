@@ -143,6 +143,12 @@
 @media (min-width: 1024px) {
   .desktopNav {
     display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .navList {
+    flex-wrap: wrap;
+    justify-content: center;
   }
   .menuButton,
   .mobileNav {

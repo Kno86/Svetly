@@ -9,14 +9,21 @@
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
 		-Server
 	}
 
+	# Client IP for rate limits and audit: overwrite any client-supplied X-Forwarded-For.
 	handle /api/* {
-		reverse_proxy api:4000
+		reverse_proxy api:4000 {
+			header_up X-Forwarded-For {remote_host}
+		}
 	}
 
 	handle {
-		reverse_proxy web:3000
+		reverse_proxy web:3000 {
+			header_up X-Forwarded-For {remote_host}
+		}
 	}
 }
