@@ -1,5 +1,6 @@
 'use client';
 
+import { clearOfflineData } from '../../lib/pwa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
@@ -49,6 +50,7 @@ export function AccountView() {
 
   async function signOut() {
     await apiRequest('/api/auth/sign-out', { body: {} });
+    await clearOfflineData();
     router.push('/');
     router.refresh();
   }
@@ -133,6 +135,7 @@ function Profile({ me, onSaved }: { me: Me; onSaved: (name: string) => void }) {
       <p>
         <Link href="/messages">Сообщения</Link> · <Link href="/notifications">Уведомления</Link> ·{' '}
         <Link href="/account/announcements">Мои объявления</Link> ·{' '}
+        <Link href="/account/recommendations">Рекомендации и интересы</Link> ·{' '}
         <Link href="/account/community">Обращения, вакансии и находки</Link> ·{' '}
         <Link href="/favorites">Избранное</Link> ·{' '}
         <Link href="/groups/mine">Мои группы и посты</Link> ·{' '}

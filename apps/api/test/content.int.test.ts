@@ -1580,4 +1580,76 @@ describe('core content platform against a real PostgreSQL database', () => {
       );
     });
   });
+  describe('map, recommendations (PHASE 9)', () => {
+    it('validates coordinate pairs, lists places and ranks explainable recommendations', async () => {
+      const editor = await user('p9-editor', 'admin');
+      const resident = await user('p9-res');
+      const base = {
+        kind: 'organization',
+        name: 'Тестовая организация P9',
+        description: 'Описание',
+        address: 'ул. Тестовая, 1',
+        status: 'published',
+      };
+      const half = await req('POST', '/api/staff/organizations', {
+        cookie: editor.cookie,
+        body: { ...base, latitude: 54.9 },
+      });
+      expect(half.statusCode).toBe(400);
+      const far = await req('POST', '/api/staff/organizations', {
+        cookie: editor.cookie,
+        body: { ...base, latitude: 40, longitude: 83 },
+      });
+      expect(far.statusCode).toBe(400);
+      const ok = await req('POST', '/api/staff/organizations', {
+        cookie: editor.cookie,
+        body: { ...base, latitude: 54.9, longitude: 83.1 },
+      });
+      expect(ok.statusCode).toBe(201);
+      const map = (await req('GET', '/api/map')).json();
+      const place = map.places.find((x: { title: string }) => x.title === base.name);
+      expect(place).toMatchObject({ type: 'organization', latitude: 54.9, longitude: 83.1 });
+      expect(map.provider).toBeNull();
+
+      expect((await req('GET', '/api/me/recommendations')).statusCode).toBe(401);
+      const cat = await prisma.category.create({
+        data: { module: 'news', slug: `p9-${Date.now().toString(36)}`, name: 'Категория P9' },
+      });
+      const news = await prisma.newsArticle.create({
+        data: {
+          slug: `p9-news-${Date.now().toString(36)}`,
+          title: 'Новость P9',
+          body: 'Текст',
+          status: 'published',
+          publishedAt: new Date(),
+          categoryId: cat.id,
+        },
+      });
+      const set = await req('PUT', '/api/me/interests', {
+        cookie: resident.cookie,
+        body: { categoryIds: [cat.id, '00000000-0000-7000-8000-000000000000'] },
+      });
+      expect(set.json().categories.filter((c: { selected: boolean }) => c.selected)).toHaveLength(
+        1,
+      );
+      const recos = (
+        await req('GET', '/api/me/recommendations', { cookie: resident.cookie })
+      ).json();
+      const hit = recos.items.find((r: { id: string }) => r.id === news.id);
+      expect(hit.reasons[0]).toContain(cat.name);
+      expect(
+        (
+          await req('POST', '/api/me/recommendations/hidden', {
+            cookie: resident.cookie,
+            body: { entityType: 'news', entityId: news.id },
+          })
+        ).statusCode,
+      ).toBe(200);
+      const after = (
+        await req('GET', '/api/me/recommendations', { cookie: resident.cookie })
+      ).json();
+      expect(after.items.some((r: { id: string }) => r.id === news.id)).toBe(false);
+      expect(after.hidden).toBe(1);
+    });
+  });
 });

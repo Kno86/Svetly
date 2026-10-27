@@ -46,6 +46,8 @@ model User {
   blocksReceived    UserBlock[]              @relation("BlocksReceived")
   notifications     Notification[]
   notificationPrefs NotificationPreference[]
+  interests         UserInterest[]
+  hiddenItems       HiddenItem[]
 
   @@map("users")
 }
@@ -206,6 +208,7 @@ model Category {
   organizations Organization[]
   events        Event[]
   directory     DirectoryEntry[]
+  interests     UserInterest[]
 
   @@unique([module, slug])
   @@map("categories")
@@ -290,6 +293,8 @@ model Organization {
   website        String?
   address        String?
   serviceArea    String?   @map("service_area")
+  latitude       Float?
+  longitude      Float?
   hours          String?
   hoursCheckedAt DateTime? @map("hours_checked_at") @db.Timestamptz(6)
   verification   String    @default("unverified")
@@ -322,6 +327,8 @@ model Event {
   description     String
   organizer       String
   location        String
+  latitude        Float?
+  longitude       Float?
   startsAt        DateTime  @map("starts_at") @db.Timestamptz(6)
   endsAt          DateTime? @map("ends_at") @db.Timestamptz(6)
   timezone        String    @default("Asia/Novosibirsk")
@@ -784,4 +791,30 @@ model AnalyticsEvent {
   @@index([occurredAt])
   @@index([name, occurredAt])
   @@map("analytics_events")
+}
+
+/// Categories a resident chose for recommendations; nothing is inferred behind their back.
+model UserInterest {
+  userId     String   @map("user_id") @db.Uuid
+  categoryId String   @map("category_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([userId, categoryId])
+  @@map("user_interests")
+}
+
+/// Items a resident hid from their recommendations.
+model HiddenItem {
+  userId     String   @map("user_id") @db.Uuid
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, entityType, entityId])
+  @@map("hidden_items")
 }

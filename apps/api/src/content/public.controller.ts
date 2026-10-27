@@ -196,6 +196,75 @@ export class PublicContentController {
     return item;
   }
 
+  /** Places for /map: published organizations and upcoming events with their text location. */
+  @Get('map')
+  async map() {
+    const now = new Date();
+    const [orgs, events] = await Promise.all([
+      this.prisma.organization.findMany({
+        where: {
+          status: 'published',
+          OR: [{ address: { not: null } }, { latitude: { not: null } }],
+        },
+        orderBy: { name: 'asc' },
+        take: 500,
+        select: {
+          slug: true,
+          kind: true,
+          name: true,
+          address: true,
+          latitude: true,
+          longitude: true,
+          verification: true,
+          category,
+        },
+      }),
+      this.prisma.event.findMany({
+        where: { status: 'published', startsAt: { gte: now } },
+        orderBy: { startsAt: 'asc' },
+        take: 200,
+        select: {
+          slug: true,
+          title: true,
+          location: true,
+          startsAt: true,
+          latitude: true,
+          longitude: true,
+          category,
+        },
+      }),
+    ]);
+    const places = [
+      ...orgs.map((o) => ({
+        type: o.kind === 'service' ? ('service' as const) : ('organization' as const),
+        slug: o.slug,
+        title: o.name,
+        location: o.address,
+        latitude: o.latitude,
+        longitude: o.longitude,
+        verification: o.verification,
+        category: o.category,
+        startsAt: null,
+      })),
+      ...events.map((e) => ({
+        type: 'event' as const,
+        slug: e.slug,
+        title: e.title,
+        location: e.location,
+        latitude: e.latitude,
+        longitude: e.longitude,
+        verification: null,
+        category: e.category,
+        startsAt: e.startsAt,
+      })),
+    ];
+    return {
+      places,
+      withCoordinates: places.filter((x) => x.latitude != null).length,
+      provider: null,
+    };
+  }
+
   @Get('organizations')
   async organizations(@Query() query: unknown) {
     const { q, category: cat, kind, page: p, limit } = parse(orgQuery, query);
