@@ -70,9 +70,9 @@ docker compose up -d --build
 Скрипты требуют bash (Linux, macOS, Git Bash или WSL) и запущенный стек.
 
 ```bash
-bash infra/scripts/backup.sh                       # backups/svetly-db-<UTC>.dump + .sha256 (папка в .gitignore)
-bash infra/scripts/restore-test.sh backups/<файл>.dump   # проверка: восстановление в изолированный проект
-bash infra/scripts/restore.sh backups/<файл>.dump        # РАЗРУШИТЕЛЬНО: замена данных текущей БД
+bash infra/scripts/backup.sh                       # backups/svetly-db-<UTC>.dump и svetly-media-<UTC>.tar.gz + .sha256 (папка в .gitignore)
+bash infra/scripts/restore-test.sh backups/<файл>.dump [backups/<media>.tar.gz]   # проверка: восстановление в изолированный проект
+bash infra/scripts/restore.sh backups/<файл>.dump [backups/<media>.tar.gz]        # РАЗРУШИТЕЛЬНО: замена данных текущей БД (и фото)
 ```
 
 - `backup.sh`: `pg_dump -Fc` из контейнера `db`, SHA-256, проверка читаемости архива `pg_restore --list`.
@@ -87,11 +87,8 @@ bash infra/scripts/restore.sh backups/<файл>.dump        # РАЗРУШИТ�
 
 ### Загруженные изображения
 
-`backup.sh` сохраняет только БД. Изображения лежат в volume `svetly_media`; копия:
-
-```bash
-docker run --rm -v svetly_media:/media:ro -v "$PWD/backups:/out" alpine tar czf /out/media-$(date +%Y%m%d-%H%M%S).tar.gz -C /media .
-```
+`backup.sh` сохраняет и БД, и volume `svetly_media` (`svetly-media-<UTC>.tar.gz` + SHA-256). Восстановление фото — вторым
+аргументом `restore.sh`; проверка — вторым аргументом `restore-test.sh` (сверяет число файлов).
 
 ## Production (подготовлено, не развёрнуто)
 

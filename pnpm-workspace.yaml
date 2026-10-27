@@ -6,3 +6,9 @@ allowBuilds:
   prisma: true
 
 saveExact: true
+
+# Security patches for transitive dependencies (pnpm audit, PHASE 10).
+overrides:
+  fastify: 5.12.7
+  fast-uri@3: ^3.1.9
+  fast-uri@4: ^4.2.3
