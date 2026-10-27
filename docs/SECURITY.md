@@ -11,7 +11,7 @@
 
 - Локально на хост публикуется только web:3000. API и PostgreSQL доступны лишь во внутренней Docker-сети.
 - В production HTTPS терминирует Caddy (HSTS). Наружу открыты только 80 и 443.
-- Web отдаёт `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`. До запуска публичной части запрещена индексация (`robots.txt` и meta robots).
+- Web отдаёт `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`. До запуска публичной части запрещена индексация (`robots.txt` и meta robots); включается только явно через `SVETLY_INDEXING=enabled`, и даже тогда приватные разделы (`/account`, `/admin`, `/business`, `/messages`, `/notifications`, `/favorites`, `/submit`, `/api/`) закрыты в `robots.txt`.
 - Контейнеры api и web работают от непривилегированного пользователя `node`.
 
 ## Авторизация (реализовано в PHASE 3)

@@ -35,7 +35,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const res = await apiGet<Announcement>(
     `/api/announcements/${encodeURIComponent((await params).slug)}`,
   );
-  return { title: res.ok ? res.data.title : 'Объявление' };
+  if (!res.ok) return { title: 'Объявление' };
+  const description = res.data.description.slice(0, 160);
+  return {
+    title: res.data.title,
+    description,
+    openGraph: { title: res.data.title, description, type: 'article' },
+  };
 }
 
 export default async function AnnouncementPage({ params }: Props) {

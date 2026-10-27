@@ -35,10 +35,9 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const res = await apiGet<Org>(`/api/organizations/${encodeURIComponent((await params).slug)}`);
-  return {
-    title: res.ok ? res.data.name : 'Организация',
-    description: res.ok ? res.data.description.slice(0, 160) : undefined,
-  };
+  if (!res.ok) return { title: 'Организация' };
+  const description = res.data.description.slice(0, 160);
+  return { title: res.data.name, description, openGraph: { title: res.data.name, description } };
 }
 
 export default async function OrganizationPage({ params }: Props) {

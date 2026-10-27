@@ -28,7 +28,13 @@ const load = async (p: Props) =>
 
 export async function generateMetadata(p: Props): Promise<Metadata> {
   const res = await load(p);
-  return { title: res.ok ? res.data.title : 'Потеряно и найдено' };
+  if (!res.ok) return { title: 'Потеряно и найдено' };
+  const description = res.data.description.slice(0, 160);
+  return {
+    title: res.data.title,
+    description,
+    openGraph: { title: res.data.title, description, type: 'article' },
+  };
 }
 
 export default async function LostFoundItemPage(p: Props) {
