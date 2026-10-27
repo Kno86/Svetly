@@ -17,6 +17,7 @@ import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guar
 import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
 import { AnalyticsService } from '../analytics/analytics.service.js';
+import { assertCoordinates, latitude, longitude } from './geo.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { uniqueSlug } from './slug.js';
 
@@ -49,6 +50,8 @@ const orgBody = z.object({
   website: url,
   address: optText(300),
   serviceArea: optText(300),
+  latitude,
+  longitude,
   hours: optText(300),
   hoursCheckedAt: date,
   sourceName: optText(200),
@@ -62,6 +65,8 @@ const eventBody = z
     description: z.string().trim().min(1).max(20_000),
     organizer: z.string().trim().min(2).max(200),
     location: z.string().trim().min(2).max(300),
+    latitude,
+    longitude,
     startsAt: z.iso.datetime({ offset: true }),
     endsAt: date,
     registrationUrl: url,
@@ -174,6 +179,7 @@ export class StaffContentController {
   @RequirePermission('content.organizations.manage')
   async createOrganization(@Body() body: unknown, @CurrentPrincipal() p: Principal) {
     const data = parse(orgBody, body);
+    assertCoordinates(data);
     await this.checkCategory(data.categoryId, ['organizations', 'services']);
     const item = await this.prisma.organization.create({
       data: { ...data, slug: uniqueSlug(data.name), createdById: p.userId },
@@ -190,6 +196,7 @@ export class StaffContentController {
     @CurrentPrincipal() p: Principal,
   ) {
     const data = parse(orgBody, body);
+    assertCoordinates(data);
     await this.checkCategory(data.categoryId, ['organizations', 'services']);
     const found = await this.prisma.organization.count({ where: { id } });
     if (!found) throw new NotFoundException({ code: 'NOT_FOUND' });
@@ -209,6 +216,7 @@ export class StaffContentController {
   @RequirePermission('content.events.manage')
   async createEvent(@Body() body: unknown, @CurrentPrincipal() p: Principal) {
     const data = parse(eventBody, body);
+    assertCoordinates(data);
     await this.checkCategory(data.categoryId, ['events']);
     const item = await this.prisma.event.create({
       data: { ...data, slug: uniqueSlug(data.title), createdById: p.userId },
@@ -225,6 +233,7 @@ export class StaffContentController {
     @CurrentPrincipal() p: Principal,
   ) {
     const data = parse(eventBody, body);
+    assertCoordinates(data);
     await this.checkCategory(data.categoryId, ['events']);
     const found = await this.prisma.event.count({ where: { id } });
     if (!found) throw new NotFoundException({ code: 'NOT_FOUND' });

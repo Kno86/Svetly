@@ -46,7 +46,7 @@ const SECTIONS: Array<[keyof SitemapData, string]> = [
   ['polls', '/polls'],
   ['groups', '/groups'],
 ];
-const STATIC = ['/', '/directory', '/feed', '/issues', ...SECTIONS.map(([, p]) => p)];
+const STATIC = ['/', '/directory', '/feed', '/issues', '/map', ...SECTIONS.map(([, p]) => p)];
 
 export function sitemapEntries(
   base: string,

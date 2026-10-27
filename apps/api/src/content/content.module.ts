@@ -10,6 +10,7 @@ import { FavoritesController } from './favorites.controller.js';
 import { SocialController } from './social.controller.js';
 import { MediaController } from './media.controller.js';
 import { MessagesController } from './messages.controller.js';
+import { RecommendationsController } from './recommendations.controller.js';
 import { NotificationsController, NotificationsService } from './notifications.controller.js';
 import { PublicContentController } from './public.controller.js';
 import { EventRegistrationController, StaffContentController } from './staff.controller.js';
@@ -33,6 +34,7 @@ import { LocalFileStorage } from './storage.service.js';
     FavoritesController,
     MessagesController,
     NotificationsController,
+    RecommendationsController,
   ],
   providers: [LocalFileStorage, NotificationsService],
 })

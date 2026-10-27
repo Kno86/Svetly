@@ -121,6 +121,13 @@ export const CONTENT_KINDS: Record<string, ContentKind> = {
       { name: 'description', label: 'Описание', type: 'textarea', required: true },
       { name: 'organizer', label: 'Организатор', type: 'text', required: true },
       { name: 'location', label: 'Место', type: 'text', required: true },
+      {
+        name: 'latitude',
+        label: 'Широта',
+        type: 'number',
+        hint: 'Только проверенные координаты (например, с места). Заполняйте вместе с долготой.',
+      },
+      { name: 'longitude', label: 'Долгота', type: 'number' },
       { name: 'startsAt', label: 'Начало', type: 'datetime', required: true },
       { name: 'endsAt', label: 'Окончание', type: 'datetime' },
       {
@@ -158,6 +165,13 @@ export const CONTENT_KINDS: Record<string, ContentKind> = {
       { name: 'phone', label: 'Телефон', type: 'tel' },
       { name: 'website', label: 'Сайт', type: 'url' },
       { name: 'address', label: 'Адрес', type: 'text' },
+      {
+        name: 'latitude',
+        label: 'Широта',
+        type: 'number',
+        hint: 'Только проверенные координаты (например, с места). Заполняйте вместе с долготой.',
+      },
+      { name: 'longitude', label: 'Долгота', type: 'number' },
       { name: 'serviceArea', label: 'Территория обслуживания', type: 'text' },
       { name: 'hours', label: 'Часы работы', type: 'text' },
       { name: 'hoursCheckedAt', label: 'Часы работы проверены', type: 'date' },
