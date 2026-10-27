@@ -1652,4 +1652,58 @@ describe('core content platform against a real PostgreSQL database', () => {
       expect(after.hidden).toBe(1);
     });
   });
+
+  describe('PHASE 11: feature flags and integrations', () => {
+    it('lets admins switch modules off, refuses unconfigured integrations and never fakes AI', async () => {
+      const admin = await user('p11-admin', 'admin');
+      const resident = await user('p11-resident');
+      expect((await req('GET', '/api/features')).json()).toMatchObject({
+        groups: true,
+        ai_assistant: false,
+      });
+      expect(
+        (await req('GET', '/api/admin/integrations', { cookie: resident.cookie })).statusCode,
+      ).toBe(403);
+      expect(
+        (
+          await req('PATCH', '/api/admin/features/groups', {
+            cookie: resident.cookie,
+            body: { enabled: false },
+          })
+        ).statusCode,
+      ).toBe(403);
+      const ai = await req('PATCH', '/api/admin/features/ai_assistant', {
+        cookie: admin.cookie,
+        body: { enabled: true },
+      });
+      expect(ai.statusCode).toBe(409);
+      expect(ai.json().code).toBe('NOT_CONFIGURED');
+      const ask = await req('POST', '/api/assistant/ask', { body: { question: 'Где аптека?' } });
+      expect(ask.statusCode).toBe(503);
+      expect(ask.json().code).toBe('NOT_CONFIGURED');
+      try {
+        const off = await req('PATCH', '/api/admin/features/groups', {
+          cookie: admin.cookie,
+          body: { enabled: false },
+        });
+        expect(off.statusCode).toBe(200);
+        expect((await req('GET', '/api/features')).json().groups).toBe(false);
+        const blocked = await req('GET', '/api/groups');
+        expect(blocked.statusCode).toBe(404);
+        expect(blocked.json().code).toBe('FEATURE_DISABLED');
+        expect(
+          (await req('GET', '/api/me/conversations', { cookie: resident.cookie })).statusCode,
+        ).toBe(200);
+        expect(
+          await prisma.auditLog.count({ where: { action: 'feature.updated', actorId: admin.id } }),
+        ).toBe(1);
+      } finally {
+        await req('PATCH', '/api/admin/features/groups', {
+          cookie: admin.cookie,
+          body: { enabled: true },
+        });
+      }
+      expect((await req('GET', '/api/groups')).statusCode).toBe(200);
+    });
+  });
 });

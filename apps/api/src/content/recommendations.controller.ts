@@ -5,6 +5,7 @@ import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { type Candidate, rank } from './recommendations.js';
+import { Feature } from '../integrations/feature.guard.js';
 
 export const INTEREST_MODULES = ['news', 'announcements', 'events', 'organizations'] as const;
 const interestsBody = z.object({ categoryIds: z.array(z.uuid()).max(50) });
@@ -15,6 +16,7 @@ const hideBody = z.object({
 const category = { select: { id: true, name: true } } as const;
 
 @Controller('me')
+@Feature('recommendations')
 export class RecommendationsController {
   constructor(private readonly prisma: PrismaService) {}
 

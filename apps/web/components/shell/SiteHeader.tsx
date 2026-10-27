@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Logo } from '../brand/Logo';
 import { AccountLink } from './AccountLink';
+import { useFeatures, visibleWith } from '../../lib/features';
 import { primaryNav } from './navigation';
 import styles from './shell.module.css';
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const nav = visibleWith(primaryNav, useFeatures());
 
   useEffect(() => {
     if (!open) return;
@@ -25,7 +27,7 @@ export function SiteHeader() {
         </Link>
         <nav aria-label="Основные разделы" className={styles.desktopNav}>
           <ul className={styles.navList}>
-            {primaryNav.map((item) => (
+            {nav.map((item) => (
               <li key={item.href}>
                 {item.available ? (
                   <a href={item.href} className={styles.navLink}>
@@ -65,7 +67,7 @@ export function SiteHeader() {
         hidden={!open}
       >
         <ul className="container">
-          {primaryNav.map((item) => (
+          {nav.map((item) => (
             <li key={item.href}>
               {item.available ? (
                 <a href={item.href} className={styles.mobileLink} onClick={() => setOpen(false)}>

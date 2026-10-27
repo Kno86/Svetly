@@ -22,6 +22,7 @@ import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { isVisibleTarget } from './visibility.js';
+import { Feature } from '../integrations/feature.guard.js';
 
 export const MESSAGE_PAGE = 30;
 const CONVERSATION_PAGE = 30;
@@ -93,6 +94,7 @@ const tooMany = (message: string) =>
  * written to the audit log or application logs.
  */
 @Controller()
+@Feature('chats')
 export class MessagesController {
   constructor(
     private readonly prisma: PrismaService,
