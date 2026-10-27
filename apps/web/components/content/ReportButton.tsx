@@ -23,7 +23,8 @@ export function ReportButton({
     | 'lost_found'
     | 'group'
     | 'post'
-    | 'comment';
+    | 'comment'
+    | 'message';
   entityId: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -76,7 +77,11 @@ export function ReportButton({
           </Select>
           <TextArea
             label="Подробности"
-            hint="Необязательно, до 2000 символов"
+            hint={
+              entityType === 'message'
+                ? 'Необязательно, до 2000 символов. Модератор увидит текст только этого сообщения, не всю переписку.'
+                : 'Необязательно, до 2000 символов'
+            }
             maxLength={2000}
             value={details}
             onChange={(e) => setDetails(e.target.value)}

@@ -74,12 +74,16 @@ export default function ComplaintsPage() {
               <span className={styles.muted}>{formatDate(c.createdAt, true)}</span>
             </div>
             <h2>
-              {c.target && t && c.target.status === 'published' ? (
+              {c.entityType === 'message' ? (
+                <span className={styles.pre}>
+                  {c.target?.title || (c.target ? 'Только фото' : 'Сообщение удалено')}
+                </span>
+              ) : c.target && t && c.target.status === 'published' ? (
                 <Link href={`${t.path}/${c.target.slug}`}>{c.target.title}</Link>
               ) : (
                 (c.target?.title ?? 'Запись удалена')
               )}
-              {c.target && c.target.status !== 'published' && (
+              {c.entityType !== 'message' && c.target && c.target.status !== 'published' && (
                 <span className={styles.muted}> (сейчас не опубликовано)</span>
               )}
             </h2>

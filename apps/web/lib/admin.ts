@@ -262,4 +262,5 @@ export const COMPLAINT_TARGETS: Record<string, { label: string; path: string }> 
   group: { label: 'Группа', path: '/groups' },
   post: { label: 'Пост', path: '/feed' },
   comment: { label: 'Комментарий', path: '/feed' },
+  message: { label: 'Личное сообщение', path: '' },
 };

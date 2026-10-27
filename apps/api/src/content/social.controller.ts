@@ -30,6 +30,7 @@ import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { isTrustedAuthor } from './community.controller.js';
+import { NotificationsService } from './notifications.controller.js';
 import { uniqueSlug } from './slug.js';
 import { visiblePostWhere } from './visibility.js';
 
@@ -145,6 +146,7 @@ export class SocialController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ---------------------------------------------------------------- groups
@@ -296,6 +298,18 @@ export class SocialController {
     if (existing) return { status: existing.status };
     const status = g.visibility === 'open' ? 'active' : 'pending';
     await this.prisma.groupMember.create({ data: { groupId: g.id, userId: p.userId, status } });
+    if (status === 'pending') {
+      const managers = await this.prisma.groupMember.findMany({
+        where: { groupId: g.id, status: 'active', role: { in: MANAGERS } },
+        select: { userId: true },
+      });
+      await this.notifications.notify(
+        managers.map((m) => m.userId),
+        'group_join_request',
+        `/groups/${slug}`,
+        p.userId,
+      );
+    }
     await this.log(
       `group.${status === 'active' ? 'joined' : 'join_requested'}`,
       p.userId,
@@ -362,6 +376,8 @@ export class SocialController {
     if (!data) throw new ConflictException({ code: 'INVALID_TRANSITION' });
     if (action === 'remove') await this.prisma.groupMember.delete({ where: { id: target.id } });
     else await this.prisma.groupMember.update({ where: { id: target.id }, data });
+    if (action === 'approve')
+      await this.notifications.notify([userId], 'group_join_approved', `/groups/${slug}`, p.userId);
     await this.log(`group.member_${action}`, p.userId, 'group', g.id, { userId });
     return { userId, action };
   }
@@ -573,7 +589,7 @@ export class SocialController {
     const { note } = parse(noteBody, body);
     const post = await this.prisma.post.findFirst({
       where: { id, status: 'published' },
-      select: { groupId: true },
+      select: { groupId: true, authorId: true },
     });
     if (!post || !(await this.canModerate(post.groupId, p)))
       throw new NotFoundException({ code: 'NOT_FOUND' });
@@ -582,6 +598,7 @@ export class SocialController {
       data: { status: 'removed', moderationNote: note, pinned: false },
     });
     await this.log('post.removed', p.userId, 'post', id);
+    await this.notifications.notify([post.authorId], 'post_removed', '/groups/mine', p.userId);
     return { id, status: 'removed' };
   }
 
@@ -621,11 +638,14 @@ export class SocialController {
         code: 'MEMBERS_ONLY',
         message: 'Комментировать могут только участники группы',
       });
+    let parentAuthor: string | undefined;
     if (data.parentId) {
-      const parent = await this.prisma.comment.count({
+      const parent = await this.prisma.comment.findFirst({
         where: { id: data.parentId, postId: id, parentId: null, status: 'published' },
+        select: { authorId: true },
       });
       if (!parent) throw new BadRequestException({ code: 'INVALID_PARENT' });
+      parentAuthor = parent.authorId;
     }
     const recent = await this.prisma.comment.count({
       where: {
@@ -646,6 +666,11 @@ export class SocialController {
       select: { id: true },
     });
     await this.log('comment.created', p.userId, 'comment', c.id, { postId: id });
+    const href = `/feed/${id}`;
+    if (parentAuthor)
+      await this.notifications.notify([parentAuthor], 'comment_reply', href, p.userId);
+    if (post.authorId !== parentAuthor)
+      await this.notifications.notify([post.authorId], 'post_comment', href, p.userId);
     return c;
   }
 
@@ -689,7 +714,7 @@ export class SocialController {
     const { note } = parse(noteBody, body);
     const c = await this.prisma.comment.findFirst({
       where: { id, status: 'published' },
-      select: { post: { select: { groupId: true } } },
+      select: { authorId: true, postId: true, post: { select: { groupId: true } } },
     });
     if (!c || !(await this.canModerate(c.post.groupId, p)))
       throw new NotFoundException({ code: 'NOT_FOUND' });
@@ -698,6 +723,7 @@ export class SocialController {
       data: { status: 'removed', moderationNote: note },
     });
     await this.log('comment.removed', p.userId, 'comment', id);
+    await this.notifications.notify([c.authorId], 'comment_removed', `/feed/${c.postId}`, p.userId);
     return { id, status: 'removed' };
   }
 
@@ -735,6 +761,14 @@ export class SocialController {
     });
     if (!count) throw new NotFoundException({ code: 'NOT_FOUND' });
     await this.log(`post.${d === 'approve' ? 'approved' : 'rejected'}`, p.userId, 'post', id);
+    const author = await this.prisma.post.findUnique({ where: { id }, select: { authorId: true } });
+    if (author)
+      await this.notifications.notify(
+        [author.authorId],
+        d === 'approve' ? 'post_approved' : 'post_rejected',
+        d === 'approve' ? `/feed/${id}` : '/groups/mine',
+        p.userId,
+      );
     return { id, status: d === 'approve' ? 'published' : 'rejected' };
   }
 
@@ -779,6 +813,17 @@ export class SocialController {
     });
     if (!count) throw new NotFoundException({ code: 'NOT_FOUND' });
     await this.log(`group.${status}`, p.userId, 'group', id);
+    const g = await this.prisma.group.findUnique({
+      where: { id },
+      select: { slug: true, createdById: true },
+    });
+    if (g)
+      await this.notifications.notify(
+        [g.createdById],
+        d === 'approve' ? 'group_approved' : d === 'reject' ? 'group_rejected' : 'group_archived',
+        d === 'reject' ? '/groups/mine' : `/groups/${g.slug}`,
+        p.userId,
+      );
     return { id, status };
   }
 
@@ -821,7 +866,7 @@ export class SocialController {
   private async visiblePost(id: string, userId: string) {
     const post = await this.prisma.post.findFirst({
       where: { id, ...visiblePostWhere(userId) },
-      select: { id: true, groupId: true },
+      select: { id: true, groupId: true, authorId: true },
     });
     if (!post) throw new NotFoundException({ code: 'NOT_FOUND' });
     return post;
@@ -853,7 +898,7 @@ export class SocialController {
   private async checkImages(userId: string, ids: string[]) {
     if (!ids.length) return;
     const owned = await this.prisma.mediaAsset.count({
-      where: { id: { in: ids }, ownerId: userId },
+      where: { id: { in: ids }, ownerId: userId, private: false },
     });
     if (owned !== new Set(ids).size)
       throw new BadRequestException({

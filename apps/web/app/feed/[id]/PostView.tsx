@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { PageHead, styles } from '../../../components/content/Blocks';
 import { FavoriteButton } from '../../../components/content/FavoriteButton';
 import { ReportButton } from '../../../components/content/ReportButton';
+import { StartConversationButton } from '../../../components/messages/StartConversationButton';
 import { PostCard } from '../../../components/social/PostCard';
 import social from '../../../components/social/social.module.css';
 import { Button } from '../../../components/ui/Button';
@@ -84,6 +85,9 @@ export function PostView({ id }: { id: string }) {
         )}
         {post.status === 'published' && !post.mine && (
           <ReportButton entityType="post" entityId={id} />
+        )}
+        {post.status === 'published' && signedIn && !post.mine && (
+          <StartConversationButton postId={id} />
         )}
         {post.mine && (
           <>
@@ -193,6 +197,7 @@ function Comment({
           </>
         )}
         {!c.mine && <ReportButton entityType="comment" entityId={c.id} />}
+        {!c.mine && post.canComment && <StartConversationButton commentId={c.id} />}
         {post.canModerate && !c.mine && (
           <Button
             size="sm"

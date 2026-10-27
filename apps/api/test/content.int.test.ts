@@ -1184,4 +1184,197 @@ describe('core content platform against a real PostgreSQL database', () => {
       ).toBe(false);
     });
   });
+  describe('messages and notifications (PHASE 7b)', () => {
+    it('limits conversations to participants, honours blocks and keeps attachments private', async () => {
+      const author = await user('p7b-author');
+      const writer = await user('p7b-writer');
+      const outsider = await user('p7b-out');
+      const mod = await user('p7b-mod', 'moderator');
+
+      const created = await req('POST', '/api/posts', {
+        cookie: author.cookie,
+        body: { body: 'Пост для проверки сообщений' },
+      });
+      const postId = created.json().id as string;
+      await req('POST', `/api/moderation/posts/${postId}/approve`, {
+        cookie: mod.cookie,
+        body: {},
+      });
+      const notes = (await req('GET', '/api/me/notifications', { cookie: author.cookie })).json();
+      expect(notes.items[0].type).toBe('post_approved');
+      expect(notes.items[0].title).not.toContain('Пост для проверки');
+
+      await req('POST', `/api/posts/${postId}/comments`, {
+        cookie: writer.cookie,
+        body: { body: 'Комментарий' },
+      });
+      expect(
+        (await req('GET', '/api/me/unread', { cookie: author.cookie })).json().notifications,
+      ).toBe(2);
+      expect(
+        (
+          await req('POST', '/api/me/notifications/read', { cookie: author.cookie, body: {} })
+        ).json().updated,
+      ).toBe(2);
+
+      expect(
+        (await req('POST', '/api/conversations', { cookie: author.cookie, body: { postId } }))
+          .statusCode,
+      ).toBe(400);
+      const start = await req('POST', '/api/conversations', {
+        cookie: writer.cookie,
+        body: { postId },
+      });
+      expect(start.statusCode).toBe(200);
+      const convId = start.json().id as string;
+      expect(
+        (
+          await req('POST', '/api/conversations', { cookie: writer.cookie, body: { postId } })
+        ).json().id,
+      ).toBe(convId);
+      // Empty conversations are not listed for the recipient.
+      expect(
+        (await req('GET', '/api/me/conversations', { cookie: author.cookie })).json().items,
+      ).toHaveLength(0);
+
+      const send = (cookie: string, body: Record<string, unknown>) =>
+        req('POST', `/api/conversations/${convId}/messages`, { cookie, body });
+      const first = await send(writer.cookie, { body: 'Здравствуйте!', clientId: 'retry-key-001' });
+      expect(first.statusCode).toBe(201);
+      const retry = await send(writer.cookie, { body: 'Здравствуйте!', clientId: 'retry-key-001' });
+      expect(retry.json().id).toBe(first.json().id);
+      expect((await send(writer.cookie, { body: '' })).statusCode).toBe(400);
+
+      for (const path of [`/api/conversations/${convId}`, `/api/conversations/${convId}/messages`])
+        expect((await req('GET', path, { cookie: outsider.cookie })).statusCode).toBe(404);
+      expect((await send(outsider.cookie, { body: 'чужой' })).statusCode).toBe(404);
+
+      expect((await req('GET', '/api/me/unread', { cookie: author.cookie })).json().messages).toBe(
+        1,
+      );
+      const list = (await req('GET', '/api/me/conversations', { cookie: author.cookie })).json();
+      expect(list.items[0]).toMatchObject({ id: convId, unread: 1, other: { id: writer.id } });
+      await req('POST', `/api/conversations/${convId}/read`, { cookie: author.cookie, body: {} });
+      expect((await req('GET', '/api/me/unread', { cookie: author.cookie })).json().messages).toBe(
+        0,
+      );
+
+      // Private attachments: only own private uploads, visible to the two members only.
+      const pub = await req('POST', '/api/media', { cookie: writer.cookie, raw: PNG });
+      expect(
+        (await send(writer.cookie, { body: 'фото', mediaIds: [pub.json().id] })).statusCode,
+      ).toBe(400);
+      const priv = await req('POST', '/api/media?scope=private', {
+        cookie: writer.cookie,
+        raw: PNG,
+      });
+      const mediaId = priv.json().id as string;
+      expect(
+        (
+          await req('POST', '/api/posts', {
+            cookie: writer.cookie,
+            body: { body: 'пост с личным фото', imageIds: [mediaId] },
+          })
+        ).statusCode,
+      ).toBe(400);
+      expect((await send(writer.cookie, { body: '', mediaIds: [mediaId] })).statusCode).toBe(201);
+      expect((await req('GET', `/api/media/${mediaId}`)).statusCode).toBe(404);
+      expect(
+        (await req('GET', `/api/media/${mediaId}`, { cookie: outsider.cookie })).statusCode,
+      ).toBe(404);
+      const seen = await req('GET', `/api/media/${mediaId}`, { cookie: author.cookie });
+      expect(seen.statusCode).toBe(200);
+      expect(seen.headers['cache-control']).toBe('private, no-store');
+
+      const history = (
+        await req('GET', `/api/conversations/${convId}/messages`, { cookie: author.cookie })
+      ).json();
+      expect(history.items.map((m: { mine: boolean }) => m.mine)).toEqual([false, false]);
+      expect(history.items[0].clientId).toBeUndefined();
+      const newer = (
+        await req('GET', `/api/conversations/${convId}/messages?after=${first.json().id}`, {
+          cookie: author.cookie,
+        })
+      ).json();
+      expect(newer.items).toHaveLength(1);
+
+      // Only the recipient may report; the sender and outsiders get 404.
+      const report = (cookie: string) =>
+        req('POST', '/api/complaints', {
+          cookie,
+          body: { entityType: 'message', entityId: first.json().id, reason: 'spam' },
+        });
+      expect((await report(writer.cookie)).statusCode).toBe(404);
+      expect((await report(outsider.cookie)).statusCode).toBe(404);
+      expect((await report(author.cookie)).statusCode).toBe(201);
+
+      // Blocks: partners only; a block stops sending both ways.
+      expect(
+        (await req('POST', `/api/users/${outsider.id}/block`, { cookie: author.cookie, body: {} }))
+          .statusCode,
+      ).toBe(404);
+      expect(
+        (await req('POST', `/api/users/${writer.id}/block`, { cookie: author.cookie, body: {} }))
+          .statusCode,
+      ).toBe(200);
+      expect((await send(writer.cookie, { body: 'ещё' })).statusCode).toBe(403);
+      expect((await send(author.cookie, { body: 'ответ' })).statusCode).toBe(403);
+      expect(
+        (await req('GET', `/api/conversations/${convId}`, { cookie: writer.cookie })).json(),
+      ).toMatchObject({ canSend: false, blockedByMe: false });
+      await req('DELETE', `/api/users/${writer.id}/block`, { cookie: author.cookie });
+      expect((await send(author.cookie, { body: 'ответ' })).statusCode).toBe(201);
+
+      // Delete: sender only, content erased.
+      const msgId = first.json().id as string;
+      expect(
+        (await req('DELETE', `/api/messages/${msgId}`, { cookie: author.cookie })).statusCode,
+      ).toBe(404);
+      expect(
+        (await req('DELETE', `/api/messages/${msgId}`, { cookie: writer.cookie })).statusCode,
+      ).toBe(200);
+      const row = await prisma.message.findUniqueOrThrow({ where: { id: msgId } });
+      expect(row).toMatchObject({ status: 'deleted', body: '', mediaIds: [] });
+      const audit = await prisma.auditLog.findMany({ where: { actorId: writer.id } });
+      expect(JSON.stringify(audit)).not.toContain('Здравствуйте');
+    });
+
+    it('rate-limits message sending', async () => {
+      const a = await user('p7b-rate-a');
+      const b = await user('p7b-rate-b');
+      const mod = await user('p7b-rate-mod', 'moderator');
+      const postId = (
+        await req('POST', '/api/posts', { cookie: a.cookie, body: { body: 'Пост для лимита' } })
+      ).json().id;
+      await req('POST', `/api/moderation/posts/${postId}/approve`, {
+        cookie: mod.cookie,
+        body: {},
+      });
+      const convId = (
+        await req('POST', '/api/conversations', { cookie: b.cookie, body: { postId } })
+      ).json().id;
+      for (let i = 0; i < 20; i++)
+        expect(
+          (
+            await req('POST', `/api/conversations/${convId}/messages`, {
+              cookie: b.cookie,
+              body: { body: `сообщение ${i}` },
+            })
+          ).statusCode,
+        ).toBe(201);
+      expect(
+        (
+          await req('POST', `/api/conversations/${convId}/messages`, {
+            cookie: b.cookie,
+            body: { body: 'лишнее' },
+          })
+        ).statusCode,
+      ).toBe(429);
+      const page = (
+        await req('GET', `/api/conversations/${convId}/messages`, { cookie: a.cookie })
+      ).json();
+      expect(page.items).toHaveLength(20);
+      expect(page.nextBefore).toBeNull();
+    });
+  });
 });

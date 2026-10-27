@@ -11,6 +11,7 @@ export const TARGET_TYPES = [
   'group',
   'post',
   'comment',
+  'message',
 ] as const;
 export type TargetType = (typeof TARGET_TYPES)[number];
 
@@ -58,6 +59,19 @@ export async function isVisibleTarget(
       return (
         (await prisma.comment.count({
           where: { id, status: 'published', post: visiblePostWhere(userId) },
+        })) > 0
+      );
+    case 'message':
+      // Only the recipient can report a message, and only while they are in the conversation.
+      return (
+        Boolean(userId) &&
+        (await prisma.message.count({
+          where: {
+            id,
+            status: 'sent',
+            senderId: { not: userId },
+            conversation: { members: { some: { userId } } },
+          },
         })) > 0
       );
   }

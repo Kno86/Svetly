@@ -35,11 +35,16 @@ model User {
 
   sessions         Session[]
   accounts         Account[]
-  roles            UserRole[]    @relation("UserRoles")
-  rolesGiven       UserRole[]    @relation("UserRolesGrantedBy")
+  roles            UserRole[]           @relation("UserRoles")
+  rolesGiven       UserRole[]           @relation("UserRolesGrantedBy")
   posts            Post[]
   comments         Comment[]
   groupMemberships GroupMember[]
+  conversations    ConversationMember[]
+  messages         Message[]
+  blocksMade       UserBlock[]          @relation("BlocksMade")
+  blocksReceived   UserBlock[]          @relation("BlocksReceived")
+  notifications    Notification[]
 
   @@map("users")
 }
@@ -212,6 +217,8 @@ model MediaAsset {
   mime       String
   size       Int
   alt        String   @default("")
+  /// Private assets (message attachments) are served only to the owner and conversation members.
+  private    Boolean  @default(false)
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([ownerId])
@@ -659,4 +666,81 @@ model Favorite {
   @@unique([userId, entityType, entityId])
   @@index([userId, createdAt])
   @@map("favorites")
+}
+
+model Conversation {
+  id            String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  /// Sorted "userA:userB" — one direct conversation per pair of users.
+  pairKey       String    @unique @map("pair_key")
+  createdById   String    @map("created_by_id") @db.Uuid
+  /// Null until the first message; empty conversations are not listed.
+  lastMessageAt DateTime? @map("last_message_at") @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  members  ConversationMember[]
+  messages Message[]
+
+  @@index([createdById, createdAt])
+  @@map("conversations")
+}
+
+model ConversationMember {
+  conversationId String   @map("conversation_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  lastReadAt     DateTime @default(now()) @map("last_read_at") @db.Timestamptz(6)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_members")
+}
+
+model Message {
+  id             String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  senderId       String   @map("sender_id") @db.Uuid
+  /// Client-generated key so a retried send does not create a duplicate.
+  clientId       String?  @map("client_id")
+  body           String   @default("")
+  mediaIds       String[] @default([]) @map("media_ids") @db.Uuid
+  status         String   @default("sent")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, clientId])
+  @@index([conversationId, createdAt])
+  @@index([senderId, createdAt])
+  @@map("messages")
+}
+
+model UserBlock {
+  blockerId String   @map("blocker_id") @db.Uuid
+  blockedId String   @map("blocked_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  blocker User @relation("BlocksMade", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("user_blocks")
+}
+
+model Notification {
+  id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  type      String
+  title     String
+  href      String?
+  readAt    DateTime? @map("read_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("notifications")
 }
