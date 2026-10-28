@@ -53,7 +53,8 @@
   --radius-xl: 1.5rem;
   --radius-pill: 999px;
 
-  --font-sans: 'Manrope Variable', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --font-sans: 'Golos Text Variable', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --font-display: 'Literata Variable', Georgia, 'Times New Roman', serif;
   --font-size-xs: 0.8125rem;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;

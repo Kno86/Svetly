@@ -1,4 +1,5 @@
-import '@fontsource-variable/manrope/wght.css';
+import '@fontsource-variable/golos-text/wght.css';
+import '@fontsource-variable/literata/wght.css';
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { Analytics } from '../components/analytics/Analytics';
