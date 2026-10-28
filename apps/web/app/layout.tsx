@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: { title: 'SVETLY', images: ['/brand/og-image.png'], locale: 'ru_RU', type: 'website' },
 };
 
-export const viewport: Viewport = { themeColor: '#103C2F' };
+export const viewport: Viewport = { themeColor: '#B4441E' };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

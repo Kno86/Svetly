@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Цифровая платформа жителей посёлка Октябрьский и жилого района Светлый',
     start_url: '/',
     display: 'standalone',
-    background_color: '#F7F6F0',
-    theme_color: '#103C2F',
+    background_color: '#FAF6EF',
+    theme_color: '#B4441E',
     lang: 'ru',
     icons: [
       { src: '/brand/icon-192.png', sizes: '192x192', type: 'image/png' },
