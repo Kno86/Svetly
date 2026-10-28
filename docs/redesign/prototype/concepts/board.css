@@ -1,0 +1,29 @@
+.board{padding-block:24px 80px}
+.board h2{font:600 24px/1.2 var(--font-display);margin:48px 0 16px}
+.bh{font:600 clamp(32px,4vw,48px)/1.1 var(--font-display);margin:8px 0}
+.bl{max-width:52em;color:var(--muted);font-size:18px}
+.lvs{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.lv{margin:0;border-radius:16px;padding:32px 24px 16px;border:1px solid var(--line)}
+.lv svg{width:100%;max-width:300px;height:auto}
+.lv figcaption,.ic figcaption{font-size:13px;margin-top:12px;color:#8a8a8a}
+.ics{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-end}
+.ic{margin:0;text-align:center}
+.sws{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.sw{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:2px;font-size:13px}
+.sw .chipc{height:64px;border-radius:8px;display:grid;place-items:center;font:600 20px var(--font-ui);margin-bottom:6px}
+.sw span{color:var(--muted)}
+.ty{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:baseline;padding:14px 0;border-top:1px solid var(--line)}
+.ty>span{font-size:13px;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:12px 0}
+.fld{display:grid;gap:6px;font-weight:600;font-size:15px;min-width:260px}
+.fld input{min-height:48px;border:1px solid var(--line-strong);border-radius:10px;padding:0 14px;font:400 16px var(--font-ui);background:var(--surface);color:var(--ink)}
+.fld.err input{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger)}
+.fld small{color:var(--danger);font-weight:500}
+.rules{display:grid;gap:8px;max-width:60em;padding-left:20px}
+.frames{display:grid;grid-template-columns:1fr 390px;gap:24px;align-items:start}
+.fd{height:640px;border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative}
+.fd iframe{width:1440px;height:1280px;border:0;transform:scale(.5);transform-origin:0 0;position:absolute}
+.fm{border:1px solid var(--line);border-radius:28px;overflow:hidden;height:780px}
+.fm iframe{width:390px;height:780px;border:0}
+@media (max-width:1100px){.fd iframe{transform:scale(.4)}.fd{height:520px}}
+@media (max-width:900px){.frames{grid-template-columns:1fr}.fd{display:none}.fm{max-width:390px}.lvs{grid-template-columns:1fr}.ty{grid-template-columns:1fr;gap:4px}}

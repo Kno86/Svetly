@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Концепция B «Окно» — главная · SVETLY прототип</title>
+<link rel="stylesheet" href="../assets/fonts/fonts.css"><link rel="stylesheet" href="b.css">
+</head>
+<body>
+<div class="demo">Прототип концепции B. Все данные вымышлены и показаны как пример.</div>
+<div class="top">
+  <header class="container hdr-in">
+    <a class="logo" href="#" aria-label="SVETLY — на главную">
+      <svg width="38" height="38" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#1A2150"/><rect x="12" y="11" width="18" height="19" rx="4" fill="#2E46D8"/><rect x="34" y="11" width="18" height="19" rx="4" fill="#FFC23D"/><rect x="12" y="34" width="18" height="19" rx="4" fill="#2E46D8"/><rect x="34" y="34" width="18" height="19" rx="4" fill="#2E46D8"/></svg>
+      <span class="logo-word">svetly</span>
+    </a>
+    <nav class="nav" aria-label="Основные разделы"><a href="#" aria-current="page">Главная</a><a href="#">Новости</a><a href="#">Объявления</a><a href="#">Услуги и бизнес</a><a href="#">Сообщество</a></nav>
+    <div class="hdr-act">
+      <button class="icon-btn hide-t" aria-label="Уведомления"><svg class="i"><use href="../assets/icons.svg#bell"/></svg></button>
+      <a class="btn btn-lamp" href="#"><svg class="i-s"><use href="../assets/icons.svg#plus"/></svg>Разместить</a>
+      <a class="btn btn-ghost" href="#">Войти</a>
+      <button class="icon-btn only-m" aria-label="Меню"><svg class="i"><use href="../assets/icons.svg#menu"/></svg></button>
+    </div>
+  </header>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <span class="loc"><svg class="i-s"><use href="../assets/icons.svg#pin"/></svg>Октябрьский и Светлый · Мошковский район</span>
+        <h1>Свой посёлок.<br><span>Всё рядом.</span></h1>
+        <p class="lead">Объявления соседей, местные мастера, события и новости. Сообщайте о проблемах и следите за решением.</p>
+        <form class="search" role="search" onsubmit="return false">
+          <div class="search-tabs" role="tablist"><button role="tab" aria-selected="true">Всё</button><button role="tab">Объявления</button><button role="tab">Услуги</button><button role="tab">События</button><button role="tab">Новости</button></div>
+          <div class="search-row"><svg class="i"><use href="../assets/icons.svg#search"/></svg><label class="sr" for="q">Поиск</label><input id="q" placeholder="Что ищете?"><button class="btn btn-primary">Найти</button></div>
+        </form>
+      </div>
+      <div class="windows" aria-hidden="true"><i></i><i class="dim"></i><i class="lit"></i><i></i><i class="lit"></i><i></i><i class="dim"></i><i class="lit"></i><i class="dim"></i><i class="lit"></i><i></i><i class="dim"></i></div>
+    </div>
+  </section>
+</div>
+
+<main id="main" class="container">
+  <div class="bento">
+    <nav class="tile t-actions" aria-label="Быстрые действия">
+      <a class="qa" href="#"><span class="ic ic-p"><svg class="i"><use href="../assets/icons.svg#tag"/></svg></span>Подать объявление</a>
+      <a class="qa" href="#"><span class="ic ic-m"><svg class="i"><use href="../assets/icons.svg#tool"/></svg></span>Найти мастера</a>
+      <a class="qa" href="#"><span class="ic ic-l"><svg class="i"><use href="../assets/icons.svg#alert"/></svg></span>Сообщить о проблеме</a>
+      <a class="qa" href="#"><span class="ic ic-n"><svg class="i"><use href="../assets/icons.svg#calendar"/></svg></span>Афиша</a>
+    </nav>
+
+    <section class="tile t-events" aria-labelledby="ev-h">
+      <div class="tile-h"><h2 id="ev-h">Афиша недели</h2><a class="more" style="color:var(--lamp)" href="#">Все события<svg class="i-s"><use href="../assets/icons.svg#arrow"/></svg></a></div>
+      <div class="ev-list">
+        <a class="ev" href="#"><div class="d"><b>12</b><span>сб</span></div><div><h3>Субботник у стадиона</h3><p>11:00 · Стадион школы · пример</p></div><span class="badge">24 идут</span></a>
+        <a class="ev" href="#"><div class="d"><b>14</b><span>пн</span></div><div><h3>Встреча жителей по благоустройству</h3><p>18:30 · Дом культуры · пример</p></div><span class="badge">9 идут</span></a>
+        <a class="ev" href="#"><div class="d"><b>19</b><span>сб</span></div><div><h3>Ярмарка выходного дня</h3><p>12:00 · Площадь · пример</p></div><span class="badge">31 идут</span></a>
+      </div>
+    </section>
+
+    <section class="tile t-ads" aria-labelledby="ads-h">
+      <div class="tile-h"><h2 id="ads-h">Новое у соседей</h2><a class="more" href="#">Все<svg class="i-s"><use href="../assets/icons.svg#arrow"/></svg></a></div>
+      <a class="ad" href="#"><div class="ph p1"></div><div><b>4 500 ₽</b><h3>Детский велосипед, 20″</h3><div class="meta"><span>Продам</span><span>сегодня</span></div></div></a>
+      <a class="ad" href="#"><div class="ph p3"></div><div><b>Даром</b><h3>Рассада томатов</h3><div class="meta"><span>Отдам даром</span><span>вчера</span></div></div></a>
+      <a class="ad" href="#"><div class="ph p2"></div><div><b>Найдено</b><h3>Ключи у остановки</h3><div class="meta"><span>Находки</span><span>сегодня</span></div></div></a>
+    </section>
+
+    <section class="tile t-issue" aria-labelledby="is-h">
+      <span class="badge warn">Обращение № 42 · пример</span>
+      <h2 id="is-h" style="margin-top:12px">Не горит фонарь на улице</h2>
+      <div class="pipe" aria-label="Статус: в работе"><i class="on"></i><i class="now"></i><i></i></div>
+      <div class="meta"><span>Принято</span><span>→ В работе</span><span>→ Решено</span></div>
+      <p class="meta" style="margin:12px 0 16px">Обращение видят только сотрудники SVETLY.</p>
+      <a class="btn btn-secondary" href="#">Сообщить о проблеме</a>
+    </section>
+
+    <section class="tile t-poll" aria-labelledby="poll-h">
+      <span class="badge info">Опрос</span>
+      <h2 id="poll-h" style="margin-top:12px">Где поставить новую лавочку?</h2>
+      <div class="opt"><span>У пруда</span><b>48%</b><span class="bar"><i style="width:48%"></i></span></div>
+      <div class="opt"><span>У остановки</span><b>31%</b><span class="bar"><i style="width:31%"></i></span></div>
+      <div class="opt"><span>Во дворе школы</span><b>21%</b><span class="bar"><i style="width:21%"></i></span></div>
+    </section>
+
+    <section class="tile t-svc" aria-labelledby="svc-h">
+      <div class="tile-h"><h2 id="svc-h">Услуги рядом</h2><a class="more" href="#">Каталог<svg class="i-s"><use href="../assets/icons.svg#arrow"/></svg></a></div>
+      <div class="chips"><a class="chip" href="#">Ремонт</a><a class="chip" href="#">Красота</a><a class="chip" href="#">Детям</a><a class="chip" href="#">Магазины</a><a class="chip" href="#">Транспорт</a><a class="chip" href="#">Учреждения</a><a class="chip" href="#">Полезные телефоны</a></div>
+    </section>
+  </div>
+
+  <section class="sec" aria-labelledby="news-h">
+    <div class="sec-h"><div><span class="kicker">Редакция</span><h2 id="news-h">Новости посёлка</h2></div><a class="more" href="#">Все новости<svg class="i-s"><use href="../assets/icons.svg#arrow"/></svg></a></div>
+    <div class="news">
+      <a class="nc big" href="#"><div class="ph p1"><span class="cap">Место для фото редакции</span></div><div class="nc-b"><span class="badge info" style="align-self:flex-start">Благоустройство</span><h3>Во дворах обновят освещение: что изменится и когда начнут</h3><div class="meta">Пример · 2 часа назад</div></div></a>
+      <a class="nc" href="#"><div class="ph p4"></div><div class="nc-b"><div class="meta">Транспорт · пример</div><h3>Изменилось расписание автобуса</h3></div></a>
+      <a class="nc" href="#"><div class="ph p3"></div><div class="nc-b"><div class="meta">Образование · пример</div><h3>Запись в кружки на новый год</h3></div></a>
+      <a class="nc" href="#"><div class="ph p2"></div><div class="nc-b"><div class="meta">Важное · пример</div><h3>Как подготовиться к отключению света</h3></div></a>
+      <a class="nc" href="#"><div class="ph"></div><div class="nc-b"><div class="meta">Сообщество · пример</div><h3>Итоги опроса о детской площадке</h3></div></a>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="biz-h">
+    <div><span class="kicker">Предпринимателям</span><h2 id="biz-h">Ваше дело — на карте посёлка</h2><p>Бесплатная проверенная карточка и заявки от жителей в кабинете бизнеса.</p><a class="btn btn-lamp btn-lg" href="#">Добавить организацию</a></div>
+    <ul><li><svg class="i"><use href="../assets/icons.svg#shield"/></svg>Проверка администратором</li><li><svg class="i"><use href="../assets/icons.svg#chat"/></svg>Заявки жителей в кабинете</li><li><svg class="i"><use href="../assets/icons.svg#chart"/></svg>Статистика — концепция, пока нет в продукте</li></ul>
+  </section>
+</main>
+
+<footer class="ftr">
+  <div class="container ftr-g">
+    <div><span class="logo-word" style="color:#fff">svetly</span><p>Цифровая платформа жителей посёлка Октябрьский и жилого района Светлый, Мошковский район.</p></div>
+    <div><h4>Разделы</h4><a href="#">Новости</a><a href="#">Объявления</a><a href="#">Услуги и бизнес</a><a href="#">Сообщество</a></div>
+    <div><h4>Жителям</h4><a href="#">Разместить</a><a href="#">Обращения</a><a href="#">Справочник</a></div>
+    <div><h4>Платформа</h4><a href="#">Правила</a><a href="#">Конфиденциальность</a><a href="#">Поддержка</a></div>
+  </div>
+</footer>
+<nav class="tabbar" aria-label="Нижнее меню">
+  <a href="#" aria-current="page"><svg class="i"><use href="../assets/icons.svg#home"/></svg>Главная</a>
+  <a href="#"><svg class="i"><use href="../assets/icons.svg#grid"/></svg>Разделы</a>
+  <a class="fab" href="#"><svg class="i"><use href="../assets/icons.svg#plus"/></svg>Разместить</a>
+  <a href="#"><svg class="i"><use href="../assets/icons.svg#chat"/></svg>Сообщения</a>
+  <a href="#"><svg class="i"><use href="../assets/icons.svg#user"/></svg>Кабинет</a>
+</nav>
+</body>
+</html>
