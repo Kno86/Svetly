@@ -44,7 +44,7 @@
   text-decoration: none;
 }
 .navLink {
-  color: var(--color-deep-forest);
+  color: var(--color-ink);
 }
 .navLink:hover {
   background: var(--color-sand);
@@ -71,7 +71,7 @@
   width: 18px;
   height: 2px;
   border-radius: 2px;
-  background: var(--color-deep-forest);
+  background: var(--color-ink);
   transition: transform var(--duration-normal) var(--ease-standard);
 }
 .menuIcon {
@@ -100,7 +100,7 @@
 }
 .mobileNav {
   border-top: 1px solid var(--color-border);
-  background: var(--color-ivory);
+  background: var(--color-paper);
 }
 .mobileNav ul {
   margin: 0;
@@ -119,7 +119,7 @@
   border-bottom: 1px solid var(--color-border);
 }
 .mobileLink {
-  color: var(--color-deep-forest);
+  color: var(--color-ink);
 }
 .mobileLinkDisabled {
   color: var(--color-text-secondary);
@@ -132,12 +132,12 @@
   border-radius: var(--radius-pill);
 }
 .soon {
-  background: var(--color-gold-soft);
-  color: var(--color-gold-text);
+  background: var(--color-sun-soft);
+  color: var(--color-sun-text);
 }
 .soonDark {
   border: 1px solid rgba(233, 188, 102, 0.6);
-  color: var(--color-warm-gold);
+  color: var(--color-sun);
   margin-left: var(--space-1);
 }
 @media (min-width: 1024px) {
@@ -162,10 +162,10 @@
   color: rgba(247, 246, 240, 0.86);
 }
 .footer a {
-  color: var(--color-ivory);
+  color: var(--color-paper);
 }
 .footer a:hover {
-  color: var(--color-warm-gold);
+  color: var(--color-sun);
 }
 .footerGrid {
   display: grid;
@@ -183,7 +183,7 @@
   font-size: var(--font-size-sm);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-warm-gold);
+  color: var(--color-sun);
 }
 .footerList {
   display: flex;

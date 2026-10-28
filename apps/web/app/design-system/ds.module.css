@@ -41,12 +41,12 @@
   background: var(--color-white);
 }
 .logoTileDark {
-  background: var(--color-deep-forest);
-  border-color: var(--color-deep-forest);
-  color: var(--color-ivory);
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-paper);
 }
 .logoTileIvory {
-  background: var(--color-ivory);
+  background: var(--color-paper);
 }
 .logoCaption {
   font-size: var(--font-size-sm);
@@ -102,7 +102,7 @@
 .spaceBar {
   height: 0.75rem;
   border-radius: var(--radius-pill);
-  background: var(--color-leaf-green);
+  background: var(--color-sage);
 }
 .row {
   display: flex;
@@ -135,7 +135,7 @@
 .gridDemo span {
   height: 3rem;
   border-radius: var(--radius-sm);
-  background: var(--color-gold-soft);
+  background: var(--color-sun-soft);
 }
 @media (min-width: 768px) {
   .gridDemo {

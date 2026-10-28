@@ -19,9 +19,9 @@ describe('contrast', () => {
     expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(min);
   });
 
-  it('documents that raw Warm Gold and Leaf Green are not text colours on light surfaces', () => {
-    expect(contrastRatio(palette.warmGold, palette.ivory)).toBeLessThan(3);
-    expect(contrastRatio(palette.leafGreen, palette.ivory)).toBeLessThan(4.5);
+  it('documents that raw Sun and Sage are not text colours on light surfaces', () => {
+    expect(contrastRatio(palette.sun, palette.paper)).toBeLessThan(3);
+    expect(contrastRatio(palette.sage, palette.paper)).toBeLessThan(4.5);
   });
 });
 

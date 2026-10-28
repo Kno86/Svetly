@@ -78,7 +78,7 @@ export function EmptyState({
   return (
     <div className={styles.empty}>
       <svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true">
-        <circle cx="31" cy="15" r="6" fill="var(--color-warm-gold)" />
+        <circle cx="31" cy="15" r="6" fill="var(--color-sun)" />
         <path d="M4 36c9-6 18-7 27-4s9 3 13 0v12H4z" fill="var(--color-border)" />
       </svg>
       <h3 className={styles.emptyTitle}>{title}</h3>
