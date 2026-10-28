@@ -7,7 +7,7 @@
   min-height: var(--control-height);
   padding: 0 var(--space-5);
   border: 1px solid transparent;
-  border-radius: var(--radius-pill);
+  border-radius: 0.625rem;
   font: inherit;
   font-weight: 650;
   line-height: 1;
