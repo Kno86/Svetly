@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="t"><title id="t">SVETLY</title>
 <defs><mask id="m-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-<rect width="64" height="64" rx="16" fill="#fff"/>
-<circle cx="41.5" cy="21" r="8" fill="#000"/>
-<path d="M12.5 22.5L18.6 35.4H6.4ZM20.4 26.5L25 36.2H15.8Z" fill="#000"/>
-<path d="M27.2 31.6L32 27.4L36.8 31.6V37.4H27.2Z" fill="#000"/>
-<path d="M19.5 64C25.5 55.2 33.6 51.1 39.6 46.6C43.4 43.7 44.2 40.8 41.3 38.6C42.2 41.6 40.3 43.6 36.4 45.6C29.4 49.2 19.8 53.4 11 64Z" fill="#000"/>
+<rect width="64" height="64" rx="14" fill="#fff"/>
+<path d="M14 36a18 18 0 0 1 36 0z" fill="#000"/>
+<rect x="10" y="40" width="44" height="4" rx="2" fill="#000"/>
+<rect x="18" y="48" width="28" height="4" rx="2" fill="#000"/>
+<rect x="26" y="56" width="12" height="3" rx="1.5" fill="#000"/>
 </mask></defs>
-<rect width="64" height="64" rx="16" fill="#103C2F" mask="url(#m-mask)"/>
+<rect width="64" height="64" rx="14" fill="#24201C" mask="url(#m-mask)"/>
 </svg>
