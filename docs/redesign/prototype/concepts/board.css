@@ -20,10 +20,10 @@
 .fld.err input{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger)}
 .fld small{color:var(--danger);font-weight:500}
 .rules{display:grid;gap:8px;max-width:60em;padding-left:20px}
-.frames{display:grid;grid-template-columns:1fr 390px;gap:24px;align-items:start}
+.frames{display:grid;grid-template-columns:1fr 392px;gap:24px;align-items:start}
 .fd{height:640px;border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative}
 .fd iframe{width:1440px;height:1280px;border:0;transform:scale(.5);transform-origin:0 0;position:absolute}
-.fm{border:1px solid var(--line);border-radius:28px;overflow:hidden;height:780px}
+.fm{width:392px;border:1px solid var(--line);border-radius:28px;overflow:hidden;height:780px}
 .fm iframe{width:390px;height:780px;border:0}
 @media (max-width:1100px){.fd iframe{transform:scale(.4)}.fd{height:520px}}
 @media (max-width:900px){.frames{grid-template-columns:1fr}.fd{display:none}.fm{max-width:390px}.lvs{grid-template-columns:1fr}.ty{grid-template-columns:1fr;gap:4px}}
