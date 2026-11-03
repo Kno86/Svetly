@@ -37,7 +37,10 @@ const M = {
 };
 const lineRects = (fill, opacity = true) =>
   M.lines
-    .map((l) => `<rect x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" rx="${l.h / 2}" fill="${fill}"${opacity && l.o < 1 ? ` opacity="${l.o}"` : ''}/>`)
+    .map(
+      (l) =>
+        `<rect x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" rx="${l.h / 2}" fill="${fill}"${opacity && l.o < 1 ? ` opacity="${l.o}"` : ''}/>`,
+    )
     .join('\n');
 
 function markFull(prefix = 'm', onDark = false) {
