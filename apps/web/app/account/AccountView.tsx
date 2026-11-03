@@ -59,6 +59,7 @@ export function AccountView() {
     <main id="main" className={`container ${styles.page}`}>
       <div className={styles.wide}>
         <h1>Личный кабинет</h1>
+        {me && <Overview />}
         {loadError && (
           <Alert tone="error" title="Не удалось загрузить данные">
             {loadError}
@@ -95,6 +96,78 @@ export function AccountView() {
         )}
       </div>
     </main>
+  );
+}
+
+interface Counts {
+  unread?: { messages: number; notifications: number };
+  announcements?: Array<{ status: string }>;
+  favorites?: unknown[];
+}
+
+function Overview() {
+  const [counts, setCounts] = useState<Counts>();
+
+  useEffect(() => {
+    void Promise.all([
+      apiRequest<{ messages: number; notifications: number }>('/api/me/unread'),
+      apiRequest<Array<{ status: string }>>('/api/me/announcements'),
+      apiRequest<unknown[]>('/api/me/favorites'),
+    ]).then(([unread, announcements, favorites]) =>
+      setCounts({
+        unread: unread.ok ? unread.data : undefined,
+        announcements: announcements.ok ? announcements.data : undefined,
+        favorites: favorites.ok ? favorites.data : undefined,
+      }),
+    );
+  }, []);
+
+  if (!counts) return <Skeleton height="7rem" />;
+  const pending = counts.announcements?.filter((a) => a.status === 'pending').length ?? 0;
+  const rejected = counts.announcements?.filter((a) => a.status === 'rejected').length ?? 0;
+  const tiles = [
+    {
+      href: '/messages',
+      label: 'Новые сообщения',
+      value: counts.unread?.messages,
+      note: 'Непрочитанные диалоги',
+    },
+    {
+      href: '/notifications',
+      label: 'Уведомления',
+      value: counts.unread?.notifications,
+      note: 'Непрочитанные',
+    },
+    {
+      href: '/account/announcements',
+      label: 'Мои объявления',
+      value: counts.announcements?.length,
+      note:
+        pending || rejected
+          ? [pending && `${pending} на проверке`, rejected && `${rejected} отклонено`]
+              .filter(Boolean)
+              .join(' · ')
+          : 'Все объявления',
+    },
+    {
+      href: '/favorites',
+      label: 'Избранное',
+      value: counts.favorites?.length,
+      note: 'Видно только вам',
+    },
+  ];
+  return (
+    <ul className={styles.tiles} role="list" aria-label="Обзор кабинета">
+      {tiles.map((t) => (
+        <li key={t.href}>
+          <Link href={t.href} className={styles.tile}>
+            <span>{t.label}</span>
+            <b>{t.value ?? '—'}</b>
+            <span className={styles.meta}>{t.value === undefined ? 'Не загрузилось' : t.note}</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 
