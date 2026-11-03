@@ -1,5 +1,6 @@
 'use client';
 
+import { useAsk } from '../../../components/ui/Dialog';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '../../../components/ui/Button';
@@ -27,11 +28,16 @@ export default function ComplaintsPage() {
   const [status, setStatus] = useState('open');
   const { data, error, reload } = useApi<Complaint[]>(`/api/admin/complaints?status=${status}`);
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string }>();
+  const [dialog, ask] = useAsk();
 
   async function resolve(c: Complaint, decision: 'resolved' | 'dismissed') {
-    const note = window
-      .prompt(decision === 'resolved' ? 'Что сделано?' : 'Почему жалоба отклонена?')
-      ?.trim();
+    const note = (
+      await ask({
+        title: decision === 'resolved' ? 'Закрыть жалобу как решённую?' : 'Отклонить жалобу?',
+        field: decision === 'resolved' ? 'Что сделано' : 'Почему жалоба отклонена',
+        confirmLabel: 'Сохранить решение',
+      })
+    )?.trim();
     if (!note) return;
     const r = await apiRequest(`/api/admin/complaints/${c.id}/resolve`, {
       body: { decision, note },
@@ -46,6 +52,7 @@ export default function ComplaintsPage() {
 
   return (
     <>
+      {dialog}
       <div className={styles.head}>
         <h1>Жалобы</h1>
       </div>

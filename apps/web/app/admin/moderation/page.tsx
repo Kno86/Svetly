@@ -1,5 +1,6 @@
 'use client';
 
+import { useAsk } from '../../../components/ui/Dialog';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '../../../components/ui/Button';
@@ -37,11 +38,19 @@ export default function ModerationPage() {
     `/api/moderation/announcements?status=${status}`,
   );
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string }>();
+  const [dialog, ask] = useAsk();
 
   async function decide(item: QueueItem, decision: 'approve' | 'reject' | 'unpublish') {
     let note: string | undefined;
     if (decision !== 'approve') {
-      note = window.prompt('Причина (увидит автор):')?.trim();
+      note = (
+        await ask({
+          title: decision === 'reject' ? 'Отклонить публикацию?' : 'Снять с публикации?',
+          field: 'Причина (увидит автор)',
+          confirmLabel: 'Сохранить решение',
+          danger: true,
+        })
+      )?.trim();
       if (!note) return;
     }
     const r = await apiRequest(`/api/moderation/announcements/${item.id}/${decision}`, {
@@ -57,6 +66,7 @@ export default function ModerationPage() {
 
   return (
     <>
+      {dialog}
       <div className={styles.head}>
         <h1>Модерация объявлений</h1>
       </div>

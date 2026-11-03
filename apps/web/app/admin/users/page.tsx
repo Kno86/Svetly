@@ -1,5 +1,6 @@
 'use client';
 
+import { useAsk } from '../../../components/ui/Dialog';
 import { useState, type FormEvent } from 'react';
 import { Button } from '../../../components/ui/Button';
 import { Alert, Badge, Card, EmptyState, Skeleton } from '../../../components/ui/Feedback';
@@ -39,6 +40,7 @@ export default function UsersPage() {
   const roles = useApi<Role[]>(canReadRoles ? '/api/admin/roles' : null);
   const [pick, setPick] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string }>();
+  const [dialog, ask] = useAsk();
   const roleName = (code: string) => roles.data?.find((r) => r.code === code)?.name ?? code;
   const grantable = roles.data?.filter((r) => r.code !== 'super_admin') ?? [];
 
@@ -49,7 +51,7 @@ export default function UsersPage() {
     body: unknown = {},
     confirm?: string,
   ) {
-    if (confirm && !window.confirm(confirm)) return;
+    if (confirm && (await ask({ title: confirm, danger: true })) === undefined) return;
     const r = await apiRequest(path, { method, body: method === 'POST' ? body : undefined });
     setMessage(r.ok ? { tone: 'success', text: ok } : { tone: 'error', text: errorMessage(r) });
     users.reload();
@@ -62,6 +64,7 @@ export default function UsersPage() {
 
   return (
     <>
+      {dialog}
       <div className={styles.head}>
         <h1>Пользователи</h1>
       </div>

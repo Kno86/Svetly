@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Alert, Skeleton } from '../ui/Feedback';
 import { apiRequest, errorMessage } from '../../lib/auth-client';
-import { navFor } from '../../lib/admin';
+import { groupNav, navFor } from '../../lib/admin';
 import styles from './admin.module.css';
 
 interface Me {
@@ -31,6 +31,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [me, setMe] = useState<Me>();
   const [error, setError] = useState<string>();
+  // The mobile menu closes itself on navigation: it is open only for the page it was opened on.
+  const [menuFor, setMenuFor] = useState<string>();
+  const menuOpen = menuFor === pathname;
 
   useEffect(() => {
     let cancelled = false;
@@ -73,23 +76,39 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <div className={`container ${styles.layout}`}>
         <nav className={styles.side} aria-label="Разделы админ-платформы">
           <p className={styles.sideTitle}>Админ-платформа</p>
-          <ul>
-            {nav.map((item) => {
-              const active =
-                item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={active ? styles.active : undefined}
-                    aria-current={active ? 'page' : undefined}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          <button
+            type="button"
+            className={styles.menuToggle}
+            aria-expanded={menuOpen}
+            aria-controls="admin-nav"
+            onClick={() => setMenuFor(menuOpen ? undefined : pathname)}
+          >
+            {nav.find((i) => isActive(i.href, pathname))?.label ?? 'Разделы'}
+            <span aria-hidden="true">{menuOpen ? '▴' : '▾'}</span>
+          </button>
+          <div id="admin-nav" className={`${styles.sideGroups} ${menuOpen ? styles.open : ''}`}>
+            {groupNav(nav).map(({ group, items }) => (
+              <div key={group ?? 'top'}>
+                {group && <p className={styles.groupTitle}>{group}</p>}
+                <ul>
+                  {items.map((item) => {
+                    const active = isActive(item.href, pathname);
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          className={active ? styles.active : undefined}
+                          aria-current={active ? 'page' : undefined}
+                        >
+                          {item.label}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
         </nav>
         <main id="main" className={styles.main}>
           {children}
@@ -97,4 +116,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
       </div>
     </StaffContext.Provider>
   );
+}
+
+function isActive(href: string, pathname: string): boolean {
+  return href === '/admin' ? pathname === '/admin' : pathname.startsWith(href);
 }
