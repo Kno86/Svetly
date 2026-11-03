@@ -7,7 +7,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import styles from '../../components/auth/auth.module.css';
 import { styles as blocks } from '../../components/content/Blocks';
 import { CabinetSwitch } from '../../components/shell/CabinetSwitch';
-import { Button } from '../../components/ui/Button';
+import { Button, ButtonLink } from '../../components/ui/Button';
 import { Alert, Badge, Card, Skeleton } from '../../components/ui/Feedback';
 import { TextField } from '../../components/ui/Field';
 import { Tabs } from '../../components/ui/Navigation';
@@ -87,6 +87,11 @@ export function AccountView() {
                   },
                   { id: 'security', label: 'Безопасность', content: <Security /> },
                   { id: 'sessions', label: 'Сессии', content: <Sessions /> },
+                  {
+                    id: 'data',
+                    label: 'Мои данные',
+                    content: <MyData isStaff={me.roles.length > 0} />,
+                  },
                 ]}
               />
             </div>
@@ -309,6 +314,81 @@ function Security() {
         </div>
       </form>
     </Card>
+  );
+}
+
+function MyData({ isStaff }: { isStaff: boolean }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<{ tone: 'success' | 'error'; text: string }>();
+
+  async function onDelete(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setBusy(true);
+    const result = await apiRequest('/api/me/delete', {
+      body: { password: String(form.get('password')), confirm: String(form.get('confirm')).trim() },
+    });
+    setBusy(false);
+    if (result.ok) {
+      await clearOfflineData();
+      router.push('/?account=deleted');
+      router.refresh();
+    } else setStatus({ tone: 'error', text: errorMessage(result) });
+  }
+
+  return (
+    <>
+      <Card className={styles.section}>
+        <h2>Выгрузка данных</h2>
+        <p>
+          Файл JSON со всем, что вы публиковали и отправляли: профиль, объявления, обращения, посты,
+          комментарии, сообщения, избранное, голоса и заявки. Тексты других людей в него не входят.
+        </p>
+        <div>
+          <ButtonLink variant="secondary" href="/api/me/export" download>
+            Скачать мои данные
+          </ButtonLink>
+        </div>
+      </Card>
+      <Card className={styles.section}>
+        <h2>Удаление аккаунта</h2>
+        {isStaff ? (
+          <Alert tone="info" title="Удаление недоступно">
+            У вас есть служебные роли. Сначала администратор должен их снять.
+          </Alert>
+        ) : (
+          <form className={styles.form} onSubmit={onDelete}>
+            <Alert tone="warning" title="Это действие нельзя отменить">
+              Удалятся профиль, вход, ваши объявления, вакансии, находки, обращения, посты,
+              комментарии, сообщения, голоса, избранное и загруженные фото. Опубликованная карточка
+              организации останется в каталоге без владельца. Созданные вами группы перейдут к
+              самому давнему участнику.
+            </Alert>
+            {status && <Alert tone={status.tone} title={status.text} />}
+            <TextField
+              label="Пароль"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+            />
+            <TextField
+              label="Введите слово УДАЛИТЬ"
+              name="confirm"
+              autoComplete="off"
+              pattern="\s*УДАЛИТЬ\s*"
+              required
+            />
+            <div>
+              <Button type="submit" variant="danger" loading={busy}>
+                Удалить аккаунт навсегда
+              </Button>
+            </div>
+          </form>
+        )}
+      </Card>
+    </>
   );
 }
 
