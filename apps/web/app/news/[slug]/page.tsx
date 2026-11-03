@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { ReportButton } from '../../../components/content/ReportButton';
 import { FavoriteButton } from '../../../components/content/FavoriteButton';
 import { notFound } from 'next/navigation';
 import { Badge } from '../../../components/ui/Feedback';
 import { LoadError, PageHead, styles } from '../../../components/content/Blocks';
-import { apiGet, formatDate, paragraphs, type CategoryRef } from '../../../lib/content';
+import { apiGet, formatDate, paragraphs, type CategoryRef, type Paged } from '../../../lib/content';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,8 +37,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function NewsArticlePage({ params }: Props) {
-  const res = await apiGet<News>(`/api/news/${encodeURIComponent((await params).slug)}`);
+  const slug = (await params).slug;
+  const [res, latest] = await Promise.all([
+    apiGet<News>(`/api/news/${encodeURIComponent(slug)}`),
+    apiGet<Paged<Pick<News, 'id' | 'slug' | 'title' | 'publishedAt'>>>('/api/news?limit=4'),
+  ]);
   if (!res.ok && res.status === 404) notFound();
+  const related = latest.ok ? latest.data.items.filter((n) => n.slug !== slug).slice(0, 3) : [];
   return (
     <main id="main" className={`container ${styles.page}`}>
       {!res.ok ? (
@@ -54,6 +60,7 @@ export default async function NewsArticlePage({ params }: Props) {
             <time dateTime={res.data.publishedAt}>{formatDate(res.data.publishedAt, true)}</time>
           </div>
           <h1>{res.data.title}</h1>
+          {res.data.excerpt && <p className={styles.articleLead}>{res.data.excerpt}</p>}
           {res.data.coverId && (
             // eslint-disable-next-line @next/next/no-img-element
             <img className={styles.cover} src={`/api/media/${res.data.coverId}`} alt="" />
@@ -84,6 +91,27 @@ export default async function NewsArticlePage({ params }: Props) {
           <FavoriteButton entityType="news" entityId={res.data.id} />
           <ReportButton entityType="news" entityId={res.data.id} />
         </article>
+      )}
+      {related.length > 0 && (
+        <section className={styles.related} aria-labelledby="related-heading">
+          <h2 id="related-heading">Ещё новости</h2>
+          <ul className={styles.rows} role="list">
+            {related.map((n) => (
+              <li key={n.id}>
+                <div>
+                  <div className={styles.meta}>
+                    <time dateTime={n.publishedAt}>{formatDate(n.publishedAt)}</time>
+                  </div>
+                  <h3>
+                    <Link href={`/news/${n.slug}`} className={styles.storyLink}>
+                      {n.title}
+                    </Link>
+                  </h3>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </main>
   );

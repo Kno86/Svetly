@@ -1,5 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-import { apiGet, eventPhase, formatPrice, pageParam, paragraphs, query } from './content';
+import {
+  apiGet,
+  dateParts,
+  eventPhase,
+  formatPrice,
+  pageParam,
+  paragraphs,
+  query,
+} from './content';
 
 describe('content helpers', () => {
   it('builds query strings without empty values', () => {
@@ -40,5 +48,12 @@ describe('eventPhase', () => {
   });
   it('marks future events as not started', () => {
     expect(eventPhase('2026-10-20T11:00:00Z', null, now)).toEqual({ started: false, ended: false });
+  });
+});
+
+describe('dateParts', () => {
+  it('uses the Novosibirsk zone', () => {
+    expect(dateParts('2026-10-19T11:00:00Z')).toEqual({ day: '19', month: 'окт', time: '18:00' });
+    expect(dateParts('2026-12-31T20:30:00Z')).toEqual({ day: '1', month: 'янв', time: '03:30' });
   });
 });

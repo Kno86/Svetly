@@ -5,7 +5,6 @@ import { buttonClass } from '../../components/ui/Button';
 import {
   Empty,
   Filters,
-  ItemCard,
   LoadError,
   PageHead,
   Pager,
@@ -13,7 +12,7 @@ import {
 } from '../../components/content/Blocks';
 import {
   apiGet,
-  formatDate,
+  dateParts,
   pageParam,
   param,
   query,
@@ -90,28 +89,38 @@ export default async function EventsPage({
         />
       ) : (
         <>
-          <div className={styles.list}>
-            {list.data.items.map((e) => (
-              <ItemCard
-                key={e.id}
-                href={`/events/${e.slug}`}
-                title={e.title}
-                badges={
-                  <>
-                    {e.status === 'cancelled' && <Badge tone="error">Отменено</Badge>}
-                    {e.category && <Badge>{e.category.name}</Badge>}
-                    {e.isDemo && <Badge tone="warning">демо</Badge>}
-                  </>
-                }
-                meta={
-                  <>
-                    <time dateTime={e.startsAt}>{formatDate(e.startsAt, true)}</time>
-                    <span>{e.location}</span>
-                  </>
-                }
-              />
-            ))}
-          </div>
+          <ul className={styles.rows} role="list">
+            {list.data.items.map((e) => {
+              const d = dateParts(e.startsAt);
+              return (
+                <li key={e.id}>
+                  <time
+                    dateTime={e.startsAt}
+                    className={`${styles.dateBox} ${when === 'past' ? styles.dateBoxPast : ''}`}
+                  >
+                    <b>{d.day}</b>
+                    <span>{d.month}</span>
+                  </time>
+                  <div>
+                    <div className={styles.meta}>
+                      {e.status === 'cancelled' && <Badge tone="error">Отменено</Badge>}
+                      {e.category && <Badge>{e.category.name}</Badge>}
+                      {e.isDemo && <Badge tone="warning">демо</Badge>}
+                    </div>
+                    <h3>
+                      <Link href={`/events/${e.slug}`} className={styles.storyLink}>
+                        {e.title}
+                      </Link>
+                    </h3>
+                    <div className={styles.meta}>
+                      <span>{d.time}</span>
+                      <span>{e.location}</span>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
           <Pager
             path="/events"
             page={page}

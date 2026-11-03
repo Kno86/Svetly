@@ -4,7 +4,14 @@ import { FavoriteButton } from '../../../components/content/FavoriteButton';
 import { notFound } from 'next/navigation';
 import { Alert, Badge } from '../../../components/ui/Feedback';
 import { ButtonLink, LoadError, PageHead, styles } from '../../../components/content/Blocks';
-import { apiGet, eventPhase, formatDate, paragraphs, type CategoryRef } from '../../../lib/content';
+import {
+  apiGet,
+  dateParts,
+  eventPhase,
+  formatDate,
+  paragraphs,
+  type CategoryRef,
+} from '../../../lib/content';
 import { EventRegistration } from './EventRegistration';
 
 export const dynamic = 'force-dynamic';
@@ -48,6 +55,7 @@ export default async function EventPage({ params }: Props) {
     );
   const e = res.data;
   const { started, ended } = eventPhase(e.startsAt, e.endsAt);
+  const d = dateParts(e.startsAt);
   return (
     <main id="main" className={`container ${styles.page}`}>
       <article className={styles.article}>
@@ -58,7 +66,17 @@ export default async function EventPage({ params }: Props) {
           {e.category && <Badge>{e.category.name}</Badge>}
           {e.isDemo && <Badge tone="warning">демо</Badge>}
         </div>
-        <h1>{e.title}</h1>
+        <div className={styles.eventHead}>
+          <time
+            dateTime={e.startsAt}
+            className={`${styles.dateBox} ${ended ? styles.dateBoxPast : ''}`}
+            aria-hidden="true"
+          >
+            <b>{d.day}</b>
+            <span>{d.month}</span>
+          </time>
+          <h1>{e.title}</h1>
+        </div>
         <dl className={styles.facts}>
           <dt>Начало</dt>
           <dd>{formatDate(e.startsAt, true)} (Новосибирск)</dd>
