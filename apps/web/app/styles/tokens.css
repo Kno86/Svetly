@@ -1,35 +1,38 @@
 /* Mirrors design/tokens.ts (verified by design/tokens.spec.ts). */
 :root {
-  --color-deep-forest: #103c2f;
-  --color-forest: #245844;
-  --color-forest-hover: #1b4a39;
-  --color-leaf-green: #7d9d58;
-  --color-leaf-text: #4f6b33;
-  --color-warm-gold: #e9bc66;
-  --color-gold-soft: #f6e7c8;
-  --color-gold-text: #7a4f0e;
-  --color-ivory: #f7f6f0;
-  --color-sand: #efede4;
+  --color-ink: #24201c;
+  --color-primary: #b4441e;
+  --color-primary-hover: #8e3315;
+  --color-primary-soft: #f8e6dd;
+  --color-sage: #8fa88a;
+  --color-sage-text: #4e6e4b;
+  --color-sun: #f2b441;
+  --color-sun-soft: #fdf0d5;
+  --color-sun-text: #8a5600;
+  --color-sky: #2f5d7c;
+  --color-sky-soft: #e3eef5;
+  --color-paper: #faf6ef;
+  --color-sand: #f1eadf;
   --color-white: #ffffff;
-  --color-text-primary: #202721;
-  --color-text-secondary: #5c645e;
-  --color-border: #e3e7e1;
-  --color-border-strong: #7e8780;
+  --color-text-primary: #24201c;
+  --color-text-secondary: #6b6158;
+  --color-border: #e7dfd2;
+  --color-border-strong: #8c8174;
 
-  --color-success: #2e6b3f;
-  --color-success-surface: #e5f0e7;
-  --color-warning: #8a5a12;
-  --color-warning-surface: #fbf0da;
-  --color-error: #b3261e;
-  --color-error-surface: #fbe7e5;
-  --color-info: #1f5f8b;
-  --color-info-surface: #e3eef6;
-  --color-focus: #245844;
-  --color-focus-on-dark: #e9bc66;
-  --color-overlay: rgba(16, 60, 47, 0.56);
+  --color-success: #276b43;
+  --color-success-surface: #e3f2e8;
+  --color-warning: #8a5600;
+  --color-warning-surface: #fff3d6;
+  --color-error: #b42318;
+  --color-error-surface: #fde8e6;
+  --color-info: #2f5d7c;
+  --color-info-surface: #e3eef5;
+  --color-focus: #2f5d7c;
+  --color-focus-on-dark: #f2b441;
+  --color-overlay: rgba(36, 32, 28, 0.56);
   --color-surface: #ffffff;
-  --color-surface-muted: #efede4;
-  --color-surface-inverse: #103c2f;
+  --color-surface-muted: #f1eadf;
+  --color-surface-inverse: #24201c;
 
   --space-0: 0;
   --space-1: 0.25rem;
@@ -50,7 +53,8 @@
   --radius-xl: 1.5rem;
   --radius-pill: 999px;
 
-  --font-sans: 'Manrope Variable', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --font-sans: 'Golos Text Variable', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --font-display: 'Literata Variable', Georgia, 'Times New Roman', serif;
   --font-size-xs: 0.8125rem;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
@@ -67,9 +71,9 @@
   --header-height: 4.25rem;
   --control-height: 2.75rem;
 
-  --shadow-sm: 0 1px 2px rgba(16, 60, 47, 0.06), 0 1px 1px rgba(16, 60, 47, 0.04);
-  --shadow-md: 0 6px 20px -8px rgba(16, 60, 47, 0.18), 0 2px 6px rgba(16, 60, 47, 0.06);
-  --shadow-lg: 0 24px 48px -20px rgba(16, 60, 47, 0.28);
+  --shadow-sm: 0 1px 2px rgba(36, 32, 28, 0.06), 0 1px 1px rgba(36, 32, 28, 0.04);
+  --shadow-md: 0 6px 20px -8px rgba(36, 32, 28, 0.18), 0 2px 6px rgba(36, 32, 28, 0.06);
+  --shadow-lg: 0 24px 48px -20px rgba(36, 32, 28, 0.28);
 
   --duration-fast: 120ms;
   --duration-normal: 200ms;

@@ -1,42 +1,45 @@
 /**
  * SVETLY design tokens: the single source of truth for colour, type, spacing and shape.
  * `app/styles/tokens.css` mirrors these values as CSS custom properties (checked by tokens.spec.ts).
- * Brand palette values come from the product specification; text/interactive tones were added
- * where the original colour does not meet WCAG 2.2 AA contrast.
+ * Palette: redesign direction A «Рассвет» (docs/redesign/DESIGN_SYSTEM.md). Sun and sage are decor-only;
+ * text and interactive tones meet WCAG 2.2 AA.
  */
 export const palette = {
-  deepForest: '#103C2F',
-  forest: '#245844',
-  forestHover: '#1B4A39',
-  leafGreen: '#7D9D58',
-  leafText: '#4F6B33',
-  warmGold: '#E9BC66',
-  goldSoft: '#F6E7C8',
-  goldText: '#7A4F0E',
-  ivory: '#F7F6F0',
-  sand: '#EFEDE4',
+  ink: '#24201C',
+  primary: '#B4441E',
+  primaryHover: '#8E3315',
+  primarySoft: '#F8E6DD',
+  sage: '#8FA88A',
+  sageText: '#4E6E4B',
+  sun: '#F2B441',
+  sunSoft: '#FDF0D5',
+  sunText: '#8A5600',
+  sky: '#2F5D7C',
+  skySoft: '#E3EEF5',
+  paper: '#FAF6EF',
+  sand: '#F1EADF',
   white: '#FFFFFF',
-  textPrimary: '#202721',
-  textSecondary: '#5C645E',
-  border: '#E3E7E1',
-  borderStrong: '#7E8780',
+  textPrimary: '#24201C',
+  textSecondary: '#6B6158',
+  border: '#E7DFD2',
+  borderStrong: '#8C8174',
 } as const;
 
 export const semantic = {
-  success: '#2E6B3F',
-  successSurface: '#E5F0E7',
-  warning: '#8A5A12',
-  warningSurface: '#FBF0DA',
-  error: '#B3261E',
-  errorSurface: '#FBE7E5',
-  info: '#1F5F8B',
-  infoSurface: '#E3EEF6',
-  focus: '#245844',
-  focusOnDark: '#E9BC66',
-  overlay: 'rgba(16, 60, 47, 0.56)',
+  success: '#276B43',
+  successSurface: '#E3F2E8',
+  warning: '#8A5600',
+  warningSurface: '#FFF3D6',
+  error: '#B42318',
+  errorSurface: '#FDE8E6',
+  info: '#2F5D7C',
+  infoSurface: '#E3EEF5',
+  focus: '#2F5D7C',
+  focusOnDark: '#F2B441',
+  overlay: 'rgba(36, 32, 28, 0.56)',
   surface: '#FFFFFF',
-  surfaceMuted: '#EFEDE4',
-  surfaceInverse: '#103C2F',
+  surfaceMuted: '#F1EADF',
+  surfaceInverse: '#24201C',
 } as const;
 
 /** 4 px base grid. */
@@ -63,7 +66,7 @@ export const radius = {
   pill: '999px',
 } as const;
 
-/** Fluid type scale (Manrope Variable, OFL). */
+/** Fluid type scale (Golos Text + Literata, OFL). */
 export const fontSize = {
   xs: '0.8125rem',
   sm: '0.875rem',
@@ -86,24 +89,28 @@ export const layout = {
 
 /** Minimum contrast checks enforced by tests: [foreground, background, minimum ratio, usage]. */
 export const contrastPairs: ReadonlyArray<readonly [string, string, number, string]> = [
-  [palette.textPrimary, palette.ivory, 7, 'body text on ivory'],
+  [palette.textPrimary, palette.paper, 7, 'body text on paper'],
   [palette.textPrimary, palette.white, 7, 'body text on white'],
-  [palette.textSecondary, palette.ivory, 4.5, 'secondary text on ivory'],
+  [palette.textSecondary, palette.paper, 4.5, 'secondary text on paper'],
   [palette.textSecondary, palette.sand, 4.5, 'secondary text on sand'],
   [palette.textSecondary, palette.white, 4.5, 'secondary text on white'],
-  [palette.deepForest, palette.ivory, 7, 'headings on ivory'],
-  [palette.white, palette.forest, 4.5, 'primary button label'],
-  [palette.white, palette.forestHover, 4.5, 'primary button hover'],
-  [palette.ivory, palette.deepForest, 7, 'text on inverse surface'],
-  [palette.warmGold, palette.deepForest, 4.5, 'gold accent on inverse surface'],
-  [palette.deepForest, palette.warmGold, 4.5, 'accent button label'],
-  [palette.leafText, palette.ivory, 4.5, 'green text/link on ivory'],
-  [palette.goldText, palette.goldSoft, 4.5, 'gold badge text'],
+  [palette.sky, palette.white, 4.5, 'link on white'],
+  [palette.sky, palette.paper, 4.5, 'link on paper'],
+  [palette.primary, palette.paper, 4.5, 'primary text on paper'],
+  [palette.primaryHover, palette.primarySoft, 4.5, 'active nav item'],
+  [palette.ink, palette.paper, 7, 'headings on paper'],
+  [palette.white, palette.primary, 4.5, 'primary button label'],
+  [palette.white, palette.primaryHover, 4.5, 'primary button hover'],
+  [palette.paper, palette.ink, 7, 'text on inverse surface'],
+  [palette.sun, palette.ink, 4.5, 'sun accent on inverse surface'],
+  [palette.ink, palette.sun, 4.5, 'accent button label'],
+  [palette.sageText, palette.paper, 4.5, 'green text/link on paper'],
+  [palette.sunText, palette.sunSoft, 4.5, 'sun badge text'],
   [palette.borderStrong, palette.white, 3, 'form control boundary'],
-  [palette.borderStrong, palette.ivory, 3, 'form control boundary on ivory'],
-  [semantic.focus, palette.ivory, 3, 'focus ring on ivory'],
+  [palette.borderStrong, palette.paper, 3, 'form control boundary on paper'],
+  [semantic.focus, palette.paper, 3, 'focus ring on paper'],
   [semantic.focus, palette.white, 3, 'focus ring on white'],
-  [semantic.focusOnDark, palette.deepForest, 3, 'focus ring on inverse surface'],
+  [semantic.focusOnDark, palette.ink, 3, 'focus ring on inverse surface'],
   [semantic.success, semantic.successSurface, 4.5, 'success message'],
   [semantic.warning, semantic.warningSurface, 4.5, 'warning message'],
   [semantic.error, semantic.errorSurface, 4.5, 'error message'],

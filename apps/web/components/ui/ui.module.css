@@ -7,7 +7,7 @@
   min-height: var(--control-height);
   padding: 0 var(--space-5);
   border: 1px solid transparent;
-  border-radius: var(--radius-pill);
+  border-radius: 0.625rem;
   font: inherit;
   font-weight: 650;
   line-height: 1;
@@ -41,37 +41,37 @@
   width: 100%;
 }
 .button-primary {
-  background: var(--color-forest);
+  background: var(--color-primary);
   color: var(--color-white);
 }
 .button-primary:hover:not(:disabled) {
-  background: var(--color-forest-hover);
+  background: var(--color-primary-hover);
   color: var(--color-white);
 }
 .button-secondary {
   background: var(--color-white);
-  color: var(--color-deep-forest);
+  color: var(--color-ink);
   border-color: var(--color-border-strong);
 }
 .button-secondary:hover:not(:disabled) {
   background: var(--color-sand);
-  color: var(--color-deep-forest);
+  color: var(--color-ink);
 }
 .button-ghost {
   background: transparent;
-  color: var(--color-deep-forest);
+  color: var(--color-ink);
 }
 .button-ghost:hover:not(:disabled) {
   background: var(--color-sand);
-  color: var(--color-deep-forest);
+  color: var(--color-ink);
 }
 .button-accent {
-  background: var(--color-warm-gold);
-  color: var(--color-deep-forest);
+  background: var(--color-sun);
+  color: var(--color-ink);
 }
 .button-accent:hover:not(:disabled) {
   background: #e2ad4a;
-  color: var(--color-deep-forest);
+  color: var(--color-ink);
 }
 .button-danger {
   background: var(--color-error);
@@ -126,7 +126,7 @@
   color: var(--color-text-secondary);
 }
 .control:hover:not(:disabled) {
-  border-color: var(--color-deep-forest);
+  border-color: var(--color-ink);
 }
 .control:focus-visible {
   outline: none;
@@ -176,7 +176,7 @@
   width: 1.25rem;
   height: 1.25rem;
   margin: 0;
-  accent-color: var(--color-forest);
+  accent-color: var(--color-primary);
   cursor: pointer;
 }
 
@@ -196,12 +196,12 @@
   color: var(--color-text-secondary);
 }
 .tone-brand {
-  background: var(--color-deep-forest);
-  color: var(--color-ivory);
+  background: var(--color-ink);
+  color: var(--color-paper);
 }
 .tone-accent {
-  background: var(--color-gold-soft);
-  color: var(--color-gold-text);
+  background: var(--color-sun-soft);
+  color: var(--color-sun-text);
 }
 .tone-success {
   background: var(--color-success-surface);
@@ -320,11 +320,11 @@
   white-space: nowrap;
 }
 .tab:hover {
-  color: var(--color-deep-forest);
+  color: var(--color-ink);
 }
 .tabActive {
-  color: var(--color-deep-forest);
-  border-bottom-color: var(--color-forest);
+  color: var(--color-ink);
+  border-bottom-color: var(--color-primary);
 }
 .tabpanel {
   padding-top: var(--space-5);
