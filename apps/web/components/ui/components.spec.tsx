@@ -85,13 +85,25 @@ describe('Logo', () => {
 });
 
 describe('SiteHeader', () => {
-  it('toggles the mobile menu and links released sections', () => {
+  it('shows five sections and opens the drawer with every module', () => {
     render(<SiteHeader />);
-    const toggle = screen.getByRole('button', { name: 'Открыть меню' });
-    expect(toggle.getAttribute('aria-expanded')).toBe('false');
-    fireEvent.click(toggle);
-    expect(toggle.getAttribute('aria-expanded')).toBe('true');
-    expect(document.getElementById('mobile-nav')?.hidden).toBe(false);
-    expect(screen.getAllByRole('link', { name: 'Новости' })[0]?.getAttribute('href')).toBe('/news');
+    const nav = screen.getByRole('navigation', { name: 'Основные разделы' });
+    expect([...nav.querySelectorAll('a')].map((a) => a.textContent)).toEqual([
+      'Новости',
+      'Объявления',
+      'Услуги и бизнес',
+      'Сообщество',
+    ]);
+    const drawer = document.getElementById('mobile-nav');
+    expect(drawer?.hidden).toBe(true);
+    const [toggle] = screen.getAllByRole('button', { name: /Открыть меню|Разделы/ });
+    fireEvent.click(toggle!);
+    expect(drawer?.hidden).toBe(false);
+    expect(drawer?.getAttribute('aria-modal')).toBe('true');
+    expect(
+      screen.getAllByRole('link', { name: 'Потеряно и найдено' })[0]?.getAttribute('href'),
+    ).toBe('/lost-found');
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(drawer?.hidden).toBe(true);
   });
 });

@@ -29,6 +29,12 @@ main {
   flex: 1 0 auto;
 }
 
+@media (max-width: 639.98px) {
+  body {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom));
+  }
+}
+
 h1,
 h2,
 h3,
