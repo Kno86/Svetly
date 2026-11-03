@@ -101,10 +101,32 @@ export const sectionTabs: Record<string, NavItem[]> = {
 };
 
 /** Tabs for a section list page; null on detail/form pages and outside merged sections. */
+/** Resident cabinet: pages live under different URLs, the tab row ties them together. */
+export const cabinetSection: Section = {
+  label: 'Кабинет',
+  href: '/account',
+  available: true,
+  match: ['/account', '/messages', '/notifications', '/favorites'],
+};
+
+export const cabinetTabs: NavItem[] = [
+  { label: 'Обзор и профиль', href: '/account', available: true },
+  { label: 'Мои объявления', href: '/account/announcements', available: true },
+  { label: 'Обращения и заявки', href: '/account/community', available: true },
+  { label: 'Сообщения', href: '/messages', available: true },
+  { label: 'Уведомления', href: '/notifications', available: true },
+  { label: 'Избранное', href: '/favorites', available: true },
+  { label: 'Рекомендации', href: '/account/recommendations', available: true },
+  { label: 'Бизнес', href: '/business', available: true },
+];
+
 export function tabsFor(pathname: string): { section: Section; items: NavItem[] } | null {
   for (const section of primaryNav) {
     const items = sectionTabs[section.href];
     if (items?.some((i) => i.href === pathname)) return { section, items };
+  }
+  if (cabinetTabs.some((i) => i.href === pathname && i.href !== '/business')) {
+    return { section: cabinetSection, items: cabinetTabs };
   }
   return null;
 }

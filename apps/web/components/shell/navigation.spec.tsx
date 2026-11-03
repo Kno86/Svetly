@@ -37,4 +37,11 @@ describe('site navigation', () => {
     expect(tabsFor('/jobs/some-job')).toBeNull();
     expect(tabsFor('/news')).toBeNull();
   });
+
+  it('ties scattered cabinet pages into one tab row', () => {
+    expect(tabsFor('/messages')?.section.label).toBe('Кабинет');
+    expect(tabsFor('/account/announcements')?.items.map((i) => i.href)).toContain('/favorites');
+    expect(tabsFor('/messages/some-id')).toBeNull();
+    expect(tabsFor('/business')).toBeNull();
+  });
 });
