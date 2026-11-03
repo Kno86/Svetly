@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import styles from '../../components/auth/auth.module.css';
+import { styles as blocks } from '../../components/content/Blocks';
+import { CabinetSwitch } from '../../components/shell/CabinetSwitch';
 import { Button } from '../../components/ui/Button';
 import { Alert, Badge, Card, Skeleton } from '../../components/ui/Feedback';
 import { TextField } from '../../components/ui/Field';
@@ -58,6 +60,7 @@ export function AccountView() {
   return (
     <main id="main" className={`container ${styles.page}`}>
       <div className={styles.wide}>
+        <CabinetSwitch current="resident" />
         <h1>Личный кабинет</h1>
         {me && <Overview />}
         {loadError && (
@@ -157,13 +160,13 @@ function Overview() {
     },
   ];
   return (
-    <ul className={styles.tiles} role="list" aria-label="Обзор кабинета">
+    <ul className={blocks.tiles} role="list" aria-label="Обзор кабинета">
       {tiles.map((t) => (
         <li key={t.href}>
-          <Link href={t.href} className={styles.tile}>
+          <Link href={t.href} className={blocks.tile}>
             <span>{t.label}</span>
             <b>{t.value ?? '—'}</b>
-            <span className={styles.meta}>{t.value === undefined ? 'Не загрузилось' : t.note}</span>
+            <span className={blocks.meta}>{t.value === undefined ? 'Не загрузилось' : t.note}</span>
           </Link>
         </li>
       ))}
