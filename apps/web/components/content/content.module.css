@@ -25,6 +25,9 @@
     grid-template-columns: 2fr 1fr auto;
   }
 }
+.searchTabs {
+  margin-bottom: var(--space-5);
+}
 .list {
   display: grid;
   gap: var(--space-4);

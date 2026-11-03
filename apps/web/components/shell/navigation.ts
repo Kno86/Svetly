@@ -75,3 +75,36 @@ export function loginHref(returnTo: string | null | undefined): string {
   const next = safeNext(returnTo);
   return next && next !== '/' ? `/login?next=${encodeURIComponent(next)}` : '/login';
 }
+
+/** Second-level tabs inside the merged sections; the legacy module routes stay the tab URLs. */
+export const sectionTabs: Record<string, NavItem[]> = {
+  '/announcements': [
+    { label: 'Объявления', href: '/announcements', available: true },
+    { label: 'Вакансии', href: '/jobs', available: true },
+    { label: 'Потеряно и найдено', href: '/lost-found', available: true },
+  ],
+  '/catalog': [
+    { label: 'Обзор', href: '/catalog', available: true },
+    { label: 'Организации', href: '/organizations', available: true },
+    { label: 'Услуги', href: '/services', available: true },
+    { label: 'Справочник', href: '/directory', available: true },
+    { label: 'Места', href: '/map', available: true },
+  ],
+  '/community': [
+    { label: 'Обзор', href: '/community', available: true },
+    { label: 'Лента', href: '/feed', available: true, feature: 'groups' },
+    { label: 'Группы', href: '/groups', available: true, feature: 'groups' },
+    { label: 'События', href: '/events', available: true },
+    { label: 'Опросы', href: '/polls', available: true },
+    { label: 'Обращения', href: '/issues', available: true },
+  ],
+};
+
+/** Tabs for a section list page; null on detail/form pages and outside merged sections. */
+export function tabsFor(pathname: string): { section: Section; items: NavItem[] } | null {
+  for (const section of primaryNav) {
+    const items = sectionTabs[section.href];
+    if (items?.some((i) => i.href === pathname)) return { section, items };
+  }
+  return null;
+}

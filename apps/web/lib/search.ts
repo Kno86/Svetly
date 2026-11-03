@@ -31,6 +31,20 @@ export const SEARCH_TYPES: Record<SearchType, { label: string; href: (slug: stri
   posts: { label: 'Пост', href: (s) => `/feed/${s}` },
 };
 
+/** Search tabs in the order of the site sections. */
+export const SEARCH_TABS: Array<{ id: SearchType; label: string }> = [
+  { id: 'news', label: 'Новости' },
+  { id: 'announcements', label: 'Объявления' },
+  { id: 'jobs', label: 'Вакансии' },
+  { id: 'lost_found', label: 'Потеряно и найдено' },
+  { id: 'organizations', label: 'Организации' },
+  { id: 'services', label: 'Услуги' },
+  { id: 'directory', label: 'Справочник' },
+  { id: 'events', label: 'События' },
+  { id: 'groups', label: 'Группы' },
+  { id: 'posts', label: 'Посты' },
+];
+
 export const SEARCH_SORT: Record<string, string> = {
   relevance: 'По релевантности',
   date: 'Сначала новые',

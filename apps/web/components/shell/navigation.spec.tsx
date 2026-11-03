@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isActive, loginHref, moreNav, primaryNav, safeNext } from './navigation';
+import { isActive, loginHref, moreNav, primaryNav, safeNext, tabsFor } from './navigation';
 
 describe('site navigation', () => {
   it('marks the section of nested and merged modules', () => {
@@ -28,5 +28,13 @@ describe('site navigation', () => {
     expect(loginHref('/messages')).toBe('/login?next=%2Fmessages');
     expect(loginHref('/')).toBe('/login');
     expect(loginHref('/register')).toBe('/login');
+  });
+
+  it('shows section tabs only on section list pages', () => {
+    expect(tabsFor('/jobs')?.section.label).toBe('Объявления');
+    expect(tabsFor('/map')?.items.map((i) => i.href)).toContain('/directory');
+    expect(tabsFor('/community')?.section.label).toBe('Сообщество');
+    expect(tabsFor('/jobs/some-job')).toBeNull();
+    expect(tabsFor('/news')).toBeNull();
   });
 });

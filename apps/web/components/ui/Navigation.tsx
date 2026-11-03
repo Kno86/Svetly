@@ -1,6 +1,7 @@
 'use client';
 
-import { useId, useState, type KeyboardEvent, type ReactNode } from 'react';
+import Link from 'next/link';
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { cx } from './cx';
 import styles from './ui.module.css';
 
@@ -72,5 +73,40 @@ export function Tabs({
         </div>
       ))}
     </div>
+  );
+}
+
+/** Tabs that are links: each tab is its own URL, so they work without JavaScript and keep the back button. */
+export function LinkTabs({
+  label,
+  items,
+}: {
+  label: string;
+  items: Array<{ label: string; href: string; current: boolean }>;
+}) {
+  const list = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    const ul = list.current;
+    const current = ul?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (ul && current && current.offsetLeft + current.offsetWidth > ul.clientWidth) {
+      ul.scrollLeft = current.offsetLeft - ul.offsetLeft - 16;
+    }
+  }, [items]);
+  return (
+    <nav aria-label={label}>
+      <ul ref={list} className={styles.tablist} role="list">
+        {items.map((item) => (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              aria-current={item.current ? 'page' : undefined}
+              className={cx(styles.tab, styles.tabLink, item.current && styles.tabActive)}
+            >
+              {item.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }

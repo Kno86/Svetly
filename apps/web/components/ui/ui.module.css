@@ -329,6 +329,17 @@
 .tabpanel {
   padding-top: var(--space-5);
 }
+ul.tablist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  scrollbar-width: none;
+}
+.tabLink {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
 
 /* Dialog */
 .dialog {
