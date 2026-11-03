@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Badge } from '../../components/ui/Feedback';
 import {
   Empty,
   Filters,
-  ItemCard,
   LoadError,
   PageHead,
   Pager,
@@ -37,6 +37,17 @@ interface NewsItem {
   category: CategoryRef | null;
 }
 
+function NewsBadges({ item }: { item: NewsItem }) {
+  return (
+    <div className={styles.meta}>
+      {item.pinned && <Badge tone="accent">Закреплено</Badge>}
+      {item.category && <Badge>{item.category.name}</Badge>}
+      {item.isDemo && <Badge tone="warning">демо</Badge>}
+      <time dateTime={item.publishedAt}>{formatDate(item.publishedAt)}</time>
+    </div>
+  );
+}
+
 export default async function NewsPage({
   searchParams,
 }: {
@@ -50,6 +61,10 @@ export default async function NewsPage({
     apiGet<Paged<NewsItem>>(`/api/news${query({ q, category, page })}`),
     apiGet<Category[]>('/api/categories?module=news'),
   ]);
+  const items = list.ok ? list.data.items : [];
+  const featured = page === 1 && !q && !category;
+  const lead = featured ? items[0] : undefined;
+  const rest = featured ? items.slice(1) : items;
   return (
     <main id="main" className={`container ${styles.page}`}>
       <PageHead
@@ -68,25 +83,32 @@ export default async function NewsPage({
         />
       ) : (
         <>
-          <div className={styles.list}>
-            {list.data.items.map((n) => (
-              <ItemCard
-                key={n.id}
-                href={`/news/${n.slug}`}
-                title={n.title}
-                badges={
-                  <>
-                    {n.pinned && <Badge tone="accent">Закреплено</Badge>}
-                    {n.category && <Badge>{n.category.name}</Badge>}
-                    {n.isDemo && <Badge tone="warning">демо</Badge>}
-                  </>
-                }
-                meta={<time dateTime={n.publishedAt}>{formatDate(n.publishedAt)}</time>}
-              >
-                {n.excerpt && <p className={styles.excerpt}>{n.excerpt}</p>}
-              </ItemCard>
+          {lead && (
+            <article className={styles.leadStory}>
+              <NewsBadges item={lead} />
+              <h2>
+                <Link href={`/news/${lead.slug}`} className={styles.storyLink}>
+                  {lead.title}
+                </Link>
+              </h2>
+              {lead.excerpt && <p>{lead.excerpt}</p>}
+            </article>
+          )}
+          <ul className={styles.rows} role="list">
+            {rest.map((n) => (
+              <li key={n.id}>
+                <div>
+                  <NewsBadges item={n} />
+                  <h3>
+                    <Link href={`/news/${n.slug}`} className={styles.storyLink}>
+                      {n.title}
+                    </Link>
+                  </h3>
+                  {n.excerpt && <p className={styles.excerpt}>{n.excerpt}</p>}
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
           <Pager
             path="/news"
             page={page}

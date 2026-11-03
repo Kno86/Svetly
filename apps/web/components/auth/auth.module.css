@@ -2,8 +2,20 @@
   padding-block: var(--space-12) var(--space-16);
 }
 .panel {
-  max-width: 28rem;
+  max-width: 29rem;
   margin-inline: auto;
+  border-top: 4px solid var(--color-primary);
+}
+@media (max-width: 30rem) {
+  .page {
+    padding-block: var(--space-6) var(--space-12);
+  }
+  .panel {
+    padding-inline: var(--space-1);
+    border: 0;
+    box-shadow: none;
+    background: none;
+  }
 }
 .wide {
   max-width: 48rem;

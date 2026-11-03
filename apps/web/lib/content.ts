@@ -83,3 +83,21 @@ export function eventPhase(startsAt: string, endsAt: string | null, now: number 
     ended: new Date(endsAt ?? startsAt).getTime() < now,
   };
 }
+
+/** Day, short month and time in the territory's zone, for calendar-style date boxes. */
+export function dateParts(value: string): { day: string; month: string; time: string } {
+  const parts = new Intl.DateTimeFormat('ru-RU', {
+    timeZone: TZ,
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).formatToParts(new Date(value));
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? '';
+  return {
+    day: get('day'),
+    month: get('month').replace('.', ''),
+    time: `${get('hour')}:${get('minute')}`,
+  };
+}
