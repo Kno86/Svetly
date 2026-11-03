@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { PageHead, styles } from '../../components/content/Blocks';
+import { CabinetSwitch } from '../../components/shell/CabinetSwitch';
 import { ButtonLink } from '../../components/ui/Button';
 import { Alert, Badge, Card, EmptyState, Skeleton } from '../../components/ui/Feedback';
 import { apiRequest, errorMessage } from '../../lib/auth-client';
@@ -46,6 +47,7 @@ export function BusinessDashboard() {
   const add = <ButtonLink href="/business/new">Подать заявку на размещение</ButtonLink>;
   return (
     <main id="main" className={`container ${styles.page}`}>
+      <CabinetSwitch current="business" />
       <PageHead
         title="Кабинет бизнеса"
         description="Карточки организаций и услуг, заявки жителей. Размещение бесплатное; каждая карточка и каждое изменение проходят проверку администратором."
@@ -67,6 +69,7 @@ export function BusinessDashboard() {
           action={add}
         />
       )}
+      {items && items.length > 0 && <Overview items={items} />}
       <div className={styles.list}>
         {items?.map((o) => (
           <Card key={o.id}>
@@ -100,10 +103,45 @@ export function BusinessDashboard() {
           </Card>
         ))}
       </div>
-      <Alert tone="info" title="Статистика и продвижение">
-        Просмотры, отзывы, продвижение и тарифы пока не подключены. Мы не показываем оценочных или
-        вымышленных цифр.
-      </Alert>
+      <div style={{ marginTop: 'var(--space-6)' }}>
+        <Alert tone="info" title="Статистика и продвижение">
+          Просмотры, отзывы, продвижение и тарифы пока не подключены. Мы не показываем оценочных или
+          вымышленных цифр.
+        </Alert>
+      </div>
     </main>
+  );
+}
+
+function Overview({ items }: { items: OwnedOrg[] }) {
+  const onReview = items.filter(
+    (o) => o.status === 'pending' || o.status === 'needs_info' || o.pendingChanges !== null,
+  ).length;
+  const tiles = [
+    { label: 'Карточек', value: items.length, note: 'Организации и услуги' },
+    {
+      label: 'Опубликовано',
+      value: items.filter((o) => o.status === 'published').length,
+      note: 'Видны в каталоге',
+    },
+    { label: 'На проверке', value: onReview, note: 'Заявки и изменения' },
+    {
+      label: 'Новые заявки',
+      value: items.reduce((n, o) => n + o.newInquiries, 0),
+      note: 'От жителей, без ответа',
+    },
+  ];
+  return (
+    <ul className={styles.tiles} role="list" aria-label="Обзор кабинета бизнеса">
+      {tiles.map((t) => (
+        <li key={t.label}>
+          <div className={styles.tile}>
+            <span>{t.label}</span>
+            <b>{t.value}</b>
+            <span className={styles.meta}>{t.note}</span>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }

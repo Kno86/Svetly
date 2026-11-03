@@ -32,7 +32,7 @@ export function Inquiries({ id }: { id: string }) {
   }
 
   return (
-    <section style={{ marginTop: 'var(--space-8)' }}>
+    <section id="inquiries">
       <h2>Заявки жителей</h2>
       <p className={styles.excerpt}>
         Жители отправляют заявки со страницы опубликованной карточки. Заявки видите только вы.
