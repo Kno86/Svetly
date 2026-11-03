@@ -107,11 +107,11 @@ export default async function EventsPage({
                       {e.category && <Badge>{e.category.name}</Badge>}
                       {e.isDemo && <Badge tone="warning">демо</Badge>}
                     </div>
-                    <h3>
+                    <h2>
                       <Link href={`/events/${e.slug}`} className={styles.storyLink}>
                         {e.title}
                       </Link>
-                    </h3>
+                    </h2>
                     <div className={styles.meta}>
                       <span>{d.time}</span>
                       <span>{e.location}</span>

@@ -37,6 +37,8 @@
   color: inherit;
   text-decoration: none;
 }
+.cardLink:hover h2,
+.cardLink:focus-visible h2,
 .cardLink:hover h3,
 .cardLink:focus-visible h3 {
   text-decoration: underline;
@@ -188,6 +190,8 @@
 }
 
 .tableWrap {
+  /* position: absolute descendants (visually hidden labels) must be clipped by the scroller too. */
+  position: relative;
   overflow-x: auto;
 }
 
@@ -231,6 +235,7 @@
 .rows > li > div {
   min-width: 0;
 }
+.rows h2,
 .rows h3 {
   margin-block: var(--space-1);
   font-size: var(--font-size-lg);

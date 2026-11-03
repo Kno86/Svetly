@@ -310,7 +310,7 @@ export default async function HomePage() {
                 {feed.organizations.map((o) => (
                   <li key={o.slug}>
                     <span className={styles.avatar} aria-hidden="true">
-                      {o.name.charAt(0)}
+                      {o.name.match(/[\p{L}\p{N}]/u)?.[0] ?? '•'}
                     </span>
                     <div>
                       <Link href={`/organizations/${o.slug}`}>{o.name}</Link>

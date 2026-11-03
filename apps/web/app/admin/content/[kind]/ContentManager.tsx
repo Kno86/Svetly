@@ -89,7 +89,7 @@ export function ContentManager({ kind: kindKey }: { kind: string }) {
       {list.data && list.data.length > 0 && (
         <div
           className={styles.item}
-          style={{ overflowX: 'auto' }}
+          style={{ overflowX: 'auto', position: 'relative' }}
           role="region"
           aria-label="Список записей"
           tabIndex={0}
