@@ -87,7 +87,13 @@ export function ContentManager({ kind: kindKey }: { kind: string }) {
         />
       )}
       {list.data && list.data.length > 0 && (
-        <div className={styles.item} style={{ overflowX: 'auto' }}>
+        <div
+          className={styles.item}
+          style={{ overflowX: 'auto' }}
+          role="region"
+          aria-label="Список записей"
+          tabIndex={0}
+        >
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>

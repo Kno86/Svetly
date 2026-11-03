@@ -11,6 +11,7 @@ export default function NotFound() {
       style={{ paddingBlock: 'var(--space-16)', maxWidth: '44rem' }}
     >
       <EmptyState
+        as="h1"
         title="Страница не найдена"
         description="Возможно, адрес набран с ошибкой или запись снята с публикации."
         action={<ButtonLink href="/search">Поиск по платформе</ButtonLink>}

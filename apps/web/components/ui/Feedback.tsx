@@ -70,10 +70,13 @@ export function EmptyState({
   title,
   description,
   action,
+  as: Heading = 'h2',
 }: {
   title: string;
   description?: string;
   action?: ReactNode;
+  /** h2 under a page h1 keeps the outline valid; a standalone page (404) passes h1. */
+  as?: 'h1' | 'h2' | 'h3';
 }) {
   return (
     <div className={styles.empty}>
@@ -81,7 +84,7 @@ export function EmptyState({
         <circle cx="31" cy="15" r="6" fill="var(--color-sun)" />
         <path d="M4 36c9-6 18-7 27-4s9 3 13 0v12H4z" fill="var(--color-border)" />
       </svg>
-      <h3 className={styles.emptyTitle}>{title}</h3>
+      <Heading className={styles.emptyTitle}>{title}</Heading>
       {description && <p className={styles.emptyText}>{description}</p>}
       {action}
     </div>
