@@ -1,7 +1,9 @@
 import Link from 'next/link';
-import { Badge, Card } from '../components/ui/Feedback';
+import { Badge, Card, EmptyState } from '../components/ui/Feedback';
 import { ButtonLink } from '../components/ui/Button';
-import { sectionLinks } from '../components/shell/navigation';
+import { DemoBadge } from '../components/content/Blocks';
+import { VerificationBadge } from '../components/content/OrganizationList';
+import { Icon, type IconName } from '../components/ui/Icon';
 import { fetchApiStatus, type ApiStatus } from '../lib/api-status';
 import { getWebBuildInfo } from '../lib/build-info';
 import { apiGet, formatDate, formatPrice } from '../lib/content';
@@ -9,20 +11,60 @@ import styles from './page.module.css';
 
 export const dynamic = 'force-dynamic';
 
-const sectionInfo: Record<string, string> = {
-  '/news': 'Новости посёлка и района: события, объявления администрации, важное рядом.',
-  '/announcements': 'Частные объявления жителей: продать, купить, отдать, найти.',
-  '/services': 'Местные мастера и услуги — от ремонта до репетиторов.',
-  '/organizations': 'Магазины, школы, медицина и сервисы территории.',
-  '/events': 'Праздники, встречи, секции и мероприятия.',
-  '/directory': 'Полезные телефоны, адреса и экстренные службы.',
-};
+interface Category {
+  slug: string;
+  name: string;
+}
 
 interface HomeFeed {
-  news: Array<{ slug: string; title: string; publishedAt: string }>;
-  announcements: Array<{ slug: string; title: string; price: number | null }>;
-  events: Array<{ slug: string; title: string; startsAt: string }>;
+  news: Array<{
+    slug: string;
+    title: string;
+    excerpt: string | null;
+    publishedAt: string;
+    isDemo: boolean;
+    category: Category | null;
+  }>;
+  announcements: Array<{
+    slug: string;
+    title: string;
+    price: number | null;
+    area: string | null;
+    publishedAt: string;
+    isDemo: boolean;
+    category: Category | null;
+  }>;
+  organizations: Array<{
+    slug: string;
+    kind: string;
+    name: string;
+    serviceArea: string | null;
+    address: string | null;
+    verification: 'unverified' | 'verified';
+    isDemo: boolean;
+    category: Category | null;
+  }>;
+  events: Array<{
+    slug: string;
+    title: string;
+    location: string | null;
+    startsAt: string;
+    isDemo: boolean;
+  }>;
 }
+
+const quickActions: Array<{ href: string; icon: IconName; title: string; text: string }> = [
+  { href: '/announcements/new', icon: 'plus', title: 'Подать объявление', text: 'Бесплатно' },
+  { href: '/catalog', icon: 'grid', title: 'Найти мастера', text: 'Услуги и организации' },
+  { href: '/issues/new', icon: 'bell', title: 'Сообщить о проблеме', text: 'Статус — в кабинете' },
+  { href: '/events', icon: 'home', title: 'Афиша', text: 'События рядом' },
+];
+
+const communityLinks = [
+  { href: '/polls', title: 'Опросы', text: 'Голосования жителей по вопросам посёлка.' },
+  { href: '/issues', title: 'Обращения жителей', text: 'Проблемы и их статус — открыто для всех.' },
+  { href: '/groups', title: 'Группы', text: 'Сообщества по интересам и домам.' },
+];
 
 function describeApi(status: ApiStatus): string {
   switch (status.state) {
@@ -35,22 +77,29 @@ function describeApi(status: ApiStatus): string {
   }
 }
 
-function HeroArt() {
+function SectionHead({
+  id,
+  kicker,
+  title,
+  href,
+  more,
+}: {
+  id: string;
+  kicker: string;
+  title: string;
+  href: string;
+  more: string;
+}) {
   return (
-    <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <rect width="400" height="300" fill="#2F5D7C" />
-      <circle cx="270" cy="96" r="44" fill="#F2B441" />
-      <circle cx="270" cy="96" r="76" fill="#F2B441" opacity="0.12" />
-      <path d="M0 196C70 160 150 150 220 166S340 182 400 150V300H0Z" fill="#4E6E4B" />
-      <path d="M0 236C90 210 170 214 250 230S360 246 400 226V300H0Z" fill="#3B5639" />
-      <path d="M60 120L92 196H28ZM104 140L130 202H78Z" fill="#8FA88A" />
-      <path d="M150 172L178 148L206 172V204H150Z" fill="#FAF6EF" />
-      <rect x="171" y="182" width="14" height="22" fill="#2F5D7C" />
-      <path
-        d="M150 300C178 262 226 246 262 222C284 207 288 192 272 180C278 196 266 206 242 218C200 238 148 258 112 300Z"
-        fill="#FAF6EF"
-      />
-    </svg>
+    <div className={styles.sectionHead}>
+      <div>
+        <span className={styles.kicker}>{kicker}</span>
+        <h2 id={id}>{title}</h2>
+      </div>
+      <Link href={href} className={styles.more}>
+        {more} <span aria-hidden="true">→</span>
+      </Link>
+    </div>
   );
 }
 
@@ -61,108 +110,170 @@ export default async function HomePage() {
     apiGet<HomeFeed>('/api/home'),
   ]);
   const feed = home.ok ? home.data : undefined;
-  const latest = feed
-    ? [
-        ...feed.news.map((n) => ({
-          key: `n-${n.slug}`,
-          href: `/news/${n.slug}`,
-          title: n.title,
-          kind: 'Новость',
-          meta: formatDate(n.publishedAt),
-        })),
-        ...feed.events.map((e) => ({
-          key: `e-${e.slug}`,
-          href: `/events/${e.slug}`,
-          title: e.title,
-          kind: 'Событие',
-          meta: formatDate(e.startsAt, true),
-        })),
-        ...feed.announcements.map((a) => ({
-          key: `a-${a.slug}`,
-          href: `/announcements/${a.slug}`,
-          title: a.title,
-          kind: 'Объявление',
-          meta: formatPrice(a.price),
-        })),
-      ]
-    : [];
+  const failed = (
+    <p className={styles.muted}>Не удалось загрузить публикации. Обновите страницу через минуту.</p>
+  );
+  const [lead, ...moreNews] = feed?.news ?? [];
 
   return (
     <main id="main">
       <section className={styles.hero}>
         <div className={`container ${styles.heroInner}`}>
           <div>
-            <div className={styles.eyebrow}>
-              <Badge tone="accent">Платформа в разработке</Badge>
-            </div>
-            <h1>Всё о жизни Октябрьского и Светлого — в одном месте</h1>
+            <span className={styles.kicker}>Посёлок Октябрьский и жилой район Светлый</span>
+            <h1>
+              Жизнь посёлка — <em className={styles.accent}>в одном месте</em>
+            </h1>
             <p className={styles.lead}>
-              SVETLY — локальная цифровая платформа для жителей и предпринимателей: новости,
-              объявления, услуги, организации и события рядом с домом.
+              Новости, объявления соседей, местные мастера и организации, события и обращения
+              жителей.
             </p>
-            <div className={styles.actions}>
-              <ButtonLink href="/announcements/new" size="lg">
-                Подать объявление
-              </ButtonLink>
-              <ButtonLink href="/search" variant="secondary" size="lg">
+            <form method="get" action="/search" role="search" className={styles.search}>
+              <label htmlFor="home-q" className="visually-hidden">
                 Поиск по платформе
-              </ButtonLink>
-            </div>
-          </div>
-          <div className={styles.heroArt}>
-            <HeroArt />
-          </div>
-        </div>
-      </section>
-
-      <section id="sections" className={styles.section}>
-        <div className="container">
-          <div className={styles.sectionHead}>
-            <h2>Разделы платформы</h2>
-            <p>Записи публикуют жители и редакция. Мы не заполняем разделы выдуманными данными.</p>
-          </div>
-          <div className="grid">
-            {sectionLinks
-              .filter((item) => sectionInfo[item.href])
-              .map((item) => (
-                <Card key={item.href} interactive={item.available}>
-                  <div className={styles.cardHead}>
-                    <span className={styles.cardIcon} aria-hidden="true">
-                      {item.label.charAt(0)}
-                    </span>
-                    {!item.available && <Badge>скоро</Badge>}
-                  </div>
-                  <h3>
-                    {item.available ? <Link href={item.href}>{item.label}</Link> : item.label}
-                  </h3>
-                  <p className={styles.cardText}>{sectionInfo[item.href]}</p>
-                </Card>
-              ))}
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.section} aria-labelledby="latest-heading">
-        <div className="container">
-          <div className={styles.sectionHead}>
-            <h2 id="latest-heading">Свежее</h2>
-          </div>
-          {!feed ? (
-            <p>Не удалось загрузить свежие публикации. Обновите страницу через минуту.</p>
-          ) : latest.length === 0 ? (
-            <p>
-              Пока публикаций нет.{' '}
-              <Link href="/announcements/new">Разместите первое объявление</Link>.
+              </label>
+              <input
+                id="home-q"
+                name="q"
+                type="search"
+                minLength={2}
+                required
+                placeholder="Найти новость, объявление, мастера…"
+              />
+              <button type="submit">
+                <Icon name="search" size={20} />
+                <span>Найти</span>
+              </button>
+            </form>
+            <p className={styles.note}>
+              <Badge tone="accent">Платформа в разработке</Badge> Записи публикуют жители и
+              редакция, выдуманных данных нет.
             </p>
+          </div>
+          <aside className={styles.today} aria-labelledby="soon-heading">
+            <h2 id="soon-heading">Ближайшие события</h2>
+            {!feed ? (
+              failed
+            ) : feed.events.length === 0 ? (
+              <p className={styles.muted}>
+                Событий пока нет. Редакция публикует их после проверки.{' '}
+                <Link href="/events">Афиша</Link>
+              </p>
+            ) : (
+              <ol className={styles.timeline}>
+                {feed.events.map((e) => (
+                  <li key={e.slug}>
+                    <time dateTime={e.startsAt}>{formatDate(e.startsAt, true)}</time>
+                    <div>
+                      <Link href={`/events/${e.slug}`}>{e.title}</Link>
+                      {e.location && <p>{e.location}</p>}
+                      <DemoBadge show={e.isDemo} />
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+            <div className={styles.sunline} aria-hidden="true" />
+          </aside>
+        </div>
+      </section>
+
+      <div className="container">
+        <nav className={styles.actions} aria-label="Быстрые действия">
+          {quickActions.map((a) => (
+            <Link key={a.href} href={a.href} className={styles.action}>
+              <span className={styles.actionIcon}>
+                <Icon name={a.icon} />
+              </span>
+              <span>
+                <b>{a.title}</b>
+                <span>{a.text}</span>
+              </span>
+            </Link>
+          ))}
+        </nav>
+      </div>
+
+      <section className={styles.section} aria-labelledby="news-heading">
+        <div className="container">
+          <SectionHead
+            id="news-heading"
+            kicker="Редакция SVETLY"
+            title="Новости"
+            href="/news"
+            more="Все новости"
+          />
+          {!feed ? (
+            failed
+          ) : !lead ? (
+            <EmptyState
+              title="Новостей пока нет"
+              description="Редакция готовит первые материалы."
+            />
+          ) : (
+            <div className={styles.news}>
+              <article className={styles.leadStory}>
+                <div className={styles.meta}>
+                  {lead.category && <Badge tone="info">{lead.category.name}</Badge>}
+                  <time dateTime={lead.publishedAt}>{formatDate(lead.publishedAt)}</time>
+                  <DemoBadge show={lead.isDemo} />
+                </div>
+                <h3>
+                  <Link href={`/news/${lead.slug}`}>{lead.title}</Link>
+                </h3>
+                {lead.excerpt && <p className={styles.muted}>{lead.excerpt}</p>}
+              </article>
+              {moreNews.length > 0 && (
+                <ul className={styles.newsList} role="list">
+                  {moreNews.map((n) => (
+                    <li key={n.slug}>
+                      <div className={styles.meta}>
+                        {n.category && <span>{n.category.name}</span>}
+                        <time dateTime={n.publishedAt}>{formatDate(n.publishedAt)}</time>
+                        <DemoBadge show={n.isDemo} />
+                      </div>
+                      <Link href={`/news/${n.slug}`}>{n.title}</Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className={styles.section} aria-labelledby="ads-heading">
+        <div className="container">
+          <SectionHead
+            id="ads-heading"
+            kicker="От соседей"
+            title="Объявления"
+            href="/announcements"
+            more="Все объявления"
+          />
+          {!feed ? (
+            failed
+          ) : feed.announcements.length === 0 ? (
+            <EmptyState
+              title="Объявлений пока нет"
+              description="Станьте первым — это бесплатно."
+              action={<ButtonLink href="/announcements/new">Подать объявление</ButtonLink>}
+            />
           ) : (
             <div className="grid">
-              {latest.map((item) => (
-                <Card key={item.key} interactive>
-                  <Badge>{item.kind}</Badge>
-                  <h3>
-                    <Link href={item.href}>{item.title}</Link>
+              {feed.announcements.map((a) => (
+                <Card key={a.slug} interactive>
+                  <div className={styles.meta}>
+                    {a.category && <span>{a.category.name}</span>}
+                    <DemoBadge show={a.isDemo} />
+                  </div>
+                  <h3 className={styles.cardTitle}>
+                    <Link href={`/announcements/${a.slug}`}>{a.title}</Link>
                   </h3>
-                  <p className={styles.cardText}>{item.meta}</p>
+                  <p className={styles.price}>{formatPrice(a.price)}</p>
+                  <p className={styles.muted}>
+                    {[a.area, formatDate(a.publishedAt)].filter(Boolean).join(' · ')}
+                  </p>
                 </Card>
               ))}
             </div>
@@ -170,12 +281,95 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className={styles.section} aria-labelledby="biz-heading">
+        <div className={`container ${styles.split}`}>
+          <div>
+            <span className={styles.kicker}>Местный бизнес</span>
+            <h2 id="biz-heading">Услуги и организации</h2>
+            <p className={styles.muted}>
+              Каталог мастеров, магазинов и учреждений. Карточки добавляют владельцы, проверку
+              проводит администратор.
+            </p>
+            <div className={styles.links}>
+              <Link href="/organizations">Организации</Link>
+              <Link href="/services">Услуги</Link>
+              <Link href="/directory">Справочник</Link>
+              <Link href="/map">Места</Link>
+            </div>
+          </div>
+          <Card>
+            {!feed ? (
+              failed
+            ) : feed.organizations.length === 0 ? (
+              <EmptyState
+                title="Каталог пока пуст"
+                description="Владельцы могут добавить организацию бесплатно."
+              />
+            ) : (
+              <ul className={styles.rows} role="list">
+                {feed.organizations.map((o) => (
+                  <li key={o.slug}>
+                    <span className={styles.avatar} aria-hidden="true">
+                      {o.name.charAt(0)}
+                    </span>
+                    <div>
+                      <Link href={`/organizations/${o.slug}`}>{o.name}</Link>
+                      <div className={styles.meta}>
+                        {o.category && <span>{o.category.name}</span>}
+                        <VerificationBadge value={o.verification} />
+                        <DemoBadge show={o.isDemo} />
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
+      </section>
+
+      <section className={styles.section} aria-labelledby="community-heading">
+        <div className="container">
+          <SectionHead
+            id="community-heading"
+            kicker="Сообщество"
+            title="Соседи и обсуждения"
+            href="/community"
+            more="Весь раздел"
+          />
+          <div className="grid">
+            {communityLinks.map((c) => (
+              <Card key={c.href} interactive>
+                <h3 className={styles.cardTitle}>
+                  <Link href={c.href}>{c.title}</Link>
+                </h3>
+                <p className={styles.muted}>{c.text}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="container">
+        <section className={styles.band} aria-labelledby="owners-heading">
+          <div>
+            <span className={styles.kicker}>Предпринимателям</span>
+            <h2 id="owners-heading">Расскажите о своём деле соседям</h2>
+            <p>
+              Бесплатная карточка организации или услуги. Заявки от жителей приходят в кабинет
+              бизнеса.
+            </p>
+          </div>
+          <ButtonLink href="/business" size="lg">
+            Кабинет бизнеса
+          </ButtonLink>
+        </section>
+      </div>
+
       <section className={styles.section} aria-labelledby="status-heading">
         <div className="container">
-          <Card>
-            <h2 id="status-heading" style={{ fontSize: 'var(--font-size-lg)' }}>
-              Состояние платформы
-            </h2>
+          <details className={styles.statusBox}>
+            <summary id="status-heading">Состояние платформы</summary>
             <dl className={styles.status}>
               <dt>Web</dt>
               <dd data-testid="web-version">
@@ -184,7 +378,7 @@ export default async function HomePage() {
               <dt>API</dt>
               <dd data-testid="api-status">{describeApi(api)}</dd>
             </dl>
-          </Card>
+          </details>
         </div>
       </section>
     </main>
