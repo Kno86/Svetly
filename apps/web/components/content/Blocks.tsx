@@ -23,13 +23,16 @@ export function PageHead({
   return (
     <>
       <Breadcrumbs items={[{ label: 'Главная', href: '/' }, ...crumbs]} />
-      <div className={styles.head}>
-        <div>
-          <h1>{title}</h1>
-          {description && <p>{description}</p>}
+      {/* Detail pages pass an empty title and render their own h1 below the meta line. */}
+      {(title || action) && (
+        <div className={styles.head}>
+          <div>
+            {title && <h1>{title}</h1>}
+            {description && <p>{description}</p>}
+          </div>
+          {action}
         </div>
-        {action}
-      </div>
+      )}
     </>
   );
 }
@@ -151,7 +154,7 @@ export function ItemCard({
     <Card interactive>
       <Link href={href} className={styles.cardLink}>
         {badges && <div className={styles.meta}>{badges}</div>}
-        <h3 className={styles.cardTitle}>{title}</h3>
+        <h2 className={styles.cardTitle}>{title}</h2>
         {children}
         {meta && <div className={styles.meta}>{meta}</div>}
       </Link>

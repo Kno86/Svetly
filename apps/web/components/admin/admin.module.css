@@ -186,3 +186,9 @@
   font-size: var(--font-size-sm);
   word-break: break-all;
 }
+
+.main h1,
+.main h2 {
+  overflow-wrap: break-word;
+  hyphens: auto;
+}

@@ -55,7 +55,12 @@ export default function AuditPage() {
       {!data && !error && <Skeleton height="10rem" />}
       {data?.length === 0 && <EmptyState title="Записей нет" description="Измените фильтр." />}
       {data && data.length > 0 && (
-        <div style={{ overflowX: 'auto' }} role="region" aria-label="Записи журнала" tabIndex={0}>
+        <div
+          style={{ overflowX: 'auto', position: 'relative' }}
+          role="region"
+          aria-label="Записи журнала"
+          tabIndex={0}
+        >
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
