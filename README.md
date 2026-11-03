@@ -2,7 +2,7 @@
 
 Цифровая платформа для жителей посёлка Октябрьский и жилого района Светлый (Мошковский район, Новосибирская область). Проект создаётся с нуля и развивается по фазам.
 
-**Текущий статус: PHASE 2 — бренд и дизайн-система (концепт на утверждение).** Публичных разделов, бизнес-модулей, авторизации и админки пока нет. Дизайн-система: [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md), бренд: [docs/BRAND.md](docs/BRAND.md), витрина компонентов: <http://localhost:3000/design-system>.
+**Текущий статус:** все фазы ТЗ и редизайн «Рассвет» реализованы, проект готов к локальному тестированию. Публичный запуск ждёт решений владельца: домен, хостинг, SMTP, мониторинг, юридические тексты (см. [docs/LAUNCH.md](docs/LAUNCH.md)). Реальных данных в базе нет: пустые разделы показывают честные пустые состояния.
 
 ## Быстрый старт (Windows + Docker Desktop, macOS, Linux)
 
@@ -29,13 +29,27 @@ docker compose up -d --build
 
 На Windows в PowerShell используйте `curl.exe` вместо `curl`.
 
+### Локальное тестирование
+
+1. Регистрация: <http://localhost:3000/register>. Письма не уходят наружу, их ловит Mailpit: <http://localhost:8025>. Откройте письмо и перейдите по ссылке подтверждения.
+2. Администратор (пароль вводится скрыто):
+
+   ```bash
+   docker compose exec api node dist/cli.js admin:create --email you@example.com --name "Имя"
+   ```
+
+   Админка: <http://localhost:3000/admin>.
+
+3. Кабинет жителя: `/account`, кабинет бизнеса: `/business`.
+4. Сбросить всё, включая базу: `docker compose down -v`.
+
 Подробности: [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 ## Состав
 
 ```text
 apps/api     NestJS 12 REST API (Fastify), Prisma 7, миграции PostgreSQL
-apps/web     Next.js 16 (App Router): публичный сайт, кабинеты и админка в будущих фазах
+apps/web     Next.js 16 (App Router): публичный сайт, кабинеты жителя и бизнеса, админка
 infra/docker Dockerfile для api (runtime + migrate) и web
 infra/caddy  Конфигурация Caddy для production (HTTPS)
 infra/scripts Скрипт smoke-проверки
