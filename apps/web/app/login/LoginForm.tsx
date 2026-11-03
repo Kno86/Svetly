@@ -9,6 +9,8 @@ import { Button } from '../../components/ui/Button';
 import { Alert } from '../../components/ui/Feedback';
 import { TextField } from '../../components/ui/Field';
 import { apiRequest, errorMessage } from '../../lib/auth-client';
+import { safeNext } from '../../components/shell/navigation';
+import { RETURN_KEY } from '../../components/shell/SiteHeader';
 
 export function LoginForm() {
   const router = useRouter();
@@ -26,7 +28,11 @@ export function LoginForm() {
     });
     setBusy(false);
     if (result.ok) {
-      router.push('/account');
+      const next =
+        safeNext(new URLSearchParams(window.location.search).get('next')) ??
+        safeNext(sessionStorage.getItem(RETURN_KEY));
+      sessionStorage.removeItem(RETURN_KEY);
+      router.push(next && next !== '/' ? next : '/account');
       router.refresh();
       return;
     }

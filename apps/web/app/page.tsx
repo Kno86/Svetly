@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Badge, Card } from '../components/ui/Feedback';
 import { ButtonLink } from '../components/ui/Button';
-import { primaryNav } from '../components/shell/navigation';
+import { sectionLinks } from '../components/shell/navigation';
 import { fetchApiStatus, type ApiStatus } from '../lib/api-status';
 import { getWebBuildInfo } from '../lib/build-info';
 import { apiGet, formatDate, formatPrice } from '../lib/content';
@@ -122,18 +122,22 @@ export default async function HomePage() {
             <p>Записи публикуют жители и редакция. Мы не заполняем разделы выдуманными данными.</p>
           </div>
           <div className="grid">
-            {primaryNav.map((item) => (
-              <Card key={item.href} interactive={item.available}>
-                <div className={styles.cardHead}>
-                  <span className={styles.cardIcon} aria-hidden="true">
-                    {item.label.charAt(0)}
-                  </span>
-                  {!item.available && <Badge>скоро</Badge>}
-                </div>
-                <h3>{item.available ? <Link href={item.href}>{item.label}</Link> : item.label}</h3>
-                <p className={styles.cardText}>{sectionInfo[item.href]}</p>
-              </Card>
-            ))}
+            {sectionLinks
+              .filter((item) => sectionInfo[item.href])
+              .map((item) => (
+                <Card key={item.href} interactive={item.available}>
+                  <div className={styles.cardHead}>
+                    <span className={styles.cardIcon} aria-hidden="true">
+                      {item.label.charAt(0)}
+                    </span>
+                    {!item.available && <Badge>скоро</Badge>}
+                  </div>
+                  <h3>
+                    {item.available ? <Link href={item.href}>{item.label}</Link> : item.label}
+                  </h3>
+                  <p className={styles.cardText}>{sectionInfo[item.href]}</p>
+                </Card>
+              ))}
           </div>
         </div>
       </section>
