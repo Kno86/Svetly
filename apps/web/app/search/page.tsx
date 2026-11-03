@@ -1,11 +1,18 @@
 import type { Metadata } from 'next';
 import { Badge, EmptyState } from '../../components/ui/Feedback';
 import { Select } from '../../components/ui/Field';
+import { LinkTabs } from '../../components/ui/Navigation';
 import { SearchField } from '../../components/search/SearchField';
 import { Button } from '../../components/ui/Button';
 import { ItemCard, LoadError, PageHead, Pager, styles } from '../../components/content/Blocks';
 import { apiGet, formatDate, param, query } from '../../lib/content';
-import { isSearchType, SEARCH_SORT, SEARCH_TYPES, type SearchHit } from '../../lib/search';
+import {
+  isSearchType,
+  SEARCH_SORT,
+  SEARCH_TABS,
+  SEARCH_TYPES,
+  type SearchHit,
+} from '../../lib/search';
 
 const LIMIT = 20;
 
@@ -38,14 +45,7 @@ export default async function SearchPage({
       />
       <form method="get" action="/search" className={styles.filters} role="search">
         <SearchField defaultValue={q} />
-        <Select label="Раздел" name="type" defaultValue={type ?? ''}>
-          <option value="">Все разделы</option>
-          {Object.entries(SEARCH_TYPES).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v.label}
-            </option>
-          ))}
-        </Select>
+        {type && <input type="hidden" name="type" value={type} />}
         <Select label="Порядок" name="sort" defaultValue={sort ?? 'relevance'}>
           {Object.entries(SEARCH_SORT).map(([k, v]) => (
             <option key={k} value={k}>
@@ -55,6 +55,18 @@ export default async function SearchPage({
         </Select>
         <Button type="submit">Найти</Button>
       </form>
+      {q.length >= 2 && (
+        <div className={styles.searchTabs}>
+          <LinkTabs
+            label="Раздел поиска"
+            items={[{ id: undefined, label: 'Все' }, ...SEARCH_TABS].map((t) => ({
+              label: t.label,
+              href: `/search${query({ q, type: t.id, sort })}`,
+              current: t.id === type,
+            }))}
+          />
+        </div>
+      )}
       {res === null ? (
         <EmptyState
           title="Введите запрос"
@@ -65,7 +77,11 @@ export default async function SearchPage({
       ) : res.data.items.length === 0 ? (
         <EmptyState
           title="Ничего не найдено"
-          description="Попробуйте другую формулировку или уберите фильтр раздела."
+          description={
+            type
+              ? 'Попробуйте другую формулировку или откройте вкладку «Все».'
+              : 'Попробуйте другую формулировку.'
+          }
         />
       ) : (
         <>

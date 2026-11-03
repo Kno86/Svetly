@@ -6,6 +6,7 @@ import { Analytics } from '../components/analytics/Analytics';
 import { ServiceWorker } from '../components/pwa/ServiceWorker';
 import { SiteFooter } from '../components/shell/SiteFooter';
 import { SiteHeader } from '../components/shell/SiteHeader';
+import { SectionTabs } from '../components/shell/SectionTabs';
 import { indexingEnabled } from '../lib/seo';
 import './globals.css';
 
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           Перейти к содержанию
         </a>
         <SiteHeader />
+        <SectionTabs />
         {children}
         <SiteFooter />
         <Analytics />
