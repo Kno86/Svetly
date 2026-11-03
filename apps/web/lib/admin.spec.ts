@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { ADMIN_NAV, CONTENT_KINDS, navFor, toContentPayload, toFormValues, toInput } from './admin';
+import {
+  ADMIN_NAV,
+  CONTENT_KINDS,
+  groupNav,
+  navFor,
+  toContentPayload,
+  toFormValues,
+  toInput,
+} from './admin';
 
 describe('admin navigation', () => {
   it('shows nothing to residents without permissions', () => {
@@ -60,5 +68,18 @@ describe('content forms', () => {
   it('defaults selects to their first option', () => {
     expect(toFormValues(CONTENT_KINDS.organizations!).kind).toBe('organization');
     expect(toInput('not a date', 'date')).toBe('');
+  });
+});
+
+describe('groupNav', () => {
+  it('groups visible items in a stable order', () => {
+    const groups = groupNav(
+      navFor(['users.read', 'moderation.announcements', 'complaints.manage']),
+    );
+    expect(groups.map((g) => g.group)).toEqual([null, 'Модерация', 'Платформа']);
+    expect(groups[1]?.items.map((i) => i.href)).toEqual(['/admin/moderation', '/admin/complaints']);
+  });
+  it('puts every item except the overview into a group', () => {
+    expect(ADMIN_NAV.filter((i) => !i.group).map((i) => i.href)).toEqual(['/admin']);
   });
 });

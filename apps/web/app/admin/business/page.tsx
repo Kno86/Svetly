@@ -1,5 +1,6 @@
 'use client';
 
+import { useAsk } from '../../../components/ui/Dialog';
 import { useState } from 'react';
 import { Button } from '../../../components/ui/Button';
 import { Alert, Badge, Card, EmptyState, Skeleton } from '../../../components/ui/Feedback';
@@ -35,17 +36,22 @@ const show = (v: unknown) => (v === null || v === undefined || v === '' ? '—' 
 export default function BusinessReviewPage() {
   const { data, error, reload } = useApi<Application[]>('/api/admin/business/applications');
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string }>();
+  const [dialog, ask] = useAsk();
 
   async function decide(a: Application, decision: 'approve' | 'reject' | 'request_info') {
     let note: string | undefined;
     if (decision !== 'approve') {
-      note = window
-        .prompt(
-          decision === 'reject'
-            ? 'Причина отказа (увидит владелец):'
-            : 'Что уточнить (увидит владелец):',
-        )
-        ?.trim();
+      note = (
+        await ask({
+          title: decision === 'reject' ? 'Отказать в размещении?' : 'Запросить уточнения?',
+          field:
+            decision === 'reject'
+              ? 'Причина отказа (увидит владелец)'
+              : 'Что уточнить (увидит владелец)',
+          confirmLabel: decision === 'reject' ? 'Отказать' : 'Отправить запрос',
+          danger: decision === 'reject',
+        })
+      )?.trim();
       if (!note) return;
     }
     const r = await apiRequest(`/api/admin/business/applications/${a.id}/${decision}`, {
@@ -61,6 +67,7 @@ export default function BusinessReviewPage() {
 
   return (
     <>
+      {dialog}
       <div className={styles.head}>
         <h1>Заявки бизнеса</h1>
       </div>

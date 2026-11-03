@@ -1,5 +1,6 @@
 'use client';
 
+import { useAsk } from '../../../../components/ui/Dialog';
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import { Button } from '../../../../components/ui/Button';
@@ -31,11 +32,18 @@ export function ContentManager({ kind: kindKey }: { kind: string }) {
   const canVerify = useCan('organizations.verify');
   const [editing, setEditing] = useState<Row | 'new' | null>(null);
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string }>();
+  const [dialog, ask] = useAsk();
 
   async function verify(row: Row, verification: 'verified' | 'unverified') {
     const sourceName =
       verification === 'verified'
-        ? window.prompt('Как проверены данные (звонок, документ, сайт)?')?.trim()
+        ? (
+            await ask({
+              title: 'Отметить данные как проверенные?',
+              field: 'Как проверены данные (звонок, документ, сайт)',
+              confirmLabel: 'Отметить',
+            })
+          )?.trim()
         : undefined;
     if (verification === 'verified' && !sourceName) return;
     const r = await apiRequest(`/api/admin/organizations/${row.id}/verification`, {
@@ -64,6 +72,7 @@ export function ContentManager({ kind: kindKey }: { kind: string }) {
 
   return (
     <>
+      {dialog}
       <div className={styles.head}>
         <h1>{kind.label}</h1>
         <Button onClick={() => setEditing('new')}>Создать</Button>

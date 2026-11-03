@@ -5,32 +5,110 @@ export interface AdminNavItem {
   label: string;
   /** `null` = visible to every staff member. */
   permission: string | null;
+  group?: AdminNavGroup;
 }
+
+export type AdminNavGroup = 'Модерация' | 'Жители' | 'Контент' | 'Платформа';
 
 export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin', label: 'Обзор', permission: null },
-  { href: '/admin/moderation', label: 'Модерация', permission: 'moderation.announcements' },
-  { href: '/admin/complaints', label: 'Жалобы', permission: 'complaints.manage' },
-  { href: '/admin/community', label: 'Вакансии и находки', permission: 'moderation.community' },
-  { href: '/admin/social', label: 'Лента и группы', permission: 'moderation.community' },
-  { href: '/admin/issues', label: 'Обращения', permission: 'issues.manage' },
-  { href: '/admin/business', label: 'Заявки бизнеса', permission: 'business.review' },
-  { href: '/admin/polls', label: 'Опросы', permission: 'polls.manage' },
-  { href: '/admin/content/news', label: 'Новости', permission: 'content.news.manage' },
-  { href: '/admin/content/events', label: 'События', permission: 'content.events.manage' },
+  {
+    href: '/admin/moderation',
+    label: 'Модерация',
+    permission: 'moderation.announcements',
+    group: 'Модерация',
+  },
+  {
+    href: '/admin/complaints',
+    label: 'Жалобы',
+    permission: 'complaints.manage',
+    group: 'Модерация',
+  },
+  {
+    href: '/admin/community',
+    label: 'Вакансии и находки',
+    permission: 'moderation.community',
+    group: 'Модерация',
+  },
+  {
+    href: '/admin/social',
+    label: 'Лента и группы',
+    permission: 'moderation.community',
+    group: 'Модерация',
+  },
+  { href: '/admin/issues', label: 'Обращения', permission: 'issues.manage', group: 'Жители' },
+  {
+    href: '/admin/business',
+    label: 'Заявки бизнеса',
+    permission: 'business.review',
+    group: 'Модерация',
+  },
+  { href: '/admin/polls', label: 'Опросы', permission: 'polls.manage', group: 'Жители' },
+  {
+    href: '/admin/content/news',
+    label: 'Новости',
+    permission: 'content.news.manage',
+    group: 'Контент',
+  },
+  {
+    href: '/admin/content/events',
+    label: 'События',
+    permission: 'content.events.manage',
+    group: 'Контент',
+  },
   {
     href: '/admin/content/organizations',
     label: 'Организации и услуги',
     permission: 'content.organizations.manage',
+    group: 'Контент',
   },
-  { href: '/admin/content/directory', label: 'Справочник', permission: 'content.directory.manage' },
-  { href: '/admin/categories', label: 'Категории', permission: 'content.categories.manage' },
-  { href: '/admin/users', label: 'Пользователи', permission: 'users.read' },
-  { href: '/admin/analytics', label: 'Аналитика', permission: 'analytics.read' },
-  { href: '/admin/audit', label: 'Журнал аудита', permission: 'audit.read' },
-  { href: '/admin/settings', label: 'Настройки', permission: 'settings.manage' },
-  { href: '/admin/integrations', label: 'Интеграции и функции', permission: 'settings.manage' },
+  {
+    href: '/admin/content/directory',
+    label: 'Справочник',
+    permission: 'content.directory.manage',
+    group: 'Контент',
+  },
+  {
+    href: '/admin/categories',
+    label: 'Категории',
+    permission: 'content.categories.manage',
+    group: 'Контент',
+  },
+  { href: '/admin/users', label: 'Пользователи', permission: 'users.read', group: 'Платформа' },
+  {
+    href: '/admin/analytics',
+    label: 'Аналитика',
+    permission: 'analytics.read',
+    group: 'Платформа',
+  },
+  { href: '/admin/audit', label: 'Журнал аудита', permission: 'audit.read', group: 'Платформа' },
+  {
+    href: '/admin/settings',
+    label: 'Настройки',
+    permission: 'settings.manage',
+    group: 'Платформа',
+  },
+  {
+    href: '/admin/integrations',
+    label: 'Интеграции и функции',
+    permission: 'settings.manage',
+    group: 'Платформа',
+  },
 ];
+
+/** Splits visible items into labelled groups, keeping ADMIN_NAV order; ungrouped items come first. */
+export function groupNav(
+  items: readonly AdminNavItem[],
+): Array<{ group: AdminNavGroup | null; items: AdminNavItem[] }> {
+  const out: Array<{ group: AdminNavGroup | null; items: AdminNavItem[] }> = [];
+  for (const item of items) {
+    const group = item.group ?? null;
+    const last = out.find((g) => g.group === group);
+    if (last) last.items.push(item);
+    else out.push({ group, items: [item] });
+  }
+  return out;
+}
 
 export function navFor(permissions: readonly string[]): AdminNavItem[] {
   if (permissions.length === 0) return [];

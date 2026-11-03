@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Logo } from '../brand/Logo';
 import { SiteHeader } from '../shell/SiteHeader';
 import { Button } from './Button';
+import { useAsk } from './Dialog';
 import { Checkbox, TextField } from './Field';
 import { Alert, EmptyState } from './Feedback';
 import { Tabs } from './Navigation';
@@ -105,5 +107,46 @@ describe('SiteHeader', () => {
     ).toBe('/lost-found');
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(drawer?.hidden).toBe(true);
+  });
+});
+
+describe('useAsk', () => {
+  HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+    this.open = true;
+  };
+  HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+    this.open = false;
+  };
+
+  function Harness() {
+    const [dialog, ask] = useAsk();
+    const [result, setResult] = useState('none');
+    return (
+      <>
+        <button
+          onClick={() =>
+            void ask({ title: 'Отклонить?', field: 'Причина' }).then((v) => setResult(String(v)))
+          }
+        >
+          go
+        </button>
+        <output>{result}</output>
+        {dialog}
+      </>
+    );
+  }
+
+  it('resolves with the trimmed reason and undefined on cancel', async () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByText('go'));
+    const submit = screen.getByRole('button', { name: 'Подтвердить', hidden: true });
+    expect(submit).toHaveProperty('disabled', true);
+    fireEvent.change(screen.getByLabelText(/Причина/), { target: { value: '  нет фото ' } });
+    fireEvent.click(submit);
+    expect(await screen.findByText('нет фото')).toBeTruthy();
+
+    fireEvent.click(screen.getByText('go'));
+    fireEvent.click(screen.getByRole('button', { name: 'Отмена', hidden: true }));
+    expect(await screen.findByText('undefined')).toBeTruthy();
   });
 });

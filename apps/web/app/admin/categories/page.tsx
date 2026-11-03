@@ -1,5 +1,6 @@
 'use client';
 
+import { useAsk } from '../../../components/ui/Dialog';
 import { useState, type FormEvent } from 'react';
 import { Button } from '../../../components/ui/Button';
 import { Alert, Badge, Card, Skeleton } from '../../../components/ui/Feedback';
@@ -30,6 +31,7 @@ export default function CategoriesPage() {
   const { data, error, reload } = useApi<AdminCategory[]>('/api/admin/categories');
   const [draft, setDraft] = useState({ module: 'news', slug: '', name: '', position: '0' });
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string }>();
+  const [dialog, ask] = useAsk();
 
   async function save(path: string, body: unknown, method: 'POST' | 'PATCH', ok: string) {
     const r = await apiRequest(path, { method, body });
@@ -50,13 +52,21 @@ export default function CategoriesPage() {
   }
 
   async function rename(c: AdminCategory) {
-    const name = window.prompt('Новое название', c.name)?.trim();
+    const name = (
+      await ask({
+        title: 'Переименовать категорию',
+        field: 'Новое название',
+        defaultValue: c.name,
+        confirmLabel: 'Сохранить',
+      })
+    )?.trim();
     if (name && name !== c.name)
       await save(`/api/admin/categories/${c.id}`, { name }, 'PATCH', 'Название изменено.');
   }
 
   return (
     <>
+      {dialog}
       <div className={styles.head}>
         <h1>Категории</h1>
       </div>

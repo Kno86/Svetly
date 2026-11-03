@@ -1,5 +1,6 @@
 'use client';
 
+import { useAsk } from '../../../components/ui/Dialog';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '../../../components/ui/Button';
@@ -49,11 +50,19 @@ export default function SocialModerationPage() {
   const [status, setStatus] = useState('pending');
   const { data, error, reload } = useApi<Item[]>(`/api/moderation/${section}?status=${status}`);
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string }>();
+  const [dialog, ask] = useAsk();
 
   async function decide(item: Item, decision: 'approve' | 'reject' | 'archive') {
     let note: string | undefined;
     if (decision !== 'approve') {
-      note = window.prompt('Причина (увидит автор):')?.trim();
+      note = (
+        await ask({
+          title: decision === 'reject' ? 'Отклонить публикацию?' : 'Снять с публикации?',
+          field: 'Причина (увидит автор)',
+          confirmLabel: 'Сохранить решение',
+          danger: true,
+        })
+      )?.trim();
       if (!note) return;
     }
     const r = await apiRequest(`/api/moderation/${section}/${item.id}/${decision}`, {
@@ -69,6 +78,7 @@ export default function SocialModerationPage() {
 
   return (
     <>
+      {dialog}
       <div className={styles.head}>
         <h1>Лента и группы</h1>
       </div>
