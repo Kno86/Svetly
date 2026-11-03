@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
+import { AccountController } from './account.controller.js';
 import { AdminPlatformController } from './admin-platform.controller.js';
 import { AnnouncementsController } from './announcements.controller.js';
 import { BusinessController } from './business.controller.js';
@@ -19,6 +20,7 @@ import { LocalFileStorage } from './storage.service.js';
 @Module({
   imports: [AuthModule],
   controllers: [
+    AccountController,
     PublicContentController,
     AnnouncementsController,
     StaffContentController,

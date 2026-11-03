@@ -67,4 +67,4 @@ docker compose exec api node dist/cli.js admin:create --email you@example.com --
 
 ## Не входит в PHASE 3
 
-VK ID, Telegram Login, 2FA, смена email, удаление/экспорт аккаунта, настройки приватности, UI админки.
+VK ID, Telegram Login, 2FA, смена email (удаление и выгрузка аккаунта — в `docs/ACCOUNT_DELETION.md`), настройки приватности, UI админки.

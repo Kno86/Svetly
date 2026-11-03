@@ -43,6 +43,9 @@ export async function apiRequest<T>(
 const MESSAGES: Record<string, string> = {
   NETWORK_ERROR: 'Нет связи с сервером. Проверьте подключение и попробуйте ещё раз.',
   INVALID_EMAIL_OR_PASSWORD: 'Неверный email или пароль.',
+  WRONG_PASSWORD: 'Неверный пароль.',
+  STAFF_ACCOUNT: 'У учётной записи есть служебные роли. Сначала их должен снять администратор.',
+  TOO_MANY_ATTEMPTS: 'Слишком много попыток. Повторите через 15 минут.',
   EMAIL_NOT_VERIFIED: 'Email не подтверждён. Мы отправили письмо со ссылкой ещё раз.',
   USER_ALREADY_EXISTS: 'Не удалось зарегистрироваться с этим email.',
   USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: 'Не удалось зарегистрироваться с этим email.',
