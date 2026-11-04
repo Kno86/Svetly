@@ -7,6 +7,7 @@ import { BusinessController } from './business.controller.js';
 import { JobsController, LostFoundController } from './community.controller.js';
 import { IssuesController } from './issues.controller.js';
 import { PollsController } from './polls.controller.js';
+import { ProfileController } from './profile.controller.js';
 import { FavoritesController } from './favorites.controller.js';
 import { SocialController } from './social.controller.js';
 import { MediaController } from './media.controller.js';
@@ -39,6 +40,7 @@ import { LocalFileStorage } from './storage.service.js';
     NotificationsController,
     RecommendationsController,
     ModerationController,
+    ProfileController,
   ],
   providers: [LocalFileStorage, NotificationsService],
 })

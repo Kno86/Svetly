@@ -40,7 +40,8 @@ export interface FeedPost {
   publishedAt: string | null;
   editedAt: string | null;
   createdAt: string;
-  author: { name: string };
+  /** `profileId` is set only when the author made their profile public. */
+  author: { name: string; profileId: string | null };
   group: { slug: string; name: string; visibility: string } | null;
   mine: boolean;
   reactions: number;

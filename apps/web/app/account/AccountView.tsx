@@ -9,7 +9,7 @@ import { styles as blocks } from '../../components/content/Blocks';
 import { CabinetSwitch } from '../../components/shell/CabinetSwitch';
 import { Button, ButtonLink } from '../../components/ui/Button';
 import { Alert, Badge, Card, Skeleton } from '../../components/ui/Feedback';
-import { TextField } from '../../components/ui/Field';
+import { Checkbox, TextArea, TextField } from '../../components/ui/Field';
 import { Tabs } from '../../components/ui/Navigation';
 import { apiRequest, errorMessage, MIN_PASSWORD_LENGTH } from '../../lib/auth-client';
 
@@ -243,7 +243,86 @@ function Profile({ me, onSaved }: { me: Me; onSaved: (name: string) => void }) {
           </Button>
         </div>
       </form>
+      <PublicProfile />
     </Card>
+  );
+}
+
+interface ProfileSettings {
+  id: string;
+  isPublic: boolean;
+  bio: string;
+}
+
+function PublicProfile() {
+  const [profile, setProfile] = useState<ProfileSettings>();
+  const [status, setStatus] = useState<{ tone: 'success' | 'error'; text: string }>();
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    void apiRequest<ProfileSettings>('/api/me/profile', { method: 'GET' }).then((r) => {
+      if (r.ok && r.data) setProfile(r.data);
+      else setStatus({ tone: 'error', text: errorMessage(r) });
+    });
+  }, []);
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setBusy(true);
+    const r = await apiRequest<ProfileSettings>('/api/me/profile', {
+      method: 'PUT',
+      body: { isPublic: form.get('isPublic') === 'on', bio: String(form.get('bio') ?? '') },
+    });
+    setBusy(false);
+    if (r.ok && r.data) {
+      setProfile(r.data);
+      setStatus({
+        tone: 'success',
+        text: r.data.isPublic ? 'Профиль открыт для всех.' : 'Профиль скрыт.',
+      });
+    } else setStatus({ tone: 'error', text: errorMessage(r) });
+  }
+
+  return (
+    <section aria-labelledby="public-profile">
+      <h3 id="public-profile">Публичный профиль</h3>
+      <p>
+        По умолчанию профиль скрыт. Если открыть его, любой посетитель увидит ваше имя, текст «О
+        себе», месяц регистрации, открытые группы и публичные посты. Email, роли и закрытые группы
+        не показываются.
+      </p>
+      {status && <Alert tone={status.tone} title={status.text} />}
+      {!profile ? (
+        !status && <Skeleton />
+      ) : (
+        <form className={styles.form} onSubmit={onSubmit}>
+          <Checkbox
+            label="Показывать мой профиль"
+            name="isPublic"
+            defaultChecked={profile.isPublic}
+          />
+          <TextArea
+            label="О себе"
+            name="bio"
+            defaultValue={profile.bio}
+            maxLength={500}
+            rows={4}
+            hint="До 500 символов. Не указывайте адрес и телефон."
+          />
+          <div>
+            <Button type="submit" loading={busy}>
+              Сохранить профиль
+            </Button>
+          </div>
+          {profile.isPublic && (
+            <p>
+              <Link href={`/residents/${profile.id}`}>Открыть мой профиль</Link>
+            </p>
+          )}
+        </form>
+      )}
+    </section>
   );
 }
 

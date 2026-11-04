@@ -48,6 +48,7 @@ model User {
   notificationPrefs NotificationPreference[]
   interests         UserInterest[]
   hiddenItems       HiddenItem[]
+  residentProfile   ResidentProfile?
 
   @@map("users")
 }
@@ -836,4 +837,16 @@ model Territory {
 
   @@index([parentId])
   @@map("territories")
+}
+
+/// Opt-in public profile of a resident. No row or `isPublic = false` means the profile is hidden.
+model ResidentProfile {
+  userId    String   @id @map("user_id") @db.Uuid
+  isPublic  Boolean  @default(false) @map("is_public")
+  bio       String   @default("")
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("resident_profiles")
 }
