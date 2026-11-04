@@ -106,13 +106,14 @@ const postSelect = {
   publishedAt: true,
   editedAt: true,
   createdAt: true,
-  author: authorSelect,
+  author: { select: { id: true, name: true, residentProfile: { select: { isPublic: true } } } },
   group: { select: { slug: true, name: true, visibility: true } },
   _count: { select: { reactions: true, comments: { where: { status: 'published' } } } },
 } as const;
 type PostRow = {
   id: string;
   authorId: string;
+  author: { id: string; name: string; residentProfile: { isPublic: boolean } | null };
   status: string;
   moderationNote: string | null;
   _count: { reactions: number; comments: number };
@@ -120,10 +121,11 @@ type PostRow = {
 
 /** Strips author ids and moderation data; adds viewer-specific flags. */
 function present(row: PostRow, viewer?: string, liked?: Set<string>) {
-  const { authorId, moderationNote, _count, ...rest } = row;
+  const { authorId, moderationNote, _count, author, ...rest } = row;
   const mine = viewer === authorId;
   return {
     ...rest,
+    author: { name: author.name, profileId: author.residentProfile?.isPublic ? author.id : null },
     ...(mine ? { moderationNote } : {}),
     mine,
     reactions: _count.reactions,

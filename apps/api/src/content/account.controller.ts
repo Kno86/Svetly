@@ -72,6 +72,7 @@ export class AccountController {
       notificationPreferences,
       interests,
       media,
+      profile,
     ] = await Promise.all([
       db.user.findUniqueOrThrow({
         where: { id: userId },
@@ -104,6 +105,7 @@ export class AccountController {
         where: { ownerId: userId },
         select: { id: true, mime: true, size: true, alt: true, private: true, createdAt: true },
       }),
+      db.residentProfile.findUnique({ where: { userId } }),
     ]);
     await this.audit.record({
       action: 'account.exported',
@@ -138,6 +140,7 @@ export class AccountController {
       notificationPreferences,
       interests,
       media,
+      profile,
     };
   }
 

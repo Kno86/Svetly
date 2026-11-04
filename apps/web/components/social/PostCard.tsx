@@ -41,7 +41,13 @@ export function PostCard({
   return (
     <Card className={styles.post}>
       <div className={styles.meta}>
-        <strong>{post.author.name}</strong>
+        <strong>
+          {post.author.profileId ? (
+            <Link href={`/residents/${post.author.profileId}`}>{post.author.name}</Link>
+          ) : (
+            post.author.name
+          )}
+        </strong>
         {post.group && <Link href={`/groups/${post.group.slug}`}>{post.group.name}</Link>}
         <span>{formatDate(post.publishedAt ?? post.createdAt, true)}</span>
         {post.editedAt && <span>изменено</span>}
