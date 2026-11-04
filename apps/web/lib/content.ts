@@ -101,3 +101,12 @@ export function dateParts(value: string): { day: string; month: string; time: st
     time: `${get('hour')}:${get('minute')}`,
   };
 }
+
+/** First characters of a plain-text description, cut at a word boundary. */
+export function excerptOf(text: string, max = 160): string {
+  const flat = text.replace(/\s+/g, ' ').trim();
+  if (flat.length <= max) return flat;
+  const cut = flat.slice(0, max);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > max * 0.6 ? cut.slice(0, space) : cut).replace(/[\s,.;:!?-]+$/, '')}…`;
+}

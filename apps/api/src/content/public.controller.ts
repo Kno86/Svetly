@@ -82,6 +82,17 @@ const announcementPublic = {
   category,
 } satisfies Prisma.AnnouncementSelect;
 
+const EXCERPT_LENGTH = 160;
+
+/** First characters of a plain-text description, cut at a word boundary. */
+export function excerptOf(text: string, max = EXCERPT_LENGTH): string {
+  const flat = text.replace(/\s+/g, ' ').trim();
+  if (flat.length <= max) return flat;
+  const cut = flat.slice(0, max);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > max * 0.6 ? cut.slice(0, space) : cut).replace(/[\s,.;:!?-]+$/, '')}…`;
+}
+
 /** Only published, non-expired content is ever returned here — drafts/pending/rejected never leak via lists, slugs or search. */
 export function publishedAnnouncement(now = new Date()): Prisma.AnnouncementWhereInput {
   return { status: 'published', expiresAt: { gt: now } };
@@ -480,8 +491,11 @@ export class PublicContentController {
         select: {
           slug: true,
           title: true,
+          description: true,
           price: true,
+          condition: true,
           area: true,
+          imageIds: true,
           publishedAt: true,
           isDemo: true,
           category,
@@ -515,7 +529,18 @@ export class PublicContentController {
         select: { slug: true, title: true, phone: true, isDemo: true },
       }),
     ]);
-    return { news, announcements, organizations, events, directory };
+    return {
+      news,
+      announcements: announcements.map(({ description, imageIds, ...a }) => ({
+        ...a,
+        excerpt: excerptOf(description),
+        coverId: imageIds[0] ?? null,
+        photoCount: imageIds.length,
+      })),
+      organizations,
+      events,
+      directory,
+    };
   }
 
   /**
