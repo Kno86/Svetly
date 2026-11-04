@@ -8,6 +8,7 @@ import styles from '../../components/admin/admin.module.css';
 
 const COUNTERS: Array<{ key: string; label: string; href: string }> = [
   { key: 'pendingAnnouncements', label: 'Объявлений на проверке', href: '/admin/moderation' },
+  { key: 'pendingCommunity', label: 'Вакансий и находок на проверке', href: '/admin/moderation' },
   { key: 'openComplaints', label: 'Открытых жалоб', href: '/admin/complaints' },
   { key: 'draftNews', label: 'Черновиков новостей', href: '/admin/content/news' },
   { key: 'upcomingEvents', label: 'Предстоящих событий', href: '/admin/content/events' },

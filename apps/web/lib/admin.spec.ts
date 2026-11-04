@@ -18,7 +18,13 @@ describe('admin navigation', () => {
     const hrefs = navFor(['users.read', 'moderation.announcements', 'complaints.manage']).map(
       (i) => i.href,
     );
-    expect(hrefs).toEqual(['/admin', '/admin/moderation', '/admin/complaints', '/admin/users']);
+    expect(hrefs).toEqual([
+      '/admin',
+      '/admin/moderation',
+      '/admin/moderation/announcements',
+      '/admin/complaints',
+      '/admin/users',
+    ]);
   });
 
   it('every gated section maps to a known permission', () => {
@@ -77,7 +83,11 @@ describe('groupNav', () => {
       navFor(['users.read', 'moderation.announcements', 'complaints.manage']),
     );
     expect(groups.map((g) => g.group)).toEqual([null, 'Модерация', 'Платформа']);
-    expect(groups[1]?.items.map((i) => i.href)).toEqual(['/admin/moderation', '/admin/complaints']);
+    expect(groups[1]?.items.map((i) => i.href)).toEqual([
+      '/admin/moderation',
+      '/admin/moderation/announcements',
+      '/admin/complaints',
+    ]);
   });
   it('puts every item except the overview into a group', () => {
     expect(ADMIN_NAV.filter((i) => !i.group).map((i) => i.href)).toEqual(['/admin']);

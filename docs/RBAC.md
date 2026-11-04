@@ -36,15 +36,15 @@ auditLog() { … }
 
 ## Staff API (без UI; админ-платформа — следующая фаза)
 
-| Метод  | Путь                                                   | Право                   |
-| ------ | ------------------------------------------------------ | ----------------------- |
-| GET    | `/api/admin/roles`                                     | `roles.read`            |
-| GET    | `/api/admin/users?q=&limit=`                           | `users.read`            |
-| POST   | `/api/admin/users/:id/roles` `{"role":"support"}`      | `roles.assign`          |
-| DELETE | `/api/admin/users/:id/roles/:role`                     | `roles.assign`          |
-| POST   | `/api/admin/users/:id/block`, `/unblock`               | `users.block`           |
-| POST   | `/api/admin/users/:id/sessions/revoke`                 | `users.sessions.revoke` |
-| GET    | `/api/admin/audit-log?action=&actorId=&before=&limit=` | `audit.read`            |
+| Метод  | Путь                                                                                            | Право                   |
+| ------ | ----------------------------------------------------------------------------------------------- | ----------------------- |
+| GET    | `/api/admin/roles`                                                                              | `roles.read`            |
+| GET    | `/api/admin/users?q=&limit=`                                                                    | `users.read`            |
+| POST   | `/api/admin/users/:id/roles` `{"role":"support"}`                                               | `roles.assign`          |
+| DELETE | `/api/admin/users/:id/roles/:role`                                                              | `roles.assign`          |
+| POST   | `/api/admin/users/:id/block`, `/unblock`                                                        | `users.block`           |
+| POST   | `/api/admin/users/:id/sessions/revoke`                                                          | `users.sessions.revoke` |
+| GET    | `/api/admin/audit-log?action=&q=&actorId=&entityType=&entityId=&outcome=&after=&before=&limit=` | `audit.read`            |
 
 ## Журнал аудита
 

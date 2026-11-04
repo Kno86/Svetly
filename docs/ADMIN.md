@@ -2,17 +2,18 @@
 
 `/admin` — единый интерфейс для сотрудников. Разделы видны по правам роли, но интерфейс ничего не решает сам: каждое действие проверяет API (`@RequirePermission`), и каждое изменение пишется в журнал аудита.
 
-| Раздел                                          | Путь                                                   | Право                                                                | API                                               |
-| ----------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------- |
-| Обзор (счётчики)                                | `/admin`                                               | любое staff-право                                                    | `GET /api/admin/dashboard`                        |
-| Модерация объявлений                            | `/admin/moderation`                                    | `moderation.announcements`                                           | `/api/moderation/announcements`                   |
-| Жалобы                                          | `/admin/complaints`                                    | `complaints.manage`                                                  | `GET /api/admin/complaints`, `POST …/:id/resolve` |
-| Новости, события, организации, справочник (CMS) | `/admin/content/{news,events,organizations,directory}` | `content.*.manage`                                                   | `/api/staff/*`                                    |
-| Проверка организаций                            | кнопка в CMS организаций                               | `organizations.verify`                                               | `POST /api/admin/organizations/:id/verification`  |
-| Категории                                       | `/admin/categories`                                    | `content.categories.manage`                                          | `/api/admin/categories`                           |
-| Пользователи и роли                             | `/admin/users`                                         | `users.read`, `roles.assign`, `users.block`, `users.sessions.revoke` | `/api/admin/users*`                               |
-| Журнал аудита                                   | `/admin/audit`                                         | `audit.read`                                                         | `GET /api/admin/audit-log`                        |
-| Настройки (порог доверия)                       | `/admin/settings`                                      | `settings.manage`                                                    | `GET/PATCH /api/admin/settings`                   |
+| Раздел                                                                 | Путь                                                   | Право                                                                | API                                               |
+| ---------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------- |
+| Обзор (счётчики)                                                       | `/admin`                                               | любое staff-право                                                    | `GET /api/admin/dashboard`                        |
+| Очередь модерации (все разделы, массовые решения)                      | `/admin/moderation`                                    | `moderation.announcements` и/или `moderation.community`              | `GET /api/moderation/queue`                       |
+| Модерация объявлений                                                   | `/admin/moderation/announcements`                      | `moderation.announcements`                                           | `/api/moderation/announcements`                   |
+| Жалобы                                                                 | `/admin/complaints`                                    | `complaints.manage`                                                  | `GET /api/admin/complaints`, `POST …/:id/resolve` |
+| Новости, события, организации, справочник (CMS)                        | `/admin/content/{news,events,organizations,directory}` | `content.*.manage`                                                   | `/api/staff/*`                                    |
+| Проверка организаций                                                   | кнопка в CMS организаций                               | `organizations.verify`                                               | `POST /api/admin/organizations/:id/verification`  |
+| Категории                                                              | `/admin/categories`                                    | `content.categories.manage`                                          | `/api/admin/categories`                           |
+| Пользователи и роли                                                    | `/admin/users`                                         | `users.read`, `roles.assign`, `users.block`, `users.sessions.revoke` | `/api/admin/users*`                               |
+| Журнал аудита (поиск по действию, объекту, автору, результату и датам) | `/admin/audit`                                         | `audit.read`                                                         | `GET /api/admin/audit-log`                        |
+| Настройки (порог доверия)                                              | `/admin/settings`                                      | `settings.manage`                                                    | `GET/PATCH /api/admin/settings`                   |
 
 ## Жалобы
 
