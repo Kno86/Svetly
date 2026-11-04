@@ -3,7 +3,7 @@ import { Authenticated, CurrentPrincipal } from '../auth/guards.js';
 import type { Principal } from '../auth/principal.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
-export type QueueKind = 'announcements' | 'jobs' | 'lost-found' | 'posts' | 'groups';
+export type QueueKind = 'announcements' | 'jobs' | 'lost-found' | 'posts' | 'groups' | 'reviews';
 
 export interface QueueItem {
   kind: QueueKind;
@@ -101,6 +101,26 @@ export class ModerationController {
           id: r.id,
           title: r.name,
           excerpt: excerpt(r.description),
+          createdAt: r.createdAt,
+        }),
+      );
+      add(
+        'reviews',
+        this.prisma.organizationReview.count({ where: pending.where }),
+        this.prisma.organizationReview.findMany({
+          ...pending,
+          select: {
+            id: true,
+            rating: true,
+            body: true,
+            createdAt: true,
+            organization: { select: { name: true } },
+          },
+        }),
+        (r) => ({
+          id: r.id,
+          title: `Отзыв об «${r.organization.name}», оценка ${r.rating} из 5`,
+          excerpt: excerpt(r.body),
           createdAt: r.createdAt,
         }),
       );

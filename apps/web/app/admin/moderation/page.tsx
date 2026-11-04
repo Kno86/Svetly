@@ -10,7 +10,7 @@ import { apiRequest } from '../../../lib/auth-client';
 import { formatDate } from '../../../lib/content';
 import styles from '../../../components/admin/admin.module.css';
 
-type Kind = 'announcements' | 'jobs' | 'lost-found' | 'posts' | 'groups';
+type Kind = 'announcements' | 'jobs' | 'lost-found' | 'posts' | 'groups' | 'reviews';
 
 interface Item {
   kind: Kind;
@@ -26,6 +26,7 @@ const KINDS: Record<Kind, { label: string; history: string }> = {
   'lost-found': { label: 'Потеряно и найдено', history: '/admin/community' },
   posts: { label: 'Посты', history: '/admin/social' },
   groups: { label: 'Группы', history: '/admin/social' },
+  reviews: { label: 'Отзывы', history: '/admin/audit' },
 };
 const PER_KIND = 50;
 const keyOf = (i: Pick<Item, 'kind' | 'id'>) => `${i.kind}:${i.id}`;

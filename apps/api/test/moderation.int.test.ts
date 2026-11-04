@@ -113,7 +113,7 @@ describe('unified moderation queue and audit search', () => {
       items: Array<{ kind: string; id: string; excerpt: string; createdAt: string }>;
     }>();
     expect(Object.keys(body.counts).sort()).toEqual(
-      ['announcements', 'groups', 'jobs', 'lost-found', 'posts'].sort(),
+      ['announcements', 'groups', 'jobs', 'lost-found', 'posts', 'reviews'].sort(),
     );
     const mine = body.items.filter((i) => i.id === ann.id || i.id === job.id);
     expect(mine.map((i) => i.kind)).toEqual(['announcements', 'jobs']);
