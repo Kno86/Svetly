@@ -1,3 +1,4 @@
+import { MediaImage } from '../../../components/content/MediaImage';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { LoadError, PageHead, styles } from '../../../components/content/Blocks';
@@ -60,8 +61,7 @@ export default async function IssuePage(p: Props) {
         {i.imageIds.length > 0 && (
           <div className={styles.gallery}>
             {i.imageIds.map((id, n) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={id} src={`/api/media/${id}`} alt={`Фото ${n + 1}`} loading="lazy" />
+              <MediaImage key={id} id={id} alt={`Фото ${n + 1}`} variant="gallery" />
             ))}
           </div>
         )}

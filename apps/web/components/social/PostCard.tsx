@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { MediaImage } from '../content/MediaImage';
 import { Button } from '../ui/Button';
 import { Badge, Card } from '../ui/Feedback';
 import { apiRequest } from '../../lib/auth-client';
@@ -66,7 +67,7 @@ export function PostCard({
       {post.imageIds.length > 0 && (
         <div className={styles.images}>
           {post.imageIds.map((id, i) => (
-            <img key={id} src={`/api/media/${id}`} alt={`Фото ${i + 1}`} loading="lazy" />
+            <MediaImage key={id} id={id} alt={`Фото ${i + 1}`} variant="post" />
           ))}
         </div>
       )}
