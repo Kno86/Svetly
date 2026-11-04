@@ -7,6 +7,7 @@ import { CommunityForm } from '../../../../components/community/CommunityForm';
 import { Alert } from '../../../../components/ui/Feedback';
 import { BUSINESS_FIELDS } from '../../../../lib/community-forms';
 import { Inquiries } from './Inquiries';
+import { Stats } from './Stats';
 
 export default function BusinessCardPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,7 +17,11 @@ export default function BusinessCardPage() {
       <PageHead
         title="Карточка"
         crumbs={[{ label: 'Кабинет бизнеса', href: '/business' }, { label: 'Карточка' }]}
-        action={<a href="#inquiries">Заявки жителей</a>}
+        action={
+          <>
+            <a href="#inquiries">Заявки жителей</a> · <a href="#stats">Статистика</a>
+          </>
+        }
       />
       <div className={styles.cabinetSplit}>
         <section>
@@ -40,6 +45,7 @@ export default function BusinessCardPage() {
         </section>
         <Inquiries id={id} />
       </div>
+      <Stats id={id} />
     </main>
   );
 }

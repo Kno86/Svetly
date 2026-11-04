@@ -10,9 +10,11 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { z } from 'zod';
 import { Prisma } from '../generated/prisma/client.js';
+import { ANALYTICS_TZ } from '../analytics/analytics.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guards.js';
 import type { Principal } from '../auth/principal.js';
@@ -49,6 +51,9 @@ const VERIFIED_FIELDS: Array<keyof Card> = ['name', 'phone', 'website', 'address
 const MAX_PENDING_APPLICATIONS = 3;
 const MAX_NEW_INQUIRIES = 10;
 
+const statsQuery = z.object({
+  days: z.enum(['7', '30', '90']).default('30').transform(Number),
+});
 const inquiryBody = z.object({
   message: z.string().trim().min(10).max(2000),
   contact: optText(200),
@@ -204,6 +209,67 @@ export class BusinessController {
         createdAt: true,
       },
     });
+  }
+
+  /**
+   * Owner-only card statistics. Views and contact clicks come from browser analytics events
+   * (estimates: Do Not Track / GPC visitors are not counted, events older than the retention
+   * period are purged); inquiries are counted from the inquiries table and are exact.
+   */
+  @Get('business/organizations/:id/stats')
+  @Authenticated()
+  async stats(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query() query: unknown,
+    @CurrentPrincipal() p: Principal,
+  ) {
+    const { days } = parse(statsQuery, query);
+    const org = await this.own(id, p.userId);
+    const paths = [`/organizations/${org.slug}`, `/services/${org.slug}`];
+    const tz = ANALYTICS_TZ;
+    const since = Prisma.sql`(((now() AT TIME ZONE ${tz})::date - ${days - 1}::int) AT TIME ZONE ${tz})`;
+    const [events, inquiries] = await Promise.all([
+      this.prisma.$queryRaw<Array<{ day: string; name: string; count: number }>>`
+        SELECT to_char((occurred_at AT TIME ZONE ${tz})::date, 'YYYY-MM-DD') AS day, name, count(*)::int AS count
+        FROM analytics_events
+        WHERE name IN ('page_view', 'contact_click') AND path IN (${Prisma.join(paths)}) AND occurred_at >= ${since}
+        GROUP BY 1, 2`,
+      this.prisma.$queryRaw<Array<{ day: string; count: number }>>`
+        SELECT to_char((created_at AT TIME ZONE ${tz})::date, 'YYYY-MM-DD') AS day, count(*)::int AS count
+        FROM business_inquiries
+        WHERE organization_id = ${id}::uuid AND created_at >= ${since}
+        GROUP BY 1`,
+    ]);
+    const dayFormat = new Intl.DateTimeFormat('en-CA', { timeZone: tz });
+    const now = Date.now();
+    const daily = Array.from({ length: days }, (_, i) => ({
+      day: dayFormat.format(new Date(now - (days - 1 - i) * 86_400_000)),
+      views: 0,
+      contactClicks: 0,
+      inquiries: 0,
+    }));
+    const byDay = new Map(daily.map((d) => [d.day, d]));
+    for (const e of events) {
+      const d = byDay.get(e.day);
+      if (d) d[e.name === 'page_view' ? 'views' : 'contactClicks'] += e.count;
+    }
+    for (const q of inquiries) {
+      const d = byDay.get(q.day);
+      if (d) d.inquiries += q.count;
+    }
+    const sum = (k: 'views' | 'contactClicks' | 'inquiries') =>
+      daily.reduce((acc, d) => acc + d[k], 0);
+    return {
+      days,
+      timezone: tz,
+      published: org.status === 'published',
+      totals: {
+        views: sum('views'),
+        contactClicks: sum('contactClicks'),
+        inquiries: sum('inquiries'),
+      },
+      daily,
+    };
   }
 
   @Post('business/inquiries/:id/reply')
