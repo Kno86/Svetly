@@ -45,11 +45,11 @@ export default async function ResidentPage({ params }: Props) {
   const r = res.data;
   return (
     <main id="main" className={`container ${styles.page}`}>
-      <Avatar name={r.name} avatarId={r.avatarId} size="lg" />
       <PageHead
         title={r.name}
         description={`На SVETLY ${sinceMonth(r.memberSince)}`}
         crumbs={[{ label: 'Сообщество', href: '/community' }, { label: r.name }]}
+        action={<Avatar name={r.name} avatarId={r.avatarId} size="lg" />}
       />
       {r.bio && (
         <section className={styles.profileSection} aria-labelledby="bio">
