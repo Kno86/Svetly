@@ -23,6 +23,10 @@ export async function seedDemo(db: Db, now = new Date()): Promise<string[]> {
   if (await db.user.findUnique({ where: { email: DEMO_EMAIL } }))
     throw new Error('Demo content already exists. Run demo:clear first.');
   const at = (days: number) => new Date(now.getTime() + days * DAY);
+  // 11:00 in Novosibirsk (UTC+7) a week from now.
+  const eventStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 7, 4),
+  );
   const done: string[] = [];
   await db.$transaction(async (tx) => {
     const t = tx as unknown as Db;
@@ -136,8 +140,8 @@ export async function seedDemo(db: Db, now = new Date()): Promise<string[]> {
         description: `${NOTE}\n\nПример события: что будет, во сколько и что взять с собой.`,
         organizer: 'Демо-организатор (вымышленный)',
         location: 'Демо-площадка (вымышленное место)',
-        startsAt: at(7),
-        endsAt: new Date(at(7).getTime() + 2 * 3_600_000),
+        startsAt: eventStart,
+        endsAt: new Date(eventStart.getTime() + 2 * 3_600_000),
         categoryId: await categoryId(t, 'events', 'vstrechi'),
         status: 'published',
         isDemo: true,
