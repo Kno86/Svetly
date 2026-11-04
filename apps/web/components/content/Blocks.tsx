@@ -44,24 +44,28 @@ export function Filters({
   category,
   categories,
   hidden,
+  noSearch,
 }: {
   action: string;
   q?: string;
   category?: string;
   categories: Category[];
   hidden?: Record<string, string>;
+  noSearch?: boolean;
 }) {
   return (
     <form method="get" action={action} className={styles.filters} role="search">
       {hidden &&
         Object.entries(hidden).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
-      <TextField
-        label="Поиск"
-        name="q"
-        type="search"
-        defaultValue={q}
-        placeholder="Например, велосипед"
-      />
+      {!noSearch && (
+        <TextField
+          label="Поиск"
+          name="q"
+          type="search"
+          defaultValue={q}
+          placeholder="Например, велосипед"
+        />
+      )}
       <Select label="Категория" name="category" defaultValue={category ?? ''}>
         <option value="">Все категории</option>
         {categories.map((c) => (

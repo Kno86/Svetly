@@ -23,6 +23,13 @@ const page = {
 const listQuery = z.object(page);
 const orgQuery = z.object({ ...page, kind: z.enum(['organization', 'service']).optional() });
 const eventQuery = z.object({ ...page, when: z.enum(['upcoming', 'past']).default('upcoming') });
+const calendarQuery = z.object({
+  month: z.string().regex(/^(20\d\d)-(0[1-9]|1[0-2])$/),
+  category: page.category,
+});
+/** The territory's fixed UTC offset (Asia/Novosibirsk has no DST). */
+const TERRITORY_OFFSET_MS = 7 * 3_600_000;
+const CALENDAR_LIMIT = 500;
 export const SEARCH_TYPES = [
   'news',
   'announcements',
@@ -365,6 +372,37 @@ export class PublicContentController {
       this.prisma.event.count({ where }),
     ]);
     return { items, total, page: p, limit };
+  }
+
+  /** Events overlapping a calendar month in the territory's time zone, for the month grid. */
+  @Get('events/calendar')
+  async eventCalendar(@Query() query: unknown) {
+    const { month, category: cat } = parse(calendarQuery, query);
+    const [y, m] = month.split('-').map(Number) as [number, number];
+    const from = new Date(Date.UTC(y, m - 1, 1) - TERRITORY_OFFSET_MS);
+    const to = new Date(Date.UTC(y, m, 1) - TERRITORY_OFFSET_MS);
+    const items = await this.prisma.event.findMany({
+      where: {
+        status: { in: ['published', 'cancelled'] },
+        startsAt: { lt: to },
+        OR: [{ endsAt: { gte: from } }, { endsAt: null, startsAt: { gte: from } }],
+        ...categoryFilter(cat),
+      },
+      orderBy: { startsAt: 'asc' },
+      take: CALENDAR_LIMIT,
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        location: true,
+        startsAt: true,
+        endsAt: true,
+        status: true,
+        isDemo: true,
+        category,
+      },
+    });
+    return { month, items, truncated: items.length === CALENDAR_LIMIT };
   }
 
   @Get('events/:slug')
