@@ -364,3 +364,86 @@ a.tile:hover {
     grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem);
   }
 }
+.calendarNav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.calendarNav h2 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+}
+.calendar {
+  display: none;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+.calendar th {
+  padding: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-align: left;
+}
+.calendar td {
+  height: 7rem;
+  padding: var(--space-2);
+  vertical-align: top;
+  border: 1px solid var(--color-border);
+}
+.calendar td ul {
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-sm);
+}
+.calendar td li + li {
+  margin-top: var(--space-1);
+}
+.calendar td a {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.calendarOut {
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+}
+.calendarToday {
+  box-shadow: inset 0 0 0 2px var(--color-primary);
+}
+.calendarDay {
+  font-weight: 600;
+}
+.calendarCancelled {
+  text-decoration: line-through;
+}
+.agenda {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.agenda > li {
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.agenda h3 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-base);
+}
+.agenda ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 48rem) {
+  .calendar {
+    display: table;
+  }
+  .agenda {
+    display: none;
+  }
+}
