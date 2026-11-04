@@ -41,7 +41,14 @@ docker compose up -d --build
    Админка: <http://localhost:3000/admin>.
 
 3. Кабинет жителя: `/account`, кабинет бизнеса: `/business`.
-4. Сбросить всё, включая базу: `docker compose down -v`.
+4. Демо-наполнение — по одной вымышленной записи с пометкой «Демо» в каждом разделе (без телефонов, адресов и реальных названий):
+
+   ```bash
+   docker compose exec api node dist/cli.js demo:seed    # добавить
+   docker compose exec api node dist/cli.js demo:clear   # удалить все демо-записи
+   ```
+
+5. Сбросить всё, включая базу: `docker compose down -v`.
 
 Подробности: [docs/RUNBOOK.md](docs/RUNBOOK.md).
 

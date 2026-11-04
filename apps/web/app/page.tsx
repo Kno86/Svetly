@@ -107,6 +107,11 @@ export default async function HomePage() {
     apiGet<HomeFeed>('/api/home'),
   ]);
   const feed = home.ok ? home.data : undefined;
+  const hasDemo =
+    !!feed &&
+    [feed.news, feed.announcements, feed.organizations, feed.events].some((list) =>
+      list.some((x) => x.isDemo),
+    );
   const failed = (
     <p className={styles.muted}>Не удалось загрузить публикации. Обновите страницу через минуту.</p>
   );
@@ -143,8 +148,10 @@ export default async function HomePage() {
               </button>
             </form>
             <p className={styles.note}>
-              <Badge tone="accent">Платформа в разработке</Badge> Записи публикуют жители и
-              редакция, выдуманных данных нет.
+              <Badge tone="accent">Платформа в разработке</Badge>{' '}
+              {hasDemo
+                ? 'Записи с пометкой «демо» — вымышленные примеры, остальные публикуют жители и редакция.'
+                : 'Записи публикуют жители и редакция, выдуманных данных нет.'}
             </p>
           </div>
           <aside className={styles.today} aria-labelledby="soon-heading">
