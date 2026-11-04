@@ -26,6 +26,14 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname, '../../'),
   poweredByHeader: false,
   reactStrictMode: true,
+  // Uploaded media are immutable (new upload = new id), so optimized variants can be cached for a year.
+  images: {
+    localPatterns: [{ pathname: '/api/media/**', search: '' }],
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [390, 640, 828, 1080, 1440, 1920],
+    imageSizes: [160, 320],
+    minimumCacheTTL: 31_536_000,
+  },
   async rewrites() {
     return [{ source: '/api/:path*', destination: `${apiInternalUrl}/api/:path*` }];
   },

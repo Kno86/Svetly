@@ -1,3 +1,4 @@
+import { MediaImage } from '../../../components/content/MediaImage';
 import type { Metadata } from 'next';
 import { ReportButton } from '../../../components/content/ReportButton';
 import { FavoriteButton } from '../../../components/content/FavoriteButton';
@@ -73,8 +74,7 @@ export default async function AnnouncementPage({ params }: Props) {
         {a.imageIds.length > 0 && (
           <div className={styles.gallery}>
             {a.imageIds.map((id, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={id} src={`/api/media/${id}`} alt={`Фото ${i + 1}`} loading="lazy" />
+              <MediaImage key={id} id={id} alt={`Фото ${i + 1}`} variant="gallery" />
             ))}
           </div>
         )}

@@ -1,3 +1,4 @@
+import { MediaImage } from '../../../components/content/MediaImage';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ReportButton } from '../../../components/content/ReportButton';
@@ -62,8 +63,13 @@ export default async function NewsArticlePage({ params }: Props) {
           <h1>{res.data.title}</h1>
           {res.data.excerpt && <p className={styles.articleLead}>{res.data.excerpt}</p>}
           {res.data.coverId && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className={styles.cover} src={`/api/media/${res.data.coverId}`} alt="" />
+            <MediaImage
+              className={styles.cover}
+              id={res.data.coverId}
+              alt=""
+              variant="cover"
+              eager
+            />
           )}
           <div className={styles.body}>
             {paragraphs(res.data.body).map((p, i) => (
