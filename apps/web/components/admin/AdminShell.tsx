@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Alert, Skeleton } from '../ui/Feedback';
 import { apiRequest, errorMessage } from '../../lib/auth-client';
-import { groupNav, navFor } from '../../lib/admin';
+import { ADMIN_NAV, groupNav, navFor } from '../../lib/admin';
 import styles from './admin.module.css';
 
 interface Me {
@@ -118,6 +118,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
   );
 }
 
+function matches(href: string, pathname: string): boolean {
+  return href === '/admin'
+    ? pathname === '/admin'
+    : pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** The most specific nav entry wins, so nested sections don't light up their parent. */
 function isActive(href: string, pathname: string): boolean {
-  return href === '/admin' ? pathname === '/admin' : pathname.startsWith(href);
+  return (
+    matches(href, pathname) &&
+    !ADMIN_NAV.some((i) => i.href.length > href.length && matches(i.href, pathname))
+  );
 }

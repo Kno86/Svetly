@@ -25,7 +25,12 @@ const listQuery = z.object({
 });
 const auditQuery = z.object({
   action: z.string().max(100).optional(),
+  q: z.string().trim().max(100).optional(),
   actorId: z.uuid().optional(),
+  entityType: z.string().max(50).optional(),
+  entityId: z.string().max(100).optional(),
+  outcome: z.enum(['success', 'denied', 'failure']).optional(),
+  after: z.iso.datetime().optional(),
   limit: z.coerce.number().int().min(1).max(200).default(50),
   before: z.iso.datetime().optional(),
 });
@@ -189,9 +194,26 @@ export class AdminController {
   @Get('audit-log')
   @RequirePermission('audit.read')
   async auditLog(@Query() query: unknown) {
-    const { action, actorId, limit, before } = parse(auditQuery, query);
+    const { action, q, actorId, entityType, entityId, outcome, limit, before, after } = parse(
+      auditQuery,
+      query,
+    );
     return this.prisma.auditLog.findMany({
-      where: { action, actorId, ...(before ? { occurredAt: { lt: new Date(before) } } : {}) },
+      where: {
+        action: action ?? (q ? { contains: q, mode: 'insensitive' } : undefined),
+        actorId,
+        entityType,
+        entityId,
+        outcome,
+        ...(before || after
+          ? {
+              occurredAt: {
+                ...(before ? { lt: new Date(before) } : {}),
+                ...(after ? { gte: new Date(after) } : {}),
+              },
+            }
+          : {}),
+      },
       orderBy: { occurredAt: 'desc' },
       take: limit,
     });

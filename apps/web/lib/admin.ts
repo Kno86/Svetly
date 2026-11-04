@@ -14,7 +14,13 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin', label: 'Обзор', permission: null },
   {
     href: '/admin/moderation',
-    label: 'Модерация',
+    label: 'Очередь модерации',
+    permission: 'moderation.announcements',
+    group: 'Модерация',
+  },
+  {
+    href: '/admin/moderation/announcements',
+    label: 'Объявления',
     permission: 'moderation.announcements',
     group: 'Модерация',
   },
