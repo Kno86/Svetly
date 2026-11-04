@@ -49,6 +49,7 @@ model User {
   interests         UserInterest[]
   hiddenItems       HiddenItem[]
   residentProfile   ResidentProfile?
+  reviews           OrganizationReview[]
 
   @@map("users")
 }
@@ -315,6 +316,7 @@ model Organization {
 
   category  Category?         @relation(fields: [categoryId], references: [id])
   inquiries BusinessInquiry[]
+  reviews   OrganizationReview[]
 
   @@index([status, kind])
   @@index([ownerId])
@@ -849,4 +851,25 @@ model ResidentProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("resident_profiles")
+}
+
+/// Resident review of an organization. Premoderated: visible only after a moderator approves it.
+model OrganizationReview {
+  id             String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  authorId       String    @map("author_id") @db.Uuid
+  rating         Int
+  body           String
+  status         String    @default("pending")
+  moderationNote String?   @map("moderation_note")
+  publishedAt    DateTime? @map("published_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  author       User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, authorId])
+  @@index([status, createdAt])
+  @@map("organization_reviews")
 }

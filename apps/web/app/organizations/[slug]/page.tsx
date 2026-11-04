@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ReportButton } from '../../../components/content/ReportButton';
 import { FavoriteButton } from '../../../components/content/FavoriteButton';
 import { InquiryButton } from '../../../components/content/InquiryButton';
+import { Reviews } from '../../../components/content/Reviews';
 import { notFound } from 'next/navigation';
 import { Badge } from '../../../components/ui/Feedback';
 import { LoadError, PageHead, styles } from '../../../components/content/Blocks';
@@ -137,6 +138,7 @@ export default async function OrganizationPage({ params }: Props) {
         {o.acceptsInquiries && <InquiryButton organizationId={o.id} />}
         <FavoriteButton entityType="organization" entityId={o.id} />
         <ReportButton entityType="organization" entityId={o.id} />
+        <Reviews organizationId={o.id} />
       </article>
     </main>
   );
