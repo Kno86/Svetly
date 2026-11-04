@@ -11,7 +11,7 @@ const VARIANTS = {
   card: {
     width: 800,
     height: 600,
-    sizes: '(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 20rem',
+    sizes: '(max-width: 640px) 50vw, 16rem',
   },
   thumb: { width: 320, height: 320, sizes: '6rem' },
   photo: { width: 1600, height: 1200, sizes: '(max-width: 800px) 100vw, 46rem' },
