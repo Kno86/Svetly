@@ -41,7 +41,7 @@ export interface FeedPost {
   editedAt: string | null;
   createdAt: string;
   /** `profileId` is set only when the author made their profile public. */
-  author: { name: string; profileId: string | null };
+  author: { name: string; avatarId: string | null; profileId: string | null };
   group: { slug: string; name: string; visibility: string } | null;
   mine: boolean;
   reactions: number;
@@ -60,7 +60,7 @@ export interface CommentView {
   body: string;
   createdAt: string;
   editedAt: string | null;
-  author: { name: string };
+  author: { name: string; avatarId: string | null };
   mine: boolean;
 }
 

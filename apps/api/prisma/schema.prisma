@@ -28,6 +28,8 @@ model User {
   email         String    @unique
   emailVerified Boolean   @default(false) @map("email_verified")
   image         String?
+  /// Public profile photo; a media asset uploaded by the user.
+  avatarId      String?   @map("avatar_id") @db.Uuid
   /// Set by staff; a blocked user cannot sign in and all sessions are revoked.
   blockedAt     DateTime? @map("blocked_at") @db.Timestamptz(6)
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -50,6 +52,7 @@ model User {
   hiddenItems       HiddenItem[]
   residentProfile   ResidentProfile?
   reviews           OrganizationReview[]
+  avatar            MediaAsset?              @relation("UserAvatar", fields: [avatarId], references: [id], onDelete: SetNull)
 
   @@map("users")
 }
@@ -226,6 +229,8 @@ model MediaAsset {
   /// Private assets (message attachments) are served only to the owner and conversation members.
   private    Boolean  @default(false)
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  avatarOf User[] @relation("UserAvatar")
 
   @@index([ownerId])
   @@map("media_assets")

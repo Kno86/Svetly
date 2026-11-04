@@ -12,7 +12,14 @@ export class MeController {
   async me(@CurrentPrincipal() principal: Principal) {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: principal.userId },
-      select: { id: true, name: true, email: true, emailVerified: true, createdAt: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        emailVerified: true,
+        avatarId: true,
+        createdAt: true,
+      },
     });
     return { user, roles: principal.roles, permissions: [...principal.permissions].sort() };
   }

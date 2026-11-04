@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Avatar } from '../ui/Avatar';
 import { useState, type FormEvent } from 'react';
 import { useApi } from '../admin/useApi';
 import { Button } from '../ui/Button';
@@ -15,7 +16,7 @@ interface Review {
   rating: number;
   body: string;
   publishedAt: string;
-  author: { name: string; profileId: string | null };
+  author: { name: string; avatarId: string | null; profileId: string | null };
 }
 interface ReviewList {
   summary: { count: number; average: number | null };
@@ -147,6 +148,7 @@ export function Reviews({ organizationId }: { organizationId: string }) {
             <li key={r.id}>
               <p className={styles.meta}>
                 <span aria-label={`оценка ${r.rating} из 5`}>{stars(r.rating)}</span> ·{' '}
+                <Avatar name={r.author.name} avatarId={r.author.avatarId} />{' '}
                 {r.author.profileId ? (
                   <Link href={`/residents/${r.author.profileId}`}>{r.author.name}</Link>
                 ) : (

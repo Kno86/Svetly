@@ -364,3 +364,34 @@ ul.tablist {
   gap: var(--space-3);
   margin-top: var(--space-6);
 }
+
+.avatar {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--color-primary-soft);
+  color: var(--color-ink);
+  font-weight: 600;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.avatar-sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.875rem;
+}
+
+.avatar-md {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.25rem;
+}
+
+.avatar-lg {
+  width: 6rem;
+  height: 6rem;
+  font-size: 2.5rem;
+}

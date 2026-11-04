@@ -12,6 +12,7 @@ import { Alert, EmptyState, Skeleton } from '../../../components/ui/Feedback';
 import { TextArea } from '../../../components/ui/Field';
 import { apiRequest, errorMessage } from '../../../lib/auth-client';
 import { formatDate } from '../../../lib/content';
+import { Avatar } from '../../../components/ui/Avatar';
 import { threadComments, type CommentView, type FeedPost } from '../../../lib/social';
 
 interface PostDetail extends FeedPost {
@@ -169,6 +170,7 @@ function Comment({
   return (
     <>
       <div className={social.meta}>
+        <Avatar name={c.author.name} avatarId={c.author.avatarId} />
         <strong>{c.author.name}</strong>
         <span>{formatDate(c.createdAt, true)}</span>
         {c.editedAt && <span>изменено</span>}

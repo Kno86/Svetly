@@ -63,7 +63,13 @@ export class ProfileController {
   async show(@Param('id', ParseUUIDPipe) id: string) {
     const user = await this.prisma.user.findFirst({
       where: { id, blockedAt: null, residentProfile: { isPublic: true } },
-      select: { id: true, name: true, createdAt: true, residentProfile: { select: { bio: true } } },
+      select: {
+        id: true,
+        name: true,
+        avatarId: true,
+        createdAt: true,
+        residentProfile: { select: { bio: true } },
+      },
     });
     if (!user) throw new NotFoundException({ code: 'NOT_FOUND', message: 'Профиль не найден' });
     const openGroup = { status: 'active', visibility: 'open' };
@@ -90,6 +96,7 @@ export class ProfileController {
       }),
     ]);
     return {
+      avatarId: user.avatarId,
       id: user.id,
       name: user.name,
       bio: user.residentProfile?.bio ?? '',

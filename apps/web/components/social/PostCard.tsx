@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { MediaImage } from '../content/MediaImage';
+import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { Badge, Card } from '../ui/Feedback';
 import { apiRequest } from '../../lib/auth-client';
@@ -42,6 +43,7 @@ export function PostCard({
   return (
     <Card className={styles.post}>
       <div className={styles.meta}>
+        <Avatar name={post.author.name} avatarId={post.author.avatarId} />
         <strong>
           {post.author.profileId ? (
             <Link href={`/residents/${post.author.profileId}`}>{post.author.name}</Link>
