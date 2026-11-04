@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { dayKey, eventsByDay, isMonth, monthGrid, monthLabel, shiftMonth } from './calendar';
+import {
+  dayKey,
+  eventsByDay,
+  isMonth,
+  monthGrid,
+  monthLabel,
+  shiftMonth,
+  sinceMonth,
+} from './calendar';
 
 const event = (id: string, startsAt: string, endsAt: string | null = null) => ({
   id,
@@ -31,6 +39,7 @@ describe('calendar', () => {
     expect(isMonth('2026-13')).toBe(false);
     expect(isMonth('2026-02')).toBe(true);
     expect(monthLabel('2026-10')).toBe('Октябрь 2026');
+    expect(sinceMonth('2026-11')).toBe('с ноября 2026');
   });
 
   it('spreads multi-day events but clips them to the month', () => {

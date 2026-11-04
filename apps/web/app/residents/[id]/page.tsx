@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Empty, LoadError, PageHead, styles } from '../../../components/content/Blocks';
 import { apiGet, formatDate, paragraphs } from '../../../lib/content';
-import { monthLabel } from '../../../lib/calendar';
+import { sinceMonth } from '../../../lib/calendar';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,18 +45,18 @@ export default async function ResidentPage({ params }: Props) {
     <main id="main" className={`container ${styles.page}`}>
       <PageHead
         title={r.name}
-        description={`Житель на SVETLY с ${monthLabel(r.memberSince).toLowerCase()}`}
+        description={`На SVETLY ${sinceMonth(r.memberSince)}`}
         crumbs={[{ label: 'Сообщество', href: '/community' }, { label: r.name }]}
       />
       {r.bio && (
-        <section aria-labelledby="bio">
+        <section className={styles.profileSection} aria-labelledby="bio">
           <h2 id="bio">О себе</h2>
           {paragraphs(r.bio).map((p, i) => (
             <p key={i}>{p}</p>
           ))}
         </section>
       )}
-      <section aria-labelledby="groups">
+      <section className={styles.profileSection} aria-labelledby="groups">
         <h2 id="groups">Открытые группы</h2>
         {r.groups.length ? (
           <ul>
@@ -70,7 +70,7 @@ export default async function ResidentPage({ params }: Props) {
           <p className={styles.meta}>Не состоит в открытых группах.</p>
         )}
       </section>
-      <section aria-labelledby="posts">
+      <section className={styles.profileSection} aria-labelledby="posts">
         <h2 id="posts">Публичные посты</h2>
         {r.posts.length ? (
           <ul className={styles.rows} role="list">

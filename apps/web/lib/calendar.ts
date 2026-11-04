@@ -51,6 +51,15 @@ export function monthLabel(month: string): string {
   return `${name[0]!.toUpperCase()}${name.slice(1)} ${y}`;
 }
 
+/** «с ноября 2026»: the month in the genitive case, as after «с». */
+export function sinceMonth(month: string): string {
+  const [y, m] = month.split('-').map(Number) as [number, number];
+  const name = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', timeZone: 'UTC' })
+    .format(new Date(Date.UTC(y, m - 1, 1)))
+    .replace(/^\d+\s*/, '');
+  return `с ${name} ${y}`;
+}
+
 /** Monday-first weeks covering the month, padded with neighbouring days. */
 export function monthGrid(month: string): CalendarDay[][] {
   const [y, m] = month.split('-').map(Number) as [number, number];

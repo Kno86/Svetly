@@ -448,3 +448,11 @@ a.tile:hover {
     display: none;
   }
 }
+
+.profileSection {
+  margin-top: var(--space-6);
+}
+.profileSection h2 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-xl);
+}
