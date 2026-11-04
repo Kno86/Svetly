@@ -1,4 +1,4 @@
-import { MediaImage } from '../../../components/content/MediaImage';
+import { PhotoGallery } from '../../../components/content/PhotoGallery';
 import type { Metadata } from 'next';
 import { ReportButton } from '../../../components/content/ReportButton';
 import { FavoriteButton } from '../../../components/content/FavoriteButton';
@@ -71,13 +71,7 @@ export default async function AnnouncementPage({ params }: Props) {
         </div>
         <h1>{a.title}</h1>
         <p className={styles.price}>{formatPrice(a.price)}</p>
-        {a.imageIds.length > 0 && (
-          <div className={styles.gallery}>
-            {a.imageIds.map((id, i) => (
-              <MediaImage key={id} id={id} alt={`Фото ${i + 1}`} variant="gallery" />
-            ))}
-          </div>
-        )}
+        <PhotoGallery ids={a.imageIds} title={a.title} />
         <div className={styles.body}>
           {paragraphs(a.description).map((p, i) => (
             <p key={i}>{p}</p>

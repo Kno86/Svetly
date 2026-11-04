@@ -1,12 +1,17 @@
 import Link from 'next/link';
 import { Badge, Card, EmptyState } from '../components/ui/Feedback';
 import { ButtonLink } from '../components/ui/Button';
+import {
+  AnnouncementCard,
+  type AnnouncementCardData,
+} from '../components/content/AnnouncementCard';
 import { DemoBadge } from '../components/content/Blocks';
+import content from '../components/content/content.module.css';
 import { VerificationBadge } from '../components/content/OrganizationList';
 import { Icon, type IconName } from '../components/ui/Icon';
 import { fetchApiStatus, type ApiStatus } from '../lib/api-status';
 import { getWebBuildInfo } from '../lib/build-info';
-import { apiGet, formatDate, formatPrice } from '../lib/content';
+import { apiGet, formatDate } from '../lib/content';
 import styles from './page.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -25,15 +30,7 @@ interface HomeFeed {
     isDemo: boolean;
     category: Category | null;
   }>;
-  announcements: Array<{
-    slug: string;
-    title: string;
-    price: number | null;
-    area: string | null;
-    publishedAt: string;
-    isDemo: boolean;
-    category: Category | null;
-  }>;
+  announcements: AnnouncementCardData[];
   organizations: Array<{
     slug: string;
     kind: string;
@@ -260,21 +257,9 @@ export default async function HomePage() {
               action={<ButtonLink href="/announcements/new">Подать объявление</ButtonLink>}
             />
           ) : (
-            <div className="grid">
+            <div className={content.adGrid}>
               {feed.announcements.map((a) => (
-                <Card key={a.slug} interactive>
-                  <div className={styles.meta}>
-                    {a.category && <span>{a.category.name}</span>}
-                    <DemoBadge show={a.isDemo} />
-                  </div>
-                  <h3 className={styles.cardTitle}>
-                    <Link href={`/announcements/${a.slug}`}>{a.title}</Link>
-                  </h3>
-                  <p className={styles.price}>{formatPrice(a.price)}</p>
-                  <p className={styles.muted}>
-                    {[a.area, formatDate(a.publishedAt)].filter(Boolean).join(' · ')}
-                  </p>
-                </Card>
+                <AnnouncementCard key={a.slug} a={a} />
               ))}
             </div>
           )}

@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
-import { Badge } from '../../components/ui/Feedback';
+import { AnnouncementCard } from '../../components/content/AnnouncementCard';
 import {
   ButtonLink,
   Empty,
   Filters,
-  ItemCard,
   LoadError,
   PageHead,
   Pager,
@@ -12,8 +11,7 @@ import {
 } from '../../components/content/Blocks';
 import {
   apiGet,
-  formatDate,
-  formatPrice,
+  excerptOf,
   pageParam,
   param,
   query,
@@ -80,27 +78,18 @@ export default async function AnnouncementsPage({
         />
       ) : (
         <>
-          <div className={styles.list}>
+          <div className={styles.adGrid}>
             {list.data.items.map((a) => (
-              <ItemCard
+              <AnnouncementCard
                 key={a.id}
-                href={`/announcements/${a.slug}`}
-                title={a.title}
-                badges={
-                  <>
-                    <Badge>{a.category.name}</Badge>
-                    {a.isDemo && <Badge tone="warning">демо</Badge>}
-                  </>
-                }
-                meta={
-                  <>
-                    {a.area && <span>{a.area}</span>}
-                    <time dateTime={a.publishedAt}>{formatDate(a.publishedAt)}</time>
-                  </>
-                }
-              >
-                <p className={styles.price}>{formatPrice(a.price)}</p>
-              </ItemCard>
+                heading="h2"
+                a={{
+                  ...a,
+                  excerpt: excerptOf(a.description),
+                  coverId: a.imageIds[0] ?? null,
+                  photoCount: a.imageIds.length,
+                }}
+              />
             ))}
           </div>
           <Pager

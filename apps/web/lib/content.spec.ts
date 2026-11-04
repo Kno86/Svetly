@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   apiGet,
+  excerptOf,
   dateParts,
   eventPhase,
   formatPrice,
@@ -55,5 +56,18 @@ describe('dateParts', () => {
   it('uses the Novosibirsk zone', () => {
     expect(dateParts('2026-10-19T11:00:00Z')).toEqual({ day: '19', month: 'окт', time: '18:00' });
     expect(dateParts('2026-12-31T20:30:00Z')).toEqual({ day: '1', month: 'янв', time: '03:30' });
+  });
+});
+
+describe('excerptOf', () => {
+  it('keeps short text and flattens whitespace', () => {
+    expect(excerptOf('  Велосипед\n\nв хорошем   состоянии ')).toBe(
+      'Велосипед в хорошем состоянии',
+    );
+  });
+  it('cuts long text at a word boundary with an ellipsis', () => {
+    const out = excerptOf('слово '.repeat(60), 40);
+    expect(out.length).toBeLessThanOrEqual(41);
+    expect(out.endsWith('слово…')).toBe(true);
   });
 });
