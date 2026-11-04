@@ -129,6 +129,7 @@ describe('public resident profile', () => {
       Record<string, unknown> & { posts: Array<{ body: string }>; groups: Array<{ slug: string }> }
     >();
     expect(Object.keys(body).sort()).toEqual([
+      'avatarId',
       'bio',
       'groups',
       'id',

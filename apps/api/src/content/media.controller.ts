@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Controller,
   Get,
   Inject,
@@ -21,12 +20,7 @@ import {
 } from '../auth/guards.js';
 import type { Principal } from '../auth/principal.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import {
-  IMAGE_TYPES,
-  LocalFileStorage,
-  MAX_IMAGE_BYTES,
-  type FileStorage,
-} from './storage.service.js';
+import { LocalFileStorage, readImage, type FileStorage } from './storage.service.js';
 
 @Controller('media')
 export class MediaController {
@@ -48,28 +42,8 @@ export class MediaController {
     @CurrentPrincipal() principal: Principal,
   ) {
     const isPrivate = scope === 'private';
-    const mime = (req.headers['content-type'] ?? '').split(';')[0]!.trim();
-    const type = IMAGE_TYPES[mime];
-    const body = req.body;
-    if (!type || !Buffer.isBuffer(body)) {
-      throw new BadRequestException({
-        code: 'UNSUPPORTED_MEDIA',
-        message: 'Допустимы только JPEG, PNG и WebP',
-      });
-    }
-    if (body.length === 0 || body.length > MAX_IMAGE_BYTES) {
-      throw new BadRequestException({
-        code: 'MEDIA_TOO_LARGE',
-        message: 'Размер изображения — до 5 МБ',
-      });
-    }
-    if (!type.magic(body)) {
-      throw new BadRequestException({
-        code: 'MEDIA_TYPE_MISMATCH',
-        message: 'Содержимое файла не соответствует типу',
-      });
-    }
-    const storageKey = await this.storage.put(body, type.ext);
+    const { body, mime, ext } = readImage(req);
+    const storageKey = await this.storage.put(body, ext);
     const asset = await this.prisma.mediaAsset.create({
       data: { ownerId: principal.userId, storageKey, mime, size: body.length, private: isPrivate },
       select: { id: true, mime: true, size: true, private: true },

@@ -72,7 +72,12 @@ export class ReviewsController {
           body: true,
           publishedAt: true,
           author: {
-            select: { id: true, name: true, residentProfile: { select: { isPublic: true } } },
+            select: {
+              id: true,
+              name: true,
+              avatarId: true,
+              residentProfile: { select: { isPublic: true } },
+            },
           },
         },
       }),
@@ -94,6 +99,7 @@ export class ReviewsController {
         ...r,
         author: {
           name: author.name,
+          avatarId: author.avatarId,
           profileId: author.residentProfile?.isPublic ? author.id : null,
         },
       })),

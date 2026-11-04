@@ -14,7 +14,7 @@ const c = (id: string, parentId: string | null = null): CommentView => ({
   body: id,
   createdAt: '2026-01-01T00:00:00Z',
   editedAt: null,
-  author: { name: 'A' },
+  author: { name: 'A', avatarId: null },
   mine: false,
 });
 

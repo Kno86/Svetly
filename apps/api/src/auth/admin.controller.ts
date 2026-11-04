@@ -88,6 +88,7 @@ export class AdminController {
         email: true,
         emailVerified: true,
         blockedAt: true,
+        avatarId: true,
         createdAt: true,
         roles: { select: { roleCode: true } },
       },

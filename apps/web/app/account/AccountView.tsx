@@ -7,6 +7,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import styles from '../../components/auth/auth.module.css';
 import { styles as blocks } from '../../components/content/Blocks';
 import { CabinetSwitch } from '../../components/shell/CabinetSwitch';
+import { Avatar } from '../../components/ui/Avatar';
 import { Button, ButtonLink } from '../../components/ui/Button';
 import { Alert, Badge, Card, Skeleton } from '../../components/ui/Feedback';
 import { Checkbox, TextArea, TextField } from '../../components/ui/Field';
@@ -14,7 +15,14 @@ import { Tabs } from '../../components/ui/Navigation';
 import { apiRequest, errorMessage, MIN_PASSWORD_LENGTH } from '../../lib/auth-client';
 
 interface Me {
-  user: { id: string; name: string; email: string; emailVerified: boolean; createdAt: string };
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    emailVerified: boolean;
+    avatarId: string | null;
+    createdAt: string;
+  };
   roles: string[];
   permissions: string[];
 }
@@ -179,6 +187,67 @@ function Overview() {
   );
 }
 
+const AVATAR_TYPES = 'image/jpeg,image/png,image/webp';
+
+function AvatarSettings({ name, initial }: { name: string; initial: string | null }) {
+  const [avatarId, setAvatarId] = useState(initial);
+  const [status, setStatus] = useState<{ tone: 'success' | 'error'; text: string }>();
+  const [busy, setBusy] = useState(false);
+
+  async function upload(file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    const r = await apiRequest<{ avatarId: string }>('/api/me/avatar', { method: 'PUT', file });
+    setBusy(false);
+    if (r.ok && r.data) {
+      setAvatarId(r.data.avatarId);
+      setStatus({ tone: 'success', text: 'Фото сохранено.' });
+    } else setStatus({ tone: 'error', text: errorMessage(r) });
+  }
+
+  async function remove() {
+    setBusy(true);
+    const r = await apiRequest('/api/me/avatar', { method: 'DELETE' });
+    setBusy(false);
+    if (r.ok) {
+      setAvatarId(null);
+      setStatus({ tone: 'success', text: 'Фото удалено.' });
+    } else setStatus({ tone: 'error', text: errorMessage(r) });
+  }
+
+  return (
+    <div className={styles.avatarRow}>
+      <Avatar name={name} avatarId={avatarId} size="lg" />
+      <div>
+        {status && <Alert tone={status.tone} title={status.text} />}
+        <p className={styles.hint}>
+          Фото видно всем рядом с вашим именем: в ленте, комментариях и отзывах. JPEG, PNG или WebP
+          до 5 МБ.
+        </p>
+        <div className={styles.avatarActions}>
+          <label className={styles.fileButton}>
+            {avatarId ? 'Заменить фото' : 'Загрузить фото'}
+            <input
+              type="file"
+              accept={AVATAR_TYPES}
+              disabled={busy}
+              onChange={(e) => {
+                void upload(e.target.files?.[0]);
+                e.target.value = '';
+              }}
+            />
+          </label>
+          {avatarId && (
+            <Button variant="ghost" size="sm" onClick={() => void remove()} loading={busy}>
+              Удалить фото
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Profile({ me, onSaved }: { me: Me; onSaved: (name: string) => void }) {
   const [status, setStatus] = useState<{ tone: 'success' | 'error'; text: string }>();
   const [busy, setBusy] = useState(false);
@@ -198,6 +267,7 @@ function Profile({ me, onSaved }: { me: Me; onSaved: (name: string) => void }) {
   return (
     <Card className={styles.section}>
       <h2>Профиль</h2>
+      <AvatarSettings name={me.user.name} initial={me.user.avatarId} />
       <dl className={styles.dl}>
         <dt>Email</dt>
         <dd>

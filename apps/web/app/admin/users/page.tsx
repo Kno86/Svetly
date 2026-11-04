@@ -1,5 +1,6 @@
 'use client';
 
+import { Avatar } from '../../../components/ui/Avatar';
 import { useAsk } from '../../../components/ui/Dialog';
 import { useState, type FormEvent } from 'react';
 import { Button } from '../../../components/ui/Button';
@@ -17,6 +18,7 @@ interface AdminUser {
   email: string;
   emailVerified: boolean;
   blockedAt: string | null;
+  avatarId: string | null;
   createdAt: string;
   roles: Array<{ roleCode: string }>;
 }
@@ -90,6 +92,7 @@ export default function UsersPage() {
         return (
           <Card key={u.id} className={styles.item}>
             <div className={styles.actions}>
+              <Avatar name={u.name} avatarId={u.avatarId} />
               <strong>{u.name}</strong>
               <span className={styles.code}>{u.email}</span>
               {!u.emailVerified && <Badge tone="warning">email не подтверждён</Badge>}
@@ -171,6 +174,23 @@ export default function UsersPage() {
                       Заблокировать
                     </Button>
                   ))}
+                {canBlock && u.avatarId && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() =>
+                      void act(
+                        `${base}/avatar`,
+                        'DELETE',
+                        'Фото удалено.',
+                        undefined,
+                        `Удалить фото профиля ${u.email}?`,
+                      )
+                    }
+                  >
+                    Удалить фото
+                  </Button>
+                )}
                 {canRevoke && (
                   <Button
                     size="sm"

@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -52,4 +53,30 @@ export class LocalFileStorage implements FileStorage {
   async remove(key: string): Promise<void> {
     await unlink(join(this.root, key)).catch(() => undefined);
   }
+}
+
+/** Validates a raw image request body (type, size, magic bytes). */
+export function readImage(req: FastifyRequest): { body: Buffer; mime: string; ext: string } {
+  const mime = (req.headers['content-type'] ?? '').split(';')[0]!.trim();
+  const type = IMAGE_TYPES[mime];
+  const body = req.body;
+  if (!type || !Buffer.isBuffer(body)) {
+    throw new BadRequestException({
+      code: 'UNSUPPORTED_MEDIA',
+      message: 'Допустимы только JPEG, PNG и WebP',
+    });
+  }
+  if (body.length === 0 || body.length > MAX_IMAGE_BYTES) {
+    throw new BadRequestException({
+      code: 'MEDIA_TOO_LARGE',
+      message: 'Размер изображения — до 5 МБ',
+    });
+  }
+  if (!type.magic(body)) {
+    throw new BadRequestException({
+      code: 'MEDIA_TYPE_MISMATCH',
+      message: 'Содержимое файла не соответствует типу',
+    });
+  }
+  return { body, mime, ext: type.ext };
 }

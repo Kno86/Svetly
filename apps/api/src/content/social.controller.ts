@@ -92,7 +92,7 @@ const statusQuery = z.object({
 });
 const memberAction = z.enum(['approve', 'ban', 'unban', 'promote', 'demote', 'remove']);
 
-const authorSelect = { select: { name: true } } as const;
+const authorSelect = { select: { name: true, avatarId: true } } as const;
 const postSelect = {
   id: true,
   groupId: true,
@@ -106,14 +106,26 @@ const postSelect = {
   publishedAt: true,
   editedAt: true,
   createdAt: true,
-  author: { select: { id: true, name: true, residentProfile: { select: { isPublic: true } } } },
+  author: {
+    select: {
+      id: true,
+      name: true,
+      avatarId: true,
+      residentProfile: { select: { isPublic: true } },
+    },
+  },
   group: { select: { slug: true, name: true, visibility: true } },
   _count: { select: { reactions: true, comments: { where: { status: 'published' } } } },
 } as const;
 type PostRow = {
   id: string;
   authorId: string;
-  author: { id: string; name: string; residentProfile: { isPublic: boolean } | null };
+  author: {
+    id: string;
+    name: string;
+    avatarId: string | null;
+    residentProfile: { isPublic: boolean } | null;
+  };
   status: string;
   moderationNote: string | null;
   _count: { reactions: number; comments: number };
@@ -125,7 +137,11 @@ function present(row: PostRow, viewer?: string, liked?: Set<string>) {
   const mine = viewer === authorId;
   return {
     ...rest,
-    author: { name: author.name, profileId: author.residentProfile?.isPublic ? author.id : null },
+    author: {
+      name: author.name,
+      avatarId: author.avatarId,
+      profileId: author.residentProfile?.isPublic ? author.id : null,
+    },
     ...(mine ? { moderationNote } : {}),
     mine,
     reactions: _count.reactions,

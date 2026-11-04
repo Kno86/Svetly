@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Avatar } from '../../../components/ui/Avatar';
 import { Empty, LoadError, PageHead, styles } from '../../../components/content/Blocks';
 import { apiGet, formatDate, paragraphs } from '../../../lib/content';
 import { sinceMonth } from '../../../lib/calendar';
@@ -10,6 +11,7 @@ export const dynamic = 'force-dynamic';
 interface Resident {
   id: string;
   name: string;
+  avatarId: string | null;
   bio: string;
   memberSince: string;
   groups: Array<{ slug: string; name: string }>;
@@ -47,6 +49,7 @@ export default async function ResidentPage({ params }: Props) {
         title={r.name}
         description={`На SVETLY ${sinceMonth(r.memberSince)}`}
         crumbs={[{ label: 'Сообщество', href: '/community' }, { label: r.name }]}
+        action={<Avatar name={r.name} avatarId={r.avatarId} size="lg" />}
       />
       {r.bio && (
         <section className={styles.profileSection} aria-labelledby="bio">
