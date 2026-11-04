@@ -7,8 +7,10 @@ import { loadConfig } from './config/env.js';
 import { hashPassword } from './auth/password.js';
 import { PrismaClient } from './generated/prisma/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { clearDemo, seedDemo } from './demo.js';
 
-const USAGE = 'Usage: node dist/cli.js admin:create --email <email> [--name <name>]';
+const USAGE =
+  'Usage: node dist/cli.js admin:create --email <email> [--name <name>] | demo:seed | demo:clear';
 
 /** Reads a line from the TTY without echoing it, so the password never reaches argv, env, history or logs. */
 async function promptHidden(question: string): Promise<string> {
@@ -100,9 +102,23 @@ async function adminCreate(args: string[]): Promise<void> {
   }
 }
 
+async function demo(command: 'demo:seed' | 'demo:clear'): Promise<void> {
+  const prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString: loadConfig().databaseUrl }),
+  });
+  try {
+    if (command === 'demo:seed')
+      console.log(`Demo content added: ${(await seedDemo(prisma)).join(', ')}.`);
+    else console.log(`Demo content removed: ${await clearDemo(prisma)} records.`);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
 async function main(): Promise<void> {
   const [command, ...rest] = process.argv.slice(2);
   if (command === 'admin:create') return adminCreate(rest);
+  if (command === 'demo:seed' || command === 'demo:clear') return demo(command);
   throw new Error(USAGE);
 }
 
