@@ -221,3 +221,16 @@
   outline: 2px solid var(--color-focus, #24201c);
   outline-offset: 2px;
 }
+
+.recordList {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.recordTitle {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
