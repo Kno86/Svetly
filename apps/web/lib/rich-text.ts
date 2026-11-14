@@ -11,7 +11,7 @@ export type Block =
   | { t: 'h'; level: 2 | 3; c: Inline[] }
   | { t: 'ul' | 'ol'; items: Inline[][] };
 
-const INLINE = /\*\*(.+?)\*\*|\*(?![\s*])(.+?)\*|\[([^\]\n]+)\]\(([^)\s]+)\)/g;
+const INLINE = /\*\*(.+?)\*\*|\*(?![\s*])(.+?)\*|\[([^\]\n]+)\]\(((?:[^()\s]|\([^()\s]*\))+)\)/g;
 
 export function safeHref(url: string): string | undefined {
   return /^https?:\/\/[^\s]+$/i.test(url) || /^\/(?!\/)/.test(url) ? url : undefined;

@@ -51,6 +51,10 @@ describe('parseInline', () => {
     });
     expect(parseInline('[x](/events)')[0]).toMatchObject({ t: 'a', href: '/events' });
     expect(parseInline('[x](javascript:alert(1))')[0]).toMatchObject({ t: 'text' });
+    expect(parseInline('[вики](https://ru.wikipedia.org/wiki/A_(b))')[0]).toMatchObject({
+      t: 'a',
+      href: 'https://ru.wikipedia.org/wiki/A_(b)',
+    });
     expect(safeHref('//evil.example')).toBeUndefined();
     expect(safeHref('data:text/html,x')).toBeUndefined();
   });
