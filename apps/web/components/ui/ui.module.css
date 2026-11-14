@@ -49,7 +49,7 @@
   color: var(--color-white);
 }
 .button-secondary {
-  background: var(--color-white);
+  background: var(--color-surface);
   color: var(--color-ink);
   border-color: var(--color-border-strong);
 }
@@ -115,7 +115,7 @@
   padding: var(--space-2) var(--space-4);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
-  background: var(--color-white);
+  background: var(--color-surface);
   color: var(--color-text-primary);
   font: inherit;
   transition:
@@ -257,7 +257,12 @@
 .skeleton {
   display: block;
   border-radius: var(--radius-sm);
-  background: linear-gradient(90deg, var(--color-sand) 25%, #f6f4ec 50%, var(--color-sand) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-sand) 25%,
+    var(--color-surface) 50%,
+    var(--color-sand) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }
@@ -275,7 +280,7 @@
   text-align: center;
   border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius-xl);
-  background: var(--color-white);
+  background: var(--color-surface);
 }
 .emptyTitle {
   font-size: var(--font-size-lg);

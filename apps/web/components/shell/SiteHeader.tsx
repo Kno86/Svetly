@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Logo } from '../brand/Logo';
+import { ThemeToggle } from './ThemeToggle';
 import { buttonClass } from '../ui/Button';
 import { cx } from '../ui/cx';
 import { Icon } from '../ui/Icon';
@@ -79,6 +80,7 @@ export function SiteHeader() {
             >
               <Icon name="search" />
             </Link>
+            <ThemeToggle />
             {account.signedIn && (
               <>
                 <Link

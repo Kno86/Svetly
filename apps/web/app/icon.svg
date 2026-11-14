@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="t"><title id="t">SVETLY</title>
-<rect width="64" height="64" rx="14" fill="#B4441E"/>
-<path d="M12 37a20 20 0 0 1 40 0z" fill="#F2B441"/>
-<rect x="8" y="41" width="48" height="6" rx="3" fill="#FAF6EF"/>
-<rect x="18" y="51" width="28" height="5" rx="2.5" fill="#FAF6EF"/>
+<defs><linearGradient id="s-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9622B"/><stop offset="1" stop-color="#B4441E"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#s-g)"/>
+<path d="M44 20A12 12 0 1 0 32 32A12 12 0 1 1 20 44" fill="none" stroke="#FAF6EF" stroke-width="9" stroke-linecap="round"/>
+<circle cx="51" cy="13" r="6" fill="#F2B441"/>
 </svg>
