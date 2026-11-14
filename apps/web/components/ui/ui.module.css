@@ -301,7 +301,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin: 0;
+  margin: 0 0 var(--space-3);
   padding: 0;
   list-style: none;
   font-size: var(--font-size-sm);
@@ -311,6 +311,19 @@
   content: '/';
   margin-right: var(--space-2);
   color: var(--color-border-strong);
+}
+/* Phones: only a back link to the parent section. */
+@media (max-width: 47.99rem) {
+  .breadcrumbs li {
+    display: none;
+  }
+  .breadcrumbs li:nth-last-child(2) {
+    display: block;
+  }
+  .breadcrumbs li:nth-last-child(2)::before {
+    content: '←';
+    color: inherit;
+  }
 }
 .tablist {
   display: flex;

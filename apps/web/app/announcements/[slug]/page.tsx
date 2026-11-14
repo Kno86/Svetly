@@ -2,6 +2,7 @@ import { PhotoGallery } from '../../../components/content/PhotoGallery';
 import type { Metadata } from 'next';
 import { ReportButton } from '../../../components/content/ReportButton';
 import { FavoriteButton } from '../../../components/content/FavoriteButton';
+import { ShareButton } from '../../../components/content/ShareButton';
 import { notFound } from 'next/navigation';
 import { Alert, Badge } from '../../../components/ui/Feedback';
 import { LoadError, PageHead, styles } from '../../../components/content/Blocks';
@@ -103,7 +104,10 @@ export default async function AnnouncementPage({ params }: Props) {
             жителями.
           </Alert>
         </div>
-        <FavoriteButton entityType="announcement" entityId={a.id} />
+        <div className={styles.actions}>
+          <ShareButton title={a.title} />
+          <FavoriteButton entityType="announcement" entityId={a.id} />
+        </div>
         <ReportButton entityType="announcement" entityId={a.id} />
       </article>
     </main>

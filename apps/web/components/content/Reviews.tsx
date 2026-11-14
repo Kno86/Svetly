@@ -102,7 +102,9 @@ export function Reviews({ organizationId }: { organizationId: string }) {
       )}
       {data && !canReview && !mine && (
         <p className={styles.meta}>
-          <Link href="/login">Войдите</Link>, чтобы оставить отзыв.
+          <span>
+            <Link href="/login">Войдите</Link>, чтобы оставить отзыв.
+          </span>
         </p>
       )}
       {canReview && (!mine || editing) && (

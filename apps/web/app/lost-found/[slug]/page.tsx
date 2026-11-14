@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ReportButton } from '../../../components/content/ReportButton';
 import { FavoriteButton } from '../../../components/content/FavoriteButton';
+import { ShareButton } from '../../../components/content/ShareButton';
 import { LoadError, PageHead, styles } from '../../../components/content/Blocks';
 import { Alert, Badge } from '../../../components/ui/Feedback';
 import { LF_KIND, LF_SUBJECT, tel } from '../../../lib/community';
@@ -102,7 +103,10 @@ export default async function LostFoundItemPage(p: Props) {
             заранее.
           </Alert>
         </div>
-        <FavoriteButton entityType="lost_found" entityId={i.id} />
+        <div className={styles.actions}>
+          <ShareButton title={i.title} />
+          <FavoriteButton entityType="lost_found" entityId={i.id} />
+        </div>
         <ReportButton entityType="lost_found" entityId={i.id} />
       </article>
     </main>
