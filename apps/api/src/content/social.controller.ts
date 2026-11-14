@@ -17,6 +17,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
+import { setting } from './settings.js';
 import { z } from 'zod';
 import { AuditService } from '../audit/audit.service.js';
 import {
@@ -48,8 +49,6 @@ export const GROUP_TOPICS = [
   'other',
 ] as const;
 export const FEED_PAGE = 20;
-const MAX_PENDING_POSTS = 5;
-const MAX_PENDING_GROUPS = 2;
 export const COMMENT_LIMIT = { count: 10, windowMs: 10 * 60_000 };
 const MANAGERS = ['owner', 'moderator'];
 
@@ -259,7 +258,7 @@ export class SocialController {
     const pending = await this.prisma.group.count({
       where: { createdById: p.userId, status: 'pending' },
     });
-    if (pending >= MAX_PENDING_GROUPS)
+    if (pending >= (await setting(this.prisma, 'social.maxPendingGroups')))
       throw new HttpException(
         { code: 'TOO_MANY_PENDING', message: 'Дождитесь проверки уже созданных групп' },
         HttpStatus.TOO_MANY_REQUESTS,
@@ -531,7 +530,7 @@ export class SocialController {
     const pending = await this.prisma.post.count({
       where: { authorId: p.userId, status: 'pending' },
     });
-    if (pending >= MAX_PENDING_POSTS)
+    if (pending >= (await setting(this.prisma, 'social.maxPendingPosts')))
       throw new HttpException(
         { code: 'TOO_MANY_PENDING', message: 'Дождитесь проверки предыдущих публикаций' },
         HttpStatus.TOO_MANY_REQUESTS,

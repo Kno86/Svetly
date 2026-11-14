@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { setting } from '../content/settings.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { actorHash, type EventName } from './events.js';
@@ -24,11 +25,7 @@ export interface TrackInput {
   meta?: Prisma.InputJsonObject;
 }
 
-export async function retentionDays(prisma: PrismaService): Promise<number> {
-  const s = await prisma.setting.findUnique({ where: { key: RETENTION_KEY } });
-  const v = Number(s?.value);
-  return Number.isInteger(v) && v >= 30 && v <= 730 ? v : DEFAULT_RETENTION_DAYS;
-}
+export const retentionDays = (prisma: PrismaService) => setting(prisma, 'analytics.retentionDays');
 
 @Injectable()
 export class AnalyticsService {

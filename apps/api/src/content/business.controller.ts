@@ -12,6 +12,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { setting } from './settings.js';
 import { z } from 'zod';
 import { Prisma } from '../generated/prisma/client.js';
 import { ANALYTICS_TZ } from '../analytics/analytics.service.js';
@@ -50,7 +51,6 @@ const cardBody = z.object({
 type Card = z.infer<typeof cardBody>;
 /** Changing these on a verified card drops the "verified" mark until staff re-check it. */
 const VERIFIED_FIELDS: Array<keyof Card> = ['name', 'phone', 'website', 'address'];
-const MAX_PENDING_APPLICATIONS = 3;
 const MAX_NEW_INQUIRIES = 10;
 
 const statsQuery = z.object({
@@ -149,7 +149,7 @@ export class BusinessController {
     const pending = await this.prisma.organization.count({
       where: { ownerId: p.userId, status: { in: ['pending', 'needs_info'] } },
     });
-    if (pending >= MAX_PENDING_APPLICATIONS)
+    if (pending >= (await setting(this.prisma, 'business.maxPendingApplications')))
       throw new BadRequestException({
         code: 'TOO_MANY_PENDING',
         message: 'Дождитесь рассмотрения уже поданных заявок',

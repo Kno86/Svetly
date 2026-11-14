@@ -543,6 +543,45 @@ describe('core content platform against a real PostgreSQL database', () => {
       expect(
         (await req('GET', '/api/admin/settings', { cookie: admin.cookie })).json().trustedThreshold,
       ).toBe(3);
+      const bad = await req('PATCH', '/api/admin/settings', {
+        cookie: admin.cookie,
+        body: { values: { 'announcements.ttlDays': 1000 } },
+      });
+      expect(bad.statusCode).toBe(400);
+      expect(
+        (
+          await req('PATCH', '/api/admin/settings', {
+            cookie: admin.cookie,
+            body: { values: { unknown: 1 } },
+          })
+        ).statusCode,
+      ).toBe(400);
+      const ttl = await req('PATCH', '/api/admin/settings', {
+        cookie: admin.cookie,
+        body: { values: { 'announcements.ttlDays': 7 } },
+      });
+      try {
+        expect(
+          ttl
+            .json<{ items: { key: string; value: number }[] }>()
+            .items.find((i) => i.key === 'announcements.ttlDays')?.value,
+        ).toBe(7);
+        const author = await user('set-ttl');
+        const created = await req('POST', '/api/announcements', {
+          cookie: author.cookie,
+          body: ad(await categoryId('announcements', 'prodam'), { title: `Неделя ${run}` }),
+        });
+        const row = await prisma.announcement.findUniqueOrThrow({
+          where: { id: created.json<{ id: string }>().id },
+        });
+        const days = (row.expiresAt!.getTime() - row.createdAt.getTime()) / 86_400_000;
+        expect(Math.round(days)).toBe(7);
+      } finally {
+        await req('PATCH', '/api/admin/settings', {
+          cookie: admin.cookie,
+          body: { values: { 'announcements.ttlDays': 30 } },
+        });
+      }
     });
 
     it('manages categories and organization verification with separate permissions', async () => {
