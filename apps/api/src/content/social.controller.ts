@@ -28,6 +28,7 @@ import {
 } from '../auth/guards.js';
 import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
+import { assertPublicImages } from './media-refs.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { isTrustedAuthor } from './community.controller.js';
 import { NotificationsService } from './notifications.controller.js';
@@ -58,6 +59,7 @@ const groupBody = z.object({
   rules: z.string().trim().max(3000).default(''),
   topic: z.enum(GROUP_TOPICS),
   visibility: z.enum(['open', 'closed']).default('open'),
+  imageIds: z.array(z.uuid()).max(6).default([]),
 });
 const groupPatch = groupBody.omit({ name: true }).partial();
 const groupQuery = z.object({
@@ -194,6 +196,7 @@ export class SocialController {
         skip: (n - 1) * size,
         take: size,
         select: {
+          imageIds: true,
           id: true,
           slug: true,
           name: true,
@@ -219,6 +222,7 @@ export class SocialController {
     const g = await this.prisma.group.findUnique({
       where: { slug },
       select: {
+        imageIds: true,
         id: true,
         slug: true,
         name: true,
@@ -251,6 +255,7 @@ export class SocialController {
   @HttpCode(201)
   async createGroup(@Body() body: unknown, @CurrentPrincipal() p: Principal) {
     const data = parse(groupBody, body);
+    await assertPublicImages(this.prisma, data.imageIds, p.userId);
     const pending = await this.prisma.group.count({
       where: { createdById: p.userId, status: 'pending' },
     });
@@ -280,6 +285,7 @@ export class SocialController {
     @CurrentPrincipal() p: Principal,
   ) {
     const data = parse(groupPatch, body);
+    await assertPublicImages(this.prisma, data.imageIds, p.userId);
     const g = await this.managedGroup(slug, p.userId, ['owner']);
     await this.prisma.group.update({ where: { id: g.id }, data });
     await this.log('group.updated', p.userId, 'group', g.id, {
@@ -309,7 +315,7 @@ export class SocialController {
   async join(@Param('slug') slug: string, @CurrentPrincipal() p: Principal) {
     const g = await this.prisma.group.findFirst({
       where: { slug, status: 'active' },
-      select: { id: true, visibility: true },
+      select: { imageIds: true, id: true, visibility: true },
     });
     if (!g) throw new NotFoundException({ code: 'NOT_FOUND' });
     const existing = await this.membership(g.id, p.userId);
@@ -343,7 +349,10 @@ export class SocialController {
   @Authenticated()
   @HttpCode(200)
   async leave(@Param('slug') slug: string, @CurrentPrincipal() p: Principal) {
-    const g = await this.prisma.group.findUnique({ where: { slug }, select: { id: true } });
+    const g = await this.prisma.group.findUnique({
+      where: { slug },
+      select: { imageIds: true, id: true },
+    });
     const m = g && (await this.membership(g.id, p.userId));
     if (!g || !m || m.status === 'banned') throw new NotFoundException({ code: 'NOT_FOUND' });
     if (m.role === 'owner')
@@ -412,7 +421,7 @@ export class SocialController {
     const { cursor } = parse(cursorQuery, query);
     const g = await this.prisma.group.findFirst({
       where: { slug, status: 'active' },
-      select: { id: true, visibility: true },
+      select: { imageIds: true, id: true, visibility: true },
     });
     if (!g) throw new NotFoundException({ code: 'NOT_FOUND' });
     const m = p ? await this.membership(g.id, p.userId) : null;
@@ -801,6 +810,7 @@ export class SocialController {
       orderBy: { createdAt: status === 'pending' ? 'asc' : 'desc' },
       take: 100,
       select: {
+        imageIds: true,
         id: true,
         slug: true,
         name: true,
@@ -835,7 +845,7 @@ export class SocialController {
     await this.log(`group.${status}`, p.userId, 'group', id);
     const g = await this.prisma.group.findUnique({
       where: { id },
-      select: { slug: true, createdById: true },
+      select: { imageIds: true, slug: true, createdById: true },
     });
     if (g)
       await this.notifications.notify(
@@ -877,7 +887,7 @@ export class SocialController {
   private async managedGroup(slug: string, userId: string, roles = MANAGERS) {
     const g = await this.prisma.group.findFirst({
       where: { slug, members: { some: { userId, status: 'active', role: { in: roles } } } },
-      select: { id: true },
+      select: { imageIds: true, id: true },
     });
     if (!g) throw new NotFoundException({ code: 'NOT_FOUND' });
     return g;

@@ -18,6 +18,7 @@ import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
 import { AnalyticsService } from '../analytics/analytics.service.js';
 import { assertCoordinates, latitude, longitude } from './geo.js';
+import { assertPublicImages, imageIdsField } from './media-refs.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { uniqueSlug } from './slug.js';
 
@@ -58,6 +59,7 @@ const orgBody = z.object({
   sourceUrl: url,
   checkedAt: date,
   status: z.enum(['draft', 'published', 'archived']).default('draft'),
+  imageIds: imageIdsField(),
 });
 const eventBody = z
   .object({
@@ -73,6 +75,7 @@ const eventBody = z
     capacity: z.number().int().min(1).max(100_000).nullable().optional(),
     categoryId: z.uuid().nullable().optional(),
     status: z.enum(['draft', 'published', 'cancelled', 'archived']).default('draft'),
+    imageIds: imageIdsField(),
   })
   .refine((e) => !e.endsAt || e.endsAt >= e.startsAt, {
     message: 'Окончание раньше начала',
@@ -89,6 +92,7 @@ const directoryBody = z.object({
   sourceUrl: url,
   checkedAt: date,
   position: z.number().int().min(0).max(10_000).default(0),
+  imageIds: imageIdsField(),
   status: z.enum(['draft', 'published', 'archived']).default('draft'),
 });
 
@@ -130,6 +134,7 @@ export class StaffContentController {
   @RequirePermission('content.news.manage')
   async createNews(@Body() body: unknown, @CurrentPrincipal() p: Principal) {
     const data = parse(newsBody, body);
+    await assertPublicImages(this.prisma, data.coverId ? [data.coverId] : []);
     await this.checkCategory(data.categoryId, ['news']);
     const item = await this.prisma.newsArticle.create({
       data: {
@@ -152,6 +157,7 @@ export class StaffContentController {
     @CurrentPrincipal() p: Principal,
   ) {
     const data = parse(newsBody, body);
+    await assertPublicImages(this.prisma, data.coverId ? [data.coverId] : []);
     await this.checkCategory(data.categoryId, ['news']);
     const existing = await this.prisma.newsArticle.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException({ code: 'NOT_FOUND' });
@@ -179,6 +185,7 @@ export class StaffContentController {
   @RequirePermission('content.organizations.manage')
   async createOrganization(@Body() body: unknown, @CurrentPrincipal() p: Principal) {
     const data = parse(orgBody, body);
+    await assertPublicImages(this.prisma, data.imageIds);
     assertCoordinates(data);
     await this.checkCategory(data.categoryId, ['organizations', 'services']);
     const item = await this.prisma.organization.create({
@@ -196,6 +203,7 @@ export class StaffContentController {
     @CurrentPrincipal() p: Principal,
   ) {
     const data = parse(orgBody, body);
+    await assertPublicImages(this.prisma, data.imageIds);
     assertCoordinates(data);
     await this.checkCategory(data.categoryId, ['organizations', 'services']);
     const found = await this.prisma.organization.count({ where: { id } });
@@ -216,6 +224,7 @@ export class StaffContentController {
   @RequirePermission('content.events.manage')
   async createEvent(@Body() body: unknown, @CurrentPrincipal() p: Principal) {
     const data = parse(eventBody, body);
+    await assertPublicImages(this.prisma, data.imageIds);
     assertCoordinates(data);
     await this.checkCategory(data.categoryId, ['events']);
     const item = await this.prisma.event.create({
@@ -233,6 +242,7 @@ export class StaffContentController {
     @CurrentPrincipal() p: Principal,
   ) {
     const data = parse(eventBody, body);
+    await assertPublicImages(this.prisma, data.imageIds);
     assertCoordinates(data);
     await this.checkCategory(data.categoryId, ['events']);
     const found = await this.prisma.event.count({ where: { id } });
@@ -256,6 +266,7 @@ export class StaffContentController {
   @RequirePermission('content.directory.manage')
   async createDirectory(@Body() body: unknown, @CurrentPrincipal() p: Principal) {
     const data = parse(directoryBody, body);
+    await assertPublicImages(this.prisma, data.imageIds);
     await this.checkCategory(data.categoryId, ['directory']);
     const item = await this.prisma.directoryEntry.create({
       data: { ...data, slug: uniqueSlug(data.title) },
@@ -272,6 +283,7 @@ export class StaffContentController {
     @CurrentPrincipal() p: Principal,
   ) {
     const data = parse(directoryBody, body);
+    await assertPublicImages(this.prisma, data.imageIds);
     await this.checkCategory(data.categoryId, ['directory']);
     const found = await this.prisma.directoryEntry.count({ where: { id } });
     if (!found) throw new NotFoundException({ code: 'NOT_FOUND' });
