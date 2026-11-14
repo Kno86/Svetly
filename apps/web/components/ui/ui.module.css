@@ -243,6 +243,12 @@
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
 }
+@media (max-width: 47.99rem) {
+  .card {
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+  }
+}
 .cardInteractive {
   transition:
     box-shadow var(--duration-normal) var(--ease-standard),

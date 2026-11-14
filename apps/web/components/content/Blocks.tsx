@@ -159,12 +159,14 @@ export function ItemCard({
 }) {
   return (
     <Card interactive>
-      <Link href={href} className={styles.cardLink}>
+      <Link href={href} className={`${styles.cardLink} ${imageId ? styles.cardMedia : ''}`}>
         {imageId && <MediaImage id={imageId} alt="" variant="card" className={styles.cardImage} />}
-        {badges && <div className={styles.meta}>{badges}</div>}
-        <h2 className={styles.cardTitle}>{title}</h2>
-        {children}
-        {meta && <div className={styles.meta}>{meta}</div>}
+        <div className={styles.cardText}>
+          {badges && <div className={styles.meta}>{badges}</div>}
+          <h2 className={styles.cardTitle}>{title}</h2>
+          {children}
+          {meta && <div className={styles.meta}>{meta}</div>}
+        </div>
       </Link>
     </Card>
   );

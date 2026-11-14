@@ -25,6 +25,24 @@
     grid-template-columns: 2fr 1fr auto;
   }
 }
+/* Phones: search box and «Найти» share the first row, other filters go below. */
+@media (max-width: 47.99rem) {
+  .filters {
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin-bottom: var(--space-5);
+  }
+  .filters > * {
+    grid-column: 1 / -1;
+  }
+  .filters > :has(input[type='search']) {
+    grid-row: 1;
+    grid-column: 1;
+  }
+  .filters:has(input[type='search']) > button[type='submit'] {
+    grid-row: 1;
+    grid-column: 2;
+  }
+}
 .searchTabs {
   margin-bottom: var(--space-5);
 }
@@ -55,6 +73,29 @@
   margin-block: var(--space-2);
   font-size: var(--font-size-lg);
   overflow-wrap: anywhere;
+}
+.cardText {
+  min-width: 0;
+}
+/* Phones: a card with a photo becomes a row — square preview on the left, text on the right. */
+@media (max-width: 47.99rem) {
+  .list {
+    gap: var(--space-3);
+  }
+  .cardTitle {
+    margin-block: var(--space-1);
+    font-size: var(--font-size-md);
+  }
+  .cardMedia {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: start;
+  }
+  .cardMedia .cardImage {
+    aspect-ratio: 1;
+    margin-bottom: 0;
+  }
 }
 .excerpt {
   color: var(--color-text-secondary);
