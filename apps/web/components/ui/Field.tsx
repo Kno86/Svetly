@@ -2,6 +2,7 @@ import {
   useId,
   type InputHTMLAttributes,
   type ReactNode,
+  type Ref,
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
@@ -87,7 +88,7 @@ export function TextArea({
   className,
   required,
   ...rest
-}: BaseProps & TextareaHTMLAttributes<HTMLTextAreaElement>) {
+}: BaseProps & TextareaHTMLAttributes<HTMLTextAreaElement> & { ref?: Ref<HTMLTextAreaElement> }) {
   const auto = useId();
   const fieldId = id ?? auto;
   return (

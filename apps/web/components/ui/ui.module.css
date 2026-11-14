@@ -400,3 +400,44 @@ ul.tablist {
   height: 6rem;
   font-size: 2.5rem;
 }
+
+.editor {
+  display: grid;
+  gap: var(--space-2);
+}
+.editorToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.editorToolbar button {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.editorToolbar button:last-child {
+  margin-left: auto;
+}
+.editorToolbar button[aria-pressed='true'] {
+  border-color: var(--color-primary);
+}
+.editorToolbar button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.editorPreview {
+  display: grid;
+  gap: var(--space-3);
+  min-height: 7rem;
+  padding: var(--space-4);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
+}

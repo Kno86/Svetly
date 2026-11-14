@@ -7,6 +7,7 @@ import { Button } from '../../../../components/ui/Button';
 import { Alert, Badge, Card, EmptyState, Skeleton } from '../../../../components/ui/Feedback';
 import { Checkbox, Select, TextArea, TextField } from '../../../../components/ui/Field';
 import { useCan } from '../../../../components/admin/AdminShell';
+import { RichTextEditor } from '../../../../components/ui/RichTextEditor';
 import { ImageUploader } from '../../../../components/ui/ImageUploader';
 import { useApi } from '../../../../components/admin/useApi';
 import { apiRequest, errorMessage } from '../../../../lib/auth-client';
@@ -318,6 +319,15 @@ function Editor({
                     rows={f.name === 'body' || f.name === 'description' ? 10 : 3}
                     value={String(value)}
                     onChange={(e) => set(f.name, e.target.value)}
+                  />
+                );
+              case 'richtext':
+                return (
+                  <RichTextEditor
+                    {...common}
+                    key={f.name}
+                    value={String(value)}
+                    onChange={(v) => set(f.name, v)}
                   />
                 );
               case 'select':
