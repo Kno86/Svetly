@@ -12,6 +12,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { Feature } from '../integrations/feature.guard.js';
 import { z } from 'zod';
 import { AuditService } from '../audit/audit.service.js';
 import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guards.js';
@@ -356,6 +357,7 @@ export class EventRegistrationController {
     return { registered: found > 0 };
   }
 
+  @Feature('events')
   @Post(':id/registration')
   @HttpCode(204)
   @Authenticated()

@@ -11,6 +11,15 @@ describe('feature flags', () => {
     expect(get({ groups: 'no' }, 'groups').enabled).toBe(true);
   });
 
+  it('switches site sections and their dependants off', () => {
+    expect(get({}, 'news').enabled).toBe(true);
+    expect(get({ news: false }, 'news').enabled).toBe(false);
+    const reviews = get({ organizations: false }, 'reviews');
+    expect(reviews.enabled).toBe(false);
+    expect(reviews.blockedBy).toContain('Организации');
+    expect(Object.values(FEATURES).filter((f) => 'section' in f).length).toBeGreaterThan(10);
+  });
+
   it('never enables integrations that are not configured or implemented', () => {
     for (const key of ['ai_assistant', 'payments', 'push_notifications', 'business_premium']) {
       const f = get({ [key]: true }, key);

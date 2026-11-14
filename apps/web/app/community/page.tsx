@@ -11,12 +11,23 @@ export const metadata: Metadata = {
 const items: HubItem[] = [
   { label: 'Лента', href: '/feed', text: 'Посты жителей и групп.', feature: 'groups' },
   { label: 'Группы', href: '/groups', text: 'Сообщества по интересам и домам.', feature: 'groups' },
-  { label: 'События', href: '/events', text: 'Праздники, встречи, секции и мероприятия.' },
-  { label: 'Опросы', href: '/polls', text: 'Мнение жителей по вопросам посёлка.' },
+  {
+    label: 'События',
+    href: '/events',
+    text: 'Праздники, встречи, секции и мероприятия.',
+    feature: 'events',
+  },
+  {
+    label: 'Опросы',
+    href: '/polls',
+    text: 'Мнение жителей по вопросам посёлка.',
+    feature: 'polls',
+  },
   {
     label: 'Обращения жителей',
     href: '/issues',
     text: 'Сообщите о проблеме и следите за статусом.',
+    feature: 'issues',
   },
 ];
 

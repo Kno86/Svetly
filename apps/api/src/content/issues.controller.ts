@@ -13,6 +13,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { Feature } from '../integrations/feature.guard.js';
 import { z } from 'zod';
 import { AuditService } from '../audit/audit.service.js';
 import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guards.js';
@@ -105,6 +106,7 @@ export class IssuesController {
     private readonly notifications: NotificationsService,
   ) {}
 
+  @Feature('issues')
   @Post('issues')
   @Authenticated()
   async create(@Body() body: unknown, @CurrentPrincipal() p: Principal) {
@@ -160,6 +162,7 @@ export class IssuesController {
     return item;
   }
 
+  @Feature('issues')
   @Get('issues')
   async list(@Query() query: unknown) {
     const { status, category, page, limit } = parse(publicQuery, query);
@@ -181,6 +184,7 @@ export class IssuesController {
     return { items, total, page, limit };
   }
 
+  @Feature('issues')
   @Get('issues/:number')
   async detail(@Param('number', ParseIntPipe) number: number) {
     const item = await this.prisma.issue.findFirst({

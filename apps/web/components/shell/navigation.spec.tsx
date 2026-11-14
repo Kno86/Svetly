@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { isActive, loginHref, moreNav, primaryNav, safeNext, tabsFor } from './navigation';
+import {
+  isActive,
+  loginHref,
+  moreNav,
+  primaryNav,
+  safeNext,
+  tabsFor,
+  visibleSections,
+} from './navigation';
 
 describe('site navigation', () => {
   it('marks the section of nested and merged modules', () => {
@@ -43,5 +51,15 @@ describe('site navigation', () => {
     expect(tabsFor('/account/announcements')?.items.map((i) => i.href)).toContain('/favorites');
     expect(tabsFor('/messages/some-id')).toBeNull();
     expect(tabsFor('/business')).toBeNull();
+  });
+
+  it('keeps a merged section while any of its modules is on', () => {
+    const hrefs = (f: Record<string, boolean>) => visibleSections(f).map((s) => s.href);
+    expect(hrefs({})).toContain('/announcements');
+    expect(hrefs({ news: false })).not.toContain('/news');
+    expect(hrefs({ announcements: false })).toContain('/jobs');
+    expect(
+      visibleSections({ announcements: false, jobs: false, lost_found: false }).map((s) => s.label),
+    ).not.toContain('Объявления');
   });
 });

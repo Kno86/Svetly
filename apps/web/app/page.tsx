@@ -12,6 +12,7 @@ import { Icon, type IconName } from '../components/ui/Icon';
 import { fetchApiStatus, type ApiStatus } from '../lib/api-status';
 import { getWebBuildInfo } from '../lib/build-info';
 import { apiGet, formatDate } from '../lib/content';
+import { visibleWith } from '../lib/feature-filter';
 import styles from './page.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -50,17 +51,45 @@ interface HomeFeed {
   }>;
 }
 
-const quickActions: Array<{ href: string; icon: IconName; title: string; text: string }> = [
-  { href: '/announcements/new', icon: 'plus', title: 'Подать объявление', text: 'Бесплатно' },
+const quickActions: Array<{
+  href: string;
+  icon: IconName;
+  title: string;
+  text: string;
+  feature?: string;
+}> = [
+  {
+    href: '/announcements/new',
+    icon: 'plus',
+    title: 'Подать объявление',
+    text: 'Бесплатно',
+    feature: 'announcements',
+  },
   { href: '/catalog', icon: 'grid', title: 'Найти мастера', text: 'Услуги и организации' },
-  { href: '/issues/new', icon: 'bell', title: 'Сообщить о проблеме', text: 'Статус — в кабинете' },
-  { href: '/events', icon: 'home', title: 'Афиша', text: 'События рядом' },
+  {
+    href: '/issues/new',
+    icon: 'bell',
+    title: 'Сообщить о проблеме',
+    text: 'Статус — в кабинете',
+    feature: 'issues',
+  },
+  { href: '/events', icon: 'home', title: 'Афиша', text: 'События рядом', feature: 'events' },
 ];
 
-const communityLinks = [
-  { href: '/polls', title: 'Опросы', text: 'Голосования жителей по вопросам посёлка.' },
-  { href: '/issues', title: 'Обращения жителей', text: 'Проблемы и их статус — открыто для всех.' },
-  { href: '/groups', title: 'Группы', text: 'Сообщества по интересам и домам.' },
+const communityLinks: Array<{ href: string; title: string; text: string; feature: string }> = [
+  {
+    href: '/polls',
+    title: 'Опросы',
+    text: 'Голосования жителей по вопросам посёлка.',
+    feature: 'polls',
+  },
+  {
+    href: '/issues',
+    title: 'Обращения жителей',
+    text: 'Проблемы и их статус — открыто для всех.',
+    feature: 'issues',
+  },
+  { href: '/groups', title: 'Группы', text: 'Сообщества по интересам и домам.', feature: 'groups' },
 ];
 
 function describeApi(status: ApiStatus): string {
@@ -102,10 +131,12 @@ function SectionHead({
 
 export default async function HomePage() {
   const build = getWebBuildInfo();
-  const [api, home] = await Promise.all([
+  const [api, home, flags] = await Promise.all([
     fetchApiStatus(process.env.API_INTERNAL_URL ?? 'http://api:4000'),
     apiGet<HomeFeed>('/api/home'),
+    apiGet<Record<string, boolean>>('/api/features'),
   ]);
+  const on = (key: string) => !flags.ok || flags.data[key] !== false;
   const feed = home.ok ? home.data : undefined;
   const hasDemo =
     !!feed &&
@@ -154,37 +185,39 @@ export default async function HomePage() {
                 : 'Записи публикуют жители и редакция, выдуманных данных нет.'}
             </p>
           </div>
-          <aside className={styles.today} aria-labelledby="soon-heading">
-            <h2 id="soon-heading">Ближайшие события</h2>
-            {!feed ? (
-              failed
-            ) : feed.events.length === 0 ? (
-              <p className={styles.muted}>
-                Событий пока нет. Редакция публикует их после проверки.{' '}
-                <Link href="/events">Афиша</Link>
-              </p>
-            ) : (
-              <ol className={styles.timeline}>
-                {feed.events.map((e) => (
-                  <li key={e.slug}>
-                    <time dateTime={e.startsAt}>{formatDate(e.startsAt, true)}</time>
-                    <div>
-                      <Link href={`/events/${e.slug}`}>{e.title}</Link>
-                      {e.location && <p>{e.location}</p>}
-                      <DemoBadge show={e.isDemo} />
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            )}
-            <div className={styles.sunline} aria-hidden="true" />
-          </aside>
+          {on('events') && (
+            <aside className={styles.today} aria-labelledby="soon-heading">
+              <h2 id="soon-heading">Ближайшие события</h2>
+              {!feed ? (
+                failed
+              ) : feed.events.length === 0 ? (
+                <p className={styles.muted}>
+                  Событий пока нет. Редакция публикует их после проверки.{' '}
+                  <Link href="/events">Афиша</Link>
+                </p>
+              ) : (
+                <ol className={styles.timeline}>
+                  {feed.events.map((e) => (
+                    <li key={e.slug}>
+                      <time dateTime={e.startsAt}>{formatDate(e.startsAt, true)}</time>
+                      <div>
+                        <Link href={`/events/${e.slug}`}>{e.title}</Link>
+                        {e.location && <p>{e.location}</p>}
+                        <DemoBadge show={e.isDemo} />
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              )}
+              <div className={styles.sunline} aria-hidden="true" />
+            </aside>
+          )}
         </div>
       </section>
 
       <div className="container">
         <nav className={styles.actions} aria-label="Быстрые действия">
-          {quickActions.map((a) => (
+          {visibleWith(quickActions, flags.ok ? flags.data : {}).map((a) => (
             <Link key={a.href} href={a.href} className={styles.action}>
               <span className={styles.actionIcon}>
                 <Icon name={a.icon} />
@@ -198,127 +231,133 @@ export default async function HomePage() {
         </nav>
       </div>
 
-      <section className={styles.section} aria-labelledby="news-heading">
-        <div className="container">
-          <SectionHead
-            id="news-heading"
-            kicker="Редакция SVETLY"
-            title="Новости"
-            href="/news"
-            more="Все новости"
-          />
-          {!feed ? (
-            failed
-          ) : !lead ? (
-            <EmptyState
-              title="Новостей пока нет"
-              description="Редакция готовит первые материалы."
+      {on('news') && (
+        <section className={styles.section} aria-labelledby="news-heading">
+          <div className="container">
+            <SectionHead
+              id="news-heading"
+              kicker="Редакция SVETLY"
+              title="Новости"
+              href="/news"
+              more="Все новости"
             />
-          ) : (
-            <div className={styles.news}>
-              <article className={styles.leadStory}>
-                <div className={styles.meta}>
-                  {lead.category && <Badge tone="info">{lead.category.name}</Badge>}
-                  <time dateTime={lead.publishedAt}>{formatDate(lead.publishedAt)}</time>
-                  <DemoBadge show={lead.isDemo} />
-                </div>
-                <h3>
-                  <Link href={`/news/${lead.slug}`}>{lead.title}</Link>
-                </h3>
-                {lead.excerpt && <p className={styles.muted}>{lead.excerpt}</p>}
-              </article>
-              {moreNews.length > 0 && (
-                <ul className={styles.newsList} role="list">
-                  {moreNews.map((n) => (
-                    <li key={n.slug}>
-                      <div className={styles.meta}>
-                        {n.category && <span>{n.category.name}</span>}
-                        <time dateTime={n.publishedAt}>{formatDate(n.publishedAt)}</time>
-                        <DemoBadge show={n.isDemo} />
+            {!feed ? (
+              failed
+            ) : !lead ? (
+              <EmptyState
+                title="Новостей пока нет"
+                description="Редакция готовит первые материалы."
+              />
+            ) : (
+              <div className={styles.news}>
+                <article className={styles.leadStory}>
+                  <div className={styles.meta}>
+                    {lead.category && <Badge tone="info">{lead.category.name}</Badge>}
+                    <time dateTime={lead.publishedAt}>{formatDate(lead.publishedAt)}</time>
+                    <DemoBadge show={lead.isDemo} />
+                  </div>
+                  <h3>
+                    <Link href={`/news/${lead.slug}`}>{lead.title}</Link>
+                  </h3>
+                  {lead.excerpt && <p className={styles.muted}>{lead.excerpt}</p>}
+                </article>
+                {moreNews.length > 0 && (
+                  <ul className={styles.newsList} role="list">
+                    {moreNews.map((n) => (
+                      <li key={n.slug}>
+                        <div className={styles.meta}>
+                          {n.category && <span>{n.category.name}</span>}
+                          <time dateTime={n.publishedAt}>{formatDate(n.publishedAt)}</time>
+                          <DemoBadge show={n.isDemo} />
+                        </div>
+                        <Link href={`/news/${n.slug}`}>{n.title}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {on('announcements') && (
+        <section className={styles.section} aria-labelledby="ads-heading">
+          <div className="container">
+            <SectionHead
+              id="ads-heading"
+              kicker="От соседей"
+              title="Объявления"
+              href="/announcements"
+              more="Все объявления"
+            />
+            {!feed ? (
+              failed
+            ) : feed.announcements.length === 0 ? (
+              <EmptyState
+                title="Объявлений пока нет"
+                description="Станьте первым — это бесплатно."
+                action={<ButtonLink href="/announcements/new">Подать объявление</ButtonLink>}
+              />
+            ) : (
+              <div className={content.adGrid}>
+                {feed.announcements.map((a) => (
+                  <AnnouncementCard key={a.slug} a={a} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {on('organizations') && (
+        <section className={styles.section} aria-labelledby="biz-heading">
+          <div className={`container ${styles.split}`}>
+            <div>
+              <span className={styles.kicker}>Местный бизнес</span>
+              <h2 id="biz-heading">Услуги и организации</h2>
+              <p className={styles.muted}>
+                Каталог мастеров, магазинов и учреждений. Карточки добавляют владельцы, проверку
+                проводит администратор.
+              </p>
+              <div className={styles.links}>
+                <Link href="/organizations">Организации</Link>
+                <Link href="/services">Услуги</Link>
+                {on('directory') && <Link href="/directory">Справочник</Link>}
+                <Link href="/map">Места</Link>
+              </div>
+            </div>
+            <Card>
+              {!feed ? (
+                failed
+              ) : feed.organizations.length === 0 ? (
+                <EmptyState
+                  title="Каталог пока пуст"
+                  description="Владельцы могут добавить организацию бесплатно."
+                />
+              ) : (
+                <ul className={styles.rows} role="list">
+                  {feed.organizations.map((o) => (
+                    <li key={o.slug}>
+                      <span className={styles.avatar} aria-hidden="true">
+                        {o.name.match(/[\p{L}\p{N}]/u)?.[0] ?? '•'}
+                      </span>
+                      <div>
+                        <Link href={`/organizations/${o.slug}`}>{o.name}</Link>
+                        <div className={styles.meta}>
+                          {o.category && <span>{o.category.name}</span>}
+                          <VerificationBadge value={o.verification} />
+                          <DemoBadge show={o.isDemo} />
+                        </div>
                       </div>
-                      <Link href={`/news/${n.slug}`}>{n.title}</Link>
                     </li>
                   ))}
                 </ul>
               )}
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className={styles.section} aria-labelledby="ads-heading">
-        <div className="container">
-          <SectionHead
-            id="ads-heading"
-            kicker="От соседей"
-            title="Объявления"
-            href="/announcements"
-            more="Все объявления"
-          />
-          {!feed ? (
-            failed
-          ) : feed.announcements.length === 0 ? (
-            <EmptyState
-              title="Объявлений пока нет"
-              description="Станьте первым — это бесплатно."
-              action={<ButtonLink href="/announcements/new">Подать объявление</ButtonLink>}
-            />
-          ) : (
-            <div className={content.adGrid}>
-              {feed.announcements.map((a) => (
-                <AnnouncementCard key={a.slug} a={a} />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className={styles.section} aria-labelledby="biz-heading">
-        <div className={`container ${styles.split}`}>
-          <div>
-            <span className={styles.kicker}>Местный бизнес</span>
-            <h2 id="biz-heading">Услуги и организации</h2>
-            <p className={styles.muted}>
-              Каталог мастеров, магазинов и учреждений. Карточки добавляют владельцы, проверку
-              проводит администратор.
-            </p>
-            <div className={styles.links}>
-              <Link href="/organizations">Организации</Link>
-              <Link href="/services">Услуги</Link>
-              <Link href="/directory">Справочник</Link>
-              <Link href="/map">Места</Link>
-            </div>
+            </Card>
           </div>
-          <Card>
-            {!feed ? (
-              failed
-            ) : feed.organizations.length === 0 ? (
-              <EmptyState
-                title="Каталог пока пуст"
-                description="Владельцы могут добавить организацию бесплатно."
-              />
-            ) : (
-              <ul className={styles.rows} role="list">
-                {feed.organizations.map((o) => (
-                  <li key={o.slug}>
-                    <span className={styles.avatar} aria-hidden="true">
-                      {o.name.match(/[\p{L}\p{N}]/u)?.[0] ?? '•'}
-                    </span>
-                    <div>
-                      <Link href={`/organizations/${o.slug}`}>{o.name}</Link>
-                      <div className={styles.meta}>
-                        {o.category && <span>{o.category.name}</span>}
-                        <VerificationBadge value={o.verification} />
-                        <DemoBadge show={o.isDemo} />
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className={styles.section} aria-labelledby="community-heading">
         <div className="container">
@@ -330,7 +369,7 @@ export default async function HomePage() {
             more="Весь раздел"
           />
           <div className="grid">
-            {communityLinks.map((c) => (
+            {visibleWith(communityLinks, flags.ok ? flags.data : {}).map((c) => (
               <Card key={c.href} interactive>
                 <h3 className={styles.cardTitle}>
                   <Link href={c.href}>{c.title}</Link>

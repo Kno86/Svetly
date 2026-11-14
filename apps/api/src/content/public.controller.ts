@@ -1,4 +1,6 @@
 import { Controller, Get, NotFoundException, Param, Query } from '@nestjs/common';
+import { Feature } from '../integrations/feature.guard.js';
+import { FeaturesService } from '../integrations/features.service.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { z } from 'zod';
 import { parse } from '../common/validation.js';
@@ -107,12 +109,23 @@ function textFilter(q: string | undefined, fields: string[]) {
   return { OR: fields.map((f) => ({ [f]: { contains: q, mode: 'insensitive' as const } })) };
 }
 
+/** Feature flag behind each search/sitemap type (default: the type itself). */
+const SEARCH_FEATURE: Record<string, string> = {
+  services: 'organizations',
+  posts: 'groups',
+};
+
 @Controller()
 export class PublicContentController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly analytics: AnalyticsService,
+    private readonly features: FeaturesService,
   ) {}
+
+  private async enabled(): Promise<Set<string>> {
+    return new Set((await this.features.resolve()).filter((f) => f.enabled).map((f) => f.key));
+  }
 
   @Get('categories')
   categories(@Query('module') module?: string) {
@@ -127,6 +140,7 @@ export class PublicContentController {
     });
   }
 
+  @Feature('news')
   @Get('news')
   async news(@Query() query: unknown) {
     const { q, category: cat, page: p, limit } = parse(listQuery, query);
@@ -158,6 +172,7 @@ export class PublicContentController {
     return { items, total, page: p, limit };
   }
 
+  @Feature('news')
   @Get('news/:slug')
   async newsItem(@Param('slug') slug: string) {
     const item = await this.prisma.newsArticle.findFirst({
@@ -182,6 +197,7 @@ export class PublicContentController {
     return item;
   }
 
+  @Feature('announcements')
   @Get('announcements')
   async announcements(@Query() query: unknown) {
     const { q, category: cat, page: p, limit } = parse(listQuery, query);
@@ -204,6 +220,7 @@ export class PublicContentController {
   }
 
   /** Contact phone is returned only on the detail page; it is the author's explicit choice to publish it. */
+  @Feature('announcements')
   @Get('announcements/:slug')
   async announcement(@Param('slug') slug: string) {
     const item = await this.prisma.announcement.findFirst({
@@ -215,6 +232,7 @@ export class PublicContentController {
   }
 
   /** Places for /map: published organizations and upcoming events with their text location. */
+  @Feature('organizations')
   @Get('map')
   async map() {
     const now = new Date();
@@ -285,6 +303,7 @@ export class PublicContentController {
     };
   }
 
+  @Feature('organizations')
   @Get('organizations')
   async organizations(@Query() query: unknown) {
     const { q, category: cat, kind, page: p, limit } = parse(orgQuery, query);
@@ -319,6 +338,7 @@ export class PublicContentController {
     return { items, total, page: p, limit };
   }
 
+  @Feature('organizations')
   @Get('organizations/:slug')
   async organization(@Param('slug') slug: string) {
     const item = await this.prisma.organization.findFirst({
@@ -352,6 +372,7 @@ export class PublicContentController {
     return { ...rest, acceptsInquiries: ownerId !== null };
   }
 
+  @Feature('events')
   @Get('events')
   async events(@Query() query: unknown) {
     const { q, category: cat, when, page: p, limit } = parse(eventQuery, query);
@@ -391,6 +412,7 @@ export class PublicContentController {
   }
 
   /** Events overlapping a calendar month in the territory's time zone, for the month grid. */
+  @Feature('events')
   @Get('events/calendar')
   async eventCalendar(@Query() query: unknown) {
     const { month, category: cat } = parse(calendarQuery, query);
@@ -422,6 +444,7 @@ export class PublicContentController {
     return { month, items, truncated: items.length === CALENDAR_LIMIT };
   }
 
+  @Feature('events')
   @Get('events/:slug')
   async event(@Param('slug') slug: string) {
     const item = await this.prisma.event.findFirst({
@@ -450,6 +473,7 @@ export class PublicContentController {
     return { ...rest, registered: _count.registrations };
   }
 
+  @Feature('directory')
   @Get('directory')
   async directory(@Query() query: unknown) {
     const { q, category: cat } = parse(listQuery, query);
@@ -478,72 +502,84 @@ export class PublicContentController {
   @Get('home')
   async home() {
     const now = new Date();
+    const on = await this.enabled();
+    const none = Promise.resolve([]);
     const [news, announcements, organizations, events, directory] = await Promise.all([
-      this.prisma.newsArticle.findMany({
-        where: { status: 'published' },
-        orderBy: [{ pinned: 'desc' }, { publishedAt: 'desc' }],
-        take: 3,
-        select: {
-          slug: true,
-          title: true,
-          excerpt: true,
-          publishedAt: true,
-          isDemo: true,
-          category,
-        },
-      }),
-      this.prisma.announcement.findMany({
-        where: publishedAnnouncement(now),
-        orderBy: { publishedAt: 'desc' },
-        take: 4,
-        select: {
-          slug: true,
-          title: true,
-          description: true,
-          price: true,
-          condition: true,
-          area: true,
-          imageIds: true,
-          publishedAt: true,
-          isDemo: true,
-          category,
-        },
-      }),
-      this.prisma.organization.findMany({
-        where: { status: 'published' },
-        orderBy: { updatedAt: 'desc' },
-        take: 4,
-        select: {
-          imageIds: true,
-          slug: true,
-          kind: true,
-          name: true,
-          serviceArea: true,
-          address: true,
-          verification: true,
-          isDemo: true,
-          category,
-        },
-      }),
-      this.prisma.event.findMany({
-        where: { status: 'published', startsAt: { gte: now } },
-        orderBy: { startsAt: 'asc' },
-        take: 3,
-        select: {
-          imageIds: true,
-          slug: true,
-          title: true,
-          location: true,
-          startsAt: true,
-          isDemo: true,
-        },
-      }),
-      this.prisma.directoryEntry.findMany({
-        where: { status: 'published', kind: 'emergency' },
-        orderBy: { position: 'asc' },
-        take: 6,
-        select: { imageIds: true, slug: true, title: true, phone: true, isDemo: true },
-      }),
+      !on.has('news')
+        ? none
+        : this.prisma.newsArticle.findMany({
+            where: { status: 'published' },
+            orderBy: [{ pinned: 'desc' }, { publishedAt: 'desc' }],
+            take: 3,
+            select: {
+              slug: true,
+              title: true,
+              excerpt: true,
+              publishedAt: true,
+              isDemo: true,
+              category,
+            },
+          }),
+      !on.has('announcements')
+        ? none
+        : this.prisma.announcement.findMany({
+            where: publishedAnnouncement(now),
+            orderBy: { publishedAt: 'desc' },
+            take: 4,
+            select: {
+              slug: true,
+              title: true,
+              description: true,
+              price: true,
+              condition: true,
+              area: true,
+              imageIds: true,
+              publishedAt: true,
+              isDemo: true,
+              category,
+            },
+          }),
+      !on.has('organizations')
+        ? none
+        : this.prisma.organization.findMany({
+            where: { status: 'published' },
+            orderBy: { updatedAt: 'desc' },
+            take: 4,
+            select: {
+              imageIds: true,
+              slug: true,
+              kind: true,
+              name: true,
+              serviceArea: true,
+              address: true,
+              verification: true,
+              isDemo: true,
+              category,
+            },
+          }),
+      !on.has('events')
+        ? none
+        : this.prisma.event.findMany({
+            where: { status: 'published', startsAt: { gte: now } },
+            orderBy: { startsAt: 'asc' },
+            take: 3,
+            select: {
+              imageIds: true,
+              slug: true,
+              title: true,
+              location: true,
+              startsAt: true,
+              isDemo: true,
+            },
+          }),
+      !on.has('directory')
+        ? none
+        : this.prisma.directoryEntry.findMany({
+            where: { status: 'published', kind: 'emergency' },
+            orderBy: { position: 'asc' },
+            take: 6,
+            select: { imageIds: true, slug: true, title: true, phone: true, isDemo: true },
+          }),
     ]);
     return {
       news,
@@ -566,7 +602,7 @@ export class PublicContentController {
   @Get('search')
   async search(@Query() query: unknown) {
     const { q, type, category, sort, page, limit } = parse(searchQuery, query);
-    const parts = this.searchParts(q, type, category);
+    const parts = this.searchParts(await this.enabled(), q, type, category);
     if (!parts.length) return { q, items: [], total: 0, page, limit };
     const order =
       sort === 'date'
@@ -605,7 +641,8 @@ export class PublicContentController {
   @Get('search/suggest')
   async suggest(@Query() query: unknown) {
     const { q } = parse(suggestQuery, query);
-    const parts = this.searchParts(q);
+    const parts = this.searchParts(await this.enabled(), q);
+    if (!parts.length) return { items: [] };
     const rows = await this.prisma.$queryRaw<Array<{ type: string; slug: string; title: string }>>(
       Prisma.sql`SELECT type, slug, title FROM (${Prisma.join(parts, ' UNION ALL ')}) AS results WHERE type <> 'posts' ORDER BY rank DESC LIMIT 8`,
     );
@@ -619,69 +656,90 @@ export class PublicContentController {
     const sel = { slug: true, updatedAt: true } as const;
     const orderBy = { updatedAt: 'desc' } as const;
     const now = new Date();
+    const on = await this.enabled();
+    const none = Promise.resolve([]);
     const [news, announcements, organizations, services, events, jobs, lostFound, polls, groups] =
       await Promise.all([
-        this.prisma.newsArticle.findMany({
-          where: { status: 'published' },
-          select: sel,
-          orderBy,
-          take,
-        }),
-        this.prisma.announcement.findMany({
-          where: { status: 'published', expiresAt: { gt: now } },
-          select: sel,
-          orderBy,
-          take,
-        }),
-        this.prisma.organization.findMany({
-          where: { status: 'published', kind: 'organization' },
-          select: sel,
-          orderBy,
-          take,
-        }),
-        this.prisma.organization.findMany({
-          where: { status: 'published', kind: 'service' },
-          select: sel,
-          orderBy,
-          take,
-        }),
-        this.prisma.event.findMany({
-          where: { status: { in: ['published', 'cancelled'] } },
-          select: sel,
-          orderBy,
-          take,
-        }),
-        this.prisma.job.findMany({
-          where: { status: 'published', expiresAt: { gt: now } },
-          select: sel,
-          orderBy,
-          take,
-        }),
-        this.prisma.lostFoundItem.findMany({
-          where: { status: 'published', expiresAt: { gt: now } },
-          select: sel,
-          orderBy,
-          take,
-        }),
-        this.prisma.poll.findMany({
-          where: { status: 'published' },
-          select: sel,
-          orderBy,
-          take,
-        }),
-        this.prisma.group.findMany({
-          where: { status: 'active', visibility: 'open' },
-          select: sel,
-          orderBy,
-          take,
-        }),
+        !on.has('news')
+          ? none
+          : this.prisma.newsArticle.findMany({
+              where: { status: 'published' },
+              select: sel,
+              orderBy,
+              take,
+            }),
+        !on.has('announcements')
+          ? none
+          : this.prisma.announcement.findMany({
+              where: { status: 'published', expiresAt: { gt: now } },
+              select: sel,
+              orderBy,
+              take,
+            }),
+        !on.has('organizations')
+          ? none
+          : this.prisma.organization.findMany({
+              where: { status: 'published', kind: 'organization' },
+              select: sel,
+              orderBy,
+              take,
+            }),
+        !on.has('organizations')
+          ? none
+          : this.prisma.organization.findMany({
+              where: { status: 'published', kind: 'service' },
+              select: sel,
+              orderBy,
+              take,
+            }),
+        !on.has('events')
+          ? none
+          : this.prisma.event.findMany({
+              where: { status: { in: ['published', 'cancelled'] } },
+              select: sel,
+              orderBy,
+              take,
+            }),
+        !on.has('jobs')
+          ? none
+          : this.prisma.job.findMany({
+              where: { status: 'published', expiresAt: { gt: now } },
+              select: sel,
+              orderBy,
+              take,
+            }),
+        !on.has('lost_found')
+          ? none
+          : this.prisma.lostFoundItem.findMany({
+              where: { status: 'published', expiresAt: { gt: now } },
+              select: sel,
+              orderBy,
+              take,
+            }),
+        !on.has('polls')
+          ? none
+          : this.prisma.poll.findMany({
+              where: { status: 'published' },
+              select: sel,
+              orderBy,
+              take,
+            }),
+        !on.has('groups')
+          ? none
+          : this.prisma.group.findMany({
+              where: { status: 'active', visibility: 'open' },
+              select: sel,
+              orderBy,
+              take,
+            }),
       ]);
     return { news, announcements, organizations, services, events, jobs, lostFound, polls, groups };
   }
 
-  private searchParts(q: string, type?: string, category?: string): Prisma.Sql[] {
+  private searchParts(on: Set<string>, q: string, type?: string, category?: string): Prisma.Sql[] {
     const parts: Prisma.Sql[] = [];
     const add = (t: string, sql: Prisma.Sql) => {
+      if (!on.has(SEARCH_FEATURE[t] ?? t)) return;
       if (type && type !== t) return;
       if (category && !CATEGORIZED.has(t)) return;
       parts.push(sql);

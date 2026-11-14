@@ -10,16 +10,23 @@ export interface NavItem {
 export interface Section extends NavItem {
   /** Path prefixes that belong to the section (for the «текущий раздел» marker). */
   match: string[];
+  /** Section shown while any of these is on; links to the first enabled one. */
+  options?: Array<{ feature: string; href: string }>;
 }
 
 /** Five top-level sections shown in the header. */
 export const primaryNav: Section[] = [
-  { label: 'Новости', href: '/news', available: true, match: ['/news'] },
+  { label: 'Новости', href: '/news', available: true, feature: 'news', match: ['/news'] },
   {
     label: 'Объявления',
     href: '/announcements',
     available: true,
     match: ['/announcements', '/jobs', '/lost-found'],
+    options: [
+      { feature: 'announcements', href: '/announcements' },
+      { feature: 'jobs', href: '/jobs' },
+      { feature: 'lost_found', href: '/lost-found' },
+    ],
   },
   {
     label: 'Услуги и бизнес',
@@ -37,17 +44,17 @@ export const primaryNav: Section[] = [
 
 /** Every public module; used by the drawer «Ещё», the footer and the hub pages. */
 export const sectionLinks: NavItem[] = [
-  { label: 'Новости', href: '/news', available: true },
-  { label: 'Объявления', href: '/announcements', available: true },
-  { label: 'Вакансии', href: '/jobs', available: true },
-  { label: 'Потеряно и найдено', href: '/lost-found', available: true },
-  { label: 'Организации', href: '/organizations', available: true },
-  { label: 'Услуги', href: '/services', available: true },
-  { label: 'Справочник', href: '/directory', available: true },
-  { label: 'Места', href: '/map', available: true },
-  { label: 'События', href: '/events', available: true },
-  { label: 'Обращения жителей', href: '/issues', available: true },
-  { label: 'Опросы', href: '/polls', available: true },
+  { label: 'Новости', href: '/news', available: true, feature: 'news' },
+  { label: 'Объявления', href: '/announcements', available: true, feature: 'announcements' },
+  { label: 'Вакансии', href: '/jobs', available: true, feature: 'jobs' },
+  { label: 'Потеряно и найдено', href: '/lost-found', available: true, feature: 'lost_found' },
+  { label: 'Организации', href: '/organizations', available: true, feature: 'organizations' },
+  { label: 'Услуги', href: '/services', available: true, feature: 'organizations' },
+  { label: 'Справочник', href: '/directory', available: true, feature: 'directory' },
+  { label: 'Места', href: '/map', available: true, feature: 'organizations' },
+  { label: 'События', href: '/events', available: true, feature: 'events' },
+  { label: 'Обращения жителей', href: '/issues', available: true, feature: 'issues' },
+  { label: 'Опросы', href: '/polls', available: true, feature: 'polls' },
   { label: 'Лента', href: '/feed', available: true, feature: 'groups' },
   { label: 'Группы', href: '/groups', available: true, feature: 'groups' },
 ];
@@ -79,24 +86,24 @@ export function loginHref(returnTo: string | null | undefined): string {
 /** Second-level tabs inside the merged sections; the legacy module routes stay the tab URLs. */
 export const sectionTabs: Record<string, NavItem[]> = {
   '/announcements': [
-    { label: 'Объявления', href: '/announcements', available: true },
-    { label: 'Вакансии', href: '/jobs', available: true },
-    { label: 'Потеряно и найдено', href: '/lost-found', available: true },
+    { label: 'Объявления', href: '/announcements', available: true, feature: 'announcements' },
+    { label: 'Вакансии', href: '/jobs', available: true, feature: 'jobs' },
+    { label: 'Потеряно и найдено', href: '/lost-found', available: true, feature: 'lost_found' },
   ],
   '/catalog': [
     { label: 'Обзор', href: '/catalog', available: true },
-    { label: 'Организации', href: '/organizations', available: true },
-    { label: 'Услуги', href: '/services', available: true },
-    { label: 'Справочник', href: '/directory', available: true },
-    { label: 'Места', href: '/map', available: true },
+    { label: 'Организации', href: '/organizations', available: true, feature: 'organizations' },
+    { label: 'Услуги', href: '/services', available: true, feature: 'organizations' },
+    { label: 'Справочник', href: '/directory', available: true, feature: 'directory' },
+    { label: 'Места', href: '/map', available: true, feature: 'organizations' },
   ],
   '/community': [
     { label: 'Обзор', href: '/community', available: true },
     { label: 'Лента', href: '/feed', available: true, feature: 'groups' },
     { label: 'Группы', href: '/groups', available: true, feature: 'groups' },
-    { label: 'События', href: '/events', available: true },
-    { label: 'Опросы', href: '/polls', available: true },
-    { label: 'Обращения', href: '/issues', available: true },
+    { label: 'События', href: '/events', available: true, feature: 'events' },
+    { label: 'Опросы', href: '/polls', available: true, feature: 'polls' },
+    { label: 'Обращения', href: '/issues', available: true, feature: 'issues' },
   ],
 };
 
@@ -113,7 +120,7 @@ export const cabinetTabs: NavItem[] = [
   { label: 'Обзор и профиль', href: '/account', available: true },
   { label: 'Мои объявления', href: '/account/announcements', available: true },
   { label: 'Обращения и заявки', href: '/account/community', available: true },
-  { label: 'Сообщения', href: '/messages', available: true },
+  { label: 'Сообщения', href: '/messages', available: true, feature: 'chats' },
   { label: 'Уведомления', href: '/notifications', available: true },
   { label: 'Избранное', href: '/favorites', available: true },
   { label: 'Рекомендации', href: '/account/recommendations', available: true },
@@ -129,4 +136,14 @@ export function tabsFor(pathname: string): { section: Section; items: NavItem[] 
     return { section: cabinetSection, items: cabinetTabs };
   }
   return null;
+}
+
+/** Header sections for the current feature map (`features[key] === false` means switched off). */
+export function visibleSections(features: Record<string, boolean>): Section[] {
+  return primaryNav.flatMap((s) => {
+    if (s.feature && features[s.feature] === false) return [];
+    if (!s.options) return [s];
+    const first = s.options.find((o) => features[o.feature] !== false);
+    return first ? [{ ...s, href: first.href }] : [];
+  });
 }
