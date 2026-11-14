@@ -39,23 +39,52 @@ const HEADING = /^(#{1,3})\s+(.+)$/;
 const BULLET = /^[-*•]\s+/;
 const NUMBER = /^\d+[.)]\s+/;
 
-function block(lines: string[]): Block[] {
-  const heading = HEADING.exec(lines[0]!);
-  if (heading) {
-    const h: Block = {
-      t: 'h',
-      level: heading[1]!.length >= 3 ? 3 : 2,
-      c: parseInline(heading[2]!.trim()),
-    };
-    return lines.length > 1 ? [h, ...block(lines.slice(1))] : [h];
+type Kind = 'h' | 'ul' | 'ol' | 'quote' | 'p';
+
+const kindOf = (line: string): Kind =>
+  HEADING.test(line)
+    ? 'h'
+    : BULLET.test(line)
+      ? 'ul'
+      : NUMBER.test(line)
+        ? 'ol'
+        : line.startsWith('>')
+          ? 'quote'
+          : 'p';
+
+function toBlock(kind: Kind, lines: string[]): Block {
+  switch (kind) {
+    case 'h': {
+      const m = HEADING.exec(lines[0]!)!;
+      return { t: 'h', level: m[1]!.length >= 3 ? 3 : 2, c: parseInline(m[2]!.trim()) };
+    }
+    case 'ul':
+      return { t: 'ul', items: lines.map((l) => parseInline(l.replace(BULLET, ''))) };
+    case 'ol':
+      return { t: 'ol', items: lines.map((l) => parseInline(l.replace(NUMBER, ''))) };
+    case 'quote':
+      return { t: 'quote', lines: lines.map((l) => parseInline(l.replace(/^>\s?/, ''))) };
+    case 'p':
+      return { t: 'p', lines: lines.map(parseInline) };
   }
-  if (lines.every((l) => BULLET.test(l)))
-    return [{ t: 'ul', items: lines.map((l) => parseInline(l.replace(BULLET, ''))) }];
-  if (lines.every((l) => NUMBER.test(l)))
-    return [{ t: 'ol', items: lines.map((l) => parseInline(l.replace(NUMBER, ''))) }];
-  if (lines.every((l) => l.startsWith('>')))
-    return [{ t: 'quote', lines: lines.map((l) => parseInline(l.replace(/^>\s?/, ''))) }];
-  return [{ t: 'p', lines: lines.map(parseInline) }];
+}
+
+/** Splits a paragraph into runs of same-kind lines, so a list or heading needs no blank line before it. */
+function block(lines: string[]): Block[] {
+  const out: Block[] = [];
+  let run: string[] = [];
+  let kind: Kind | undefined;
+  for (const line of lines) {
+    const k = kindOf(line);
+    if (kind && (k !== kind || k === 'h')) {
+      out.push(toBlock(kind, run));
+      run = [];
+    }
+    kind = k;
+    run.push(line);
+  }
+  if (kind) out.push(toBlock(kind, run));
+  return out;
 }
 
 export function parseRichText(text: string): Block[] {

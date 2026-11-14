@@ -22,8 +22,10 @@ describe('parseRichText', () => {
     expect(parseRichText('# Крупный')[0]).toMatchObject({ t: 'h', level: 2 });
   });
 
-  it('does not treat a mixed block as a list', () => {
-    expect(parseRichText('- пункт\nобычная строка')[0]!.t).toBe('p');
+  it('splits lines of different kinds without a blank line', () => {
+    expect(
+      parseRichText('Текст\n- пункт\n- ещё\nобычная строка\n## Заголовок').map((b) => b.t),
+    ).toEqual(['p', 'ul', 'p', 'h']);
   });
 });
 
