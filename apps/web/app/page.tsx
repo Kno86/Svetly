@@ -323,7 +323,7 @@ export default async function HomePage() {
               <div className={styles.links}>
                 <Link href="/organizations">Организации</Link>
                 <Link href="/services">Услуги</Link>
-                <Link href="/directory">Справочник</Link>
+                {on('directory') && <Link href="/directory">Справочник</Link>}
                 <Link href="/map">Места</Link>
               </div>
             </div>
