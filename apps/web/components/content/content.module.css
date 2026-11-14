@@ -25,22 +25,13 @@
     grid-template-columns: 2fr 1fr auto;
   }
 }
-/* Phones: search box and «Найти» share the first row, other filters go below. */
+/* Phones: a lone search box and «Найти» share one row (DOM order = visual order). */
 @media (max-width: 47.99rem) {
   .filters {
-    grid-template-columns: minmax(0, 1fr) auto;
     margin-bottom: var(--space-5);
   }
-  .filters > * {
-    grid-column: 1 / -1;
-  }
-  .filters > :has(input[type='search']) {
-    grid-row: 1;
-    grid-column: 1;
-  }
-  .filters:has(input[type='search']) > button[type='submit'] {
-    grid-row: 1;
-    grid-column: 2;
+  .filters:has(input[type='search']):not(:has(select)) {
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 }
 .searchTabs {
