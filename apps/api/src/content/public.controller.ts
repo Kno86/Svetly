@@ -642,6 +642,7 @@ export class PublicContentController {
   async suggest(@Query() query: unknown) {
     const { q } = parse(suggestQuery, query);
     const parts = this.searchParts(await this.enabled(), q);
+    if (!parts.length) return { items: [] };
     const rows = await this.prisma.$queryRaw<Array<{ type: string; slug: string; title: string }>>(
       Prisma.sql`SELECT type, slug, title FROM (${Prisma.join(parts, ' UNION ALL ')}) AS results WHERE type <> 'posts' ORDER BY rank DESC LIMIT 8`,
     );
