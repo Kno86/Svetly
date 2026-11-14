@@ -11,6 +11,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { setting } from './settings.js';
 import { z } from 'zod';
 import { AuditService } from '../audit/audit.service.js';
 import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guards.js';
@@ -19,9 +20,6 @@ import { parse } from '../common/validation.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { NotificationsService } from './notifications.controller.js';
 import { uniqueSlug } from './slug.js';
-
-const ANNOUNCEMENT_TTL_DAYS = 30;
-const MAX_PENDING_PER_USER = 10;
 
 const announcementBody = z.object({
   title: z.string().trim().min(5).max(120),
@@ -44,13 +42,8 @@ const queueQuery = z.object({
 });
 
 /** Number of approved announcements after which an author is no longer premoderated (admin-configurable setting). */
-export async function trustedThreshold(prisma: PrismaService): Promise<number> {
-  const setting = await prisma.setting.findUnique({
-    where: { key: 'moderation.trustedThreshold' },
-  });
-  const value = Number(setting?.value);
-  return Number.isInteger(value) && value >= 0 ? value : 3;
-}
+export const trustedThreshold = (prisma: PrismaService) =>
+  setting(prisma, 'moderation.trustedThreshold');
 
 @Controller()
 export class AnnouncementsController {
@@ -121,7 +114,7 @@ export class AnnouncementsController {
     const pending = await this.prisma.announcement.count({
       where: { authorId: principal.userId, status: 'pending' },
     });
-    if (pending >= MAX_PENDING_PER_USER) {
+    if (pending >= (await setting(this.prisma, 'announcements.maxPending'))) {
       throw new BadRequestException({
         code: 'TOO_MANY_PENDING',
         message: 'Слишком много объявлений ждут проверки',
@@ -146,7 +139,9 @@ export class AnnouncementsController {
         authorId: principal.userId,
         status: trusted ? 'published' : 'pending',
         publishedAt: trusted ? now : null,
-        expiresAt: new Date(now.getTime() + ANNOUNCEMENT_TTL_DAYS * 86_400_000),
+        expiresAt: new Date(
+          now.getTime() + (await setting(this.prisma, 'announcements.ttlDays')) * 86_400_000,
+        ),
       },
       select: { id: true, slug: true, status: true },
     });

@@ -1,5 +1,6 @@
 import {
   Body,
+  BadRequestException,
   ConflictException,
   Controller,
   Get,
@@ -13,6 +14,14 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import {
+  allSettings,
+  isSettingKey,
+  setting,
+  SETTINGS,
+  validSetting,
+  type SettingKey,
+} from './settings.js';
 import { z } from 'zod';
 import { Prisma } from '../generated/prisma/client.js';
 import { TARGET_TYPES, isVisibleTarget } from './visibility.js';
@@ -21,8 +30,6 @@ import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guar
 import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { RETENTION_KEY, retentionDays } from '../analytics/analytics.service.js';
-import { trustedThreshold } from './announcements.controller.js';
 
 const ENTITY_TYPES = TARGET_TYPES;
 type EntityType = (typeof ENTITY_TYPES)[number];
@@ -54,6 +61,7 @@ const resolveBody = z.object({
 const settingsBody = z.object({
   trustedThreshold: z.number().int().min(0).max(50).optional(),
   analyticsRetentionDays: z.number().int().min(30).max(730).optional(),
+  values: z.record(z.string(), z.number().int()).optional(),
 });
 const categoryBody = z.object({
   module: z.enum(MODULES),
@@ -167,9 +175,12 @@ export class AdminPlatformController {
   @Get('admin/settings')
   @RequirePermission('settings.manage')
   async settings() {
+    const items = await allSettings(this.prisma);
+    const value = (key: SettingKey) => items.find((i) => i.key === key)!.value;
     return {
-      trustedThreshold: await trustedThreshold(this.prisma),
-      analyticsRetentionDays: await retentionDays(this.prisma),
+      trustedThreshold: value('moderation.trustedThreshold'),
+      analyticsRetentionDays: value('analytics.retentionDays'),
+      items,
     };
   }
 
@@ -177,16 +188,25 @@ export class AdminPlatformController {
   @RequirePermission('settings.manage')
   async updateSettings(@Body() body: unknown, @CurrentPrincipal() p: Principal) {
     const data = parse(settingsBody, body);
-    const changes: Array<[string, number, number]> = [];
+    const next = new Map<SettingKey, number>();
     if (data.trustedThreshold !== undefined)
-      changes.push([
-        'moderation.trustedThreshold',
-        await trustedThreshold(this.prisma),
-        data.trustedThreshold,
-      ]);
+      next.set('moderation.trustedThreshold', data.trustedThreshold);
     if (data.analyticsRetentionDays !== undefined)
-      changes.push([RETENTION_KEY, await retentionDays(this.prisma), data.analyticsRetentionDays]);
-    for (const [key, from, to] of changes) {
+      next.set('analytics.retentionDays', data.analyticsRetentionDays);
+    for (const [key, raw] of Object.entries(data.values ?? {})) {
+      const v = isSettingKey(key) ? validSetting(key, raw) : undefined;
+      if (!isSettingKey(key) || v === undefined)
+        throw new BadRequestException({
+          code: 'INVALID_SETTING',
+          message: isSettingKey(key)
+            ? `«${SETTINGS[key].label}»: от ${SETTINGS[key].min} до ${SETTINGS[key].max}`
+            : 'Неизвестная настройка',
+        });
+      next.set(key, v);
+    }
+    for (const [key, to] of next) {
+      const from = await setting(this.prisma, key);
+      if (from === to) continue;
       await this.prisma.setting.upsert({
         where: { key },
         create: { key, value: to },

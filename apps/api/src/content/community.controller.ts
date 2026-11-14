@@ -12,6 +12,7 @@ import {
   Query,
   type Type,
 } from '@nestjs/common';
+import { setting } from './settings.js';
 import { z } from 'zod';
 import { AuditService } from '../audit/audit.service.js';
 import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guards.js';
@@ -52,7 +53,7 @@ const jobBody = z.object({
   area: optText(120),
   contactPhone: phone,
   contactNote: optText(300),
-  ttlDays: z.number().int().min(7).max(60).default(30),
+  ttlDays: z.number().int().min(7).max(60).optional(),
   imageIds: z.array(z.uuid()).max(6).default([]),
 });
 const lostFoundBody = z.object({
@@ -82,7 +83,7 @@ interface KindConfig {
   entity: 'job' | 'lost_found';
   delegate: (p: PrismaService) => Delegate;
   body: z.ZodType<Row>;
-  ttlDays: number;
+  ttlKey: 'jobs.ttlDays' | 'lostFound.ttlDays';
   text: string[];
   listSelect: Record<string, true>;
   /** Author-side final statuses besides "closed" (e.g. lost & found "resolved"). */
@@ -94,7 +95,7 @@ const JOB: KindConfig = {
   entity: 'job',
   delegate: (p) => p.job as unknown as Delegate,
   body: jobBody,
-  ttlDays: 30,
+  ttlKey: 'jobs.ttlDays',
   text: ['title', 'employer', 'description'],
   listSelect: {
     id: true,
@@ -115,7 +116,7 @@ const LOST_FOUND: KindConfig = {
   entity: 'lost_found',
   delegate: (p) => p.lostFoundItem as unknown as Delegate,
   body: lostFoundBody,
-  ttlDays: 60,
+  ttlKey: 'lostFound.ttlDays',
   text: ['title', 'description'],
   listSelect: {
     id: true,
@@ -131,7 +132,6 @@ const LOST_FOUND: KindConfig = {
   },
   finalActions: ['close', 'resolve'],
 };
-const MAX_PENDING = 10;
 
 /** Author is trusted after N approved posts across all resident modules with no rejections. */
 export async function isTrustedAuthor(prisma: PrismaService, authorId: string): Promise<boolean> {
@@ -195,7 +195,7 @@ function communityController(cfg: KindConfig): Type<unknown> {
             ? { happenedOn: happenedOn ? new Date(happenedOn) : null }
             : {}),
         },
-        ttl: ttlDays ?? cfg.ttlDays,
+        ttl: ttlDays,
       };
     }
 
@@ -273,7 +273,8 @@ function communityController(cfg: KindConfig): Type<unknown> {
       const parsed = parse(cfg.body, body);
       await this.checkImages(p.userId, parsed.imageIds as string[] | undefined);
       if (
-        (await this.db.count({ where: { authorId: p.userId, status: 'pending' } })) >= MAX_PENDING
+        (await this.db.count({ where: { authorId: p.userId, status: 'pending' } })) >=
+        (await setting(this.prisma, 'community.maxPending'))
       )
         throw new BadRequestException({
           code: 'TOO_MANY_PENDING',
@@ -289,7 +290,9 @@ function communityController(cfg: KindConfig): Type<unknown> {
           authorId: p.userId,
           status: trusted ? 'published' : 'pending',
           publishedAt: trusted ? now : null,
-          expiresAt: new Date(now.getTime() + ttl * 86_400_000),
+          expiresAt: new Date(
+            now.getTime() + (ttl ?? (await setting(this.prisma, cfg.ttlKey))) * 86_400_000,
+          ),
         },
         select: { id: true, slug: true, status: true },
       });

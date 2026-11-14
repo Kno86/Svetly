@@ -11,6 +11,7 @@ import {
   ParseUUIDPipe,
   Post,
 } from '@nestjs/common';
+import { setting } from './settings.js';
 import { z } from 'zod';
 import { AuditService } from '../audit/audit.service.js';
 import {
@@ -32,7 +33,6 @@ const reviewBody = z.object({
 const noteBody = z.object({ note: z.string().trim().max(1000).optional() });
 /** An average of one or two opinions is misleading; below this only the count is shown. */
 export const MIN_REVIEWS_FOR_AVERAGE = 3;
-const MAX_PENDING_PER_AUTHOR = 5;
 const PAGE = 50;
 
 /**
@@ -131,7 +131,7 @@ export class ReviewsController {
     const pending = await this.prisma.organizationReview.count({
       where: { authorId: p.userId, status: 'pending', organizationId: { not: id } },
     });
-    if (pending >= MAX_PENDING_PER_AUTHOR)
+    if (pending >= (await setting(this.prisma, 'reviews.maxPending')))
       throw new BadRequestException({
         code: 'TOO_MANY_PENDING',
         message: 'Дождитесь проверки уже отправленных отзывов',

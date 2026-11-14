@@ -234,3 +234,10 @@
   font-weight: 600;
   overflow-wrap: anywhere;
 }
+
+.stickyActions {
+  position: sticky;
+  bottom: 0;
+  padding-block: var(--space-3);
+  background: var(--color-surface);
+}
