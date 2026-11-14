@@ -122,6 +122,7 @@ export async function allSettings(prisma: PrismaService) {
   return (Object.keys(SETTINGS) as SettingKey[]).map((key) => ({
     key,
     ...SETTINGS[key],
-    value: (stored.has(key) && validSetting(key, stored.get(key))) ?? SETTINGS[key].default,
+    value:
+      (stored.has(key) ? validSetting(key, stored.get(key)) : undefined) ?? SETTINGS[key].default,
   }));
 }
