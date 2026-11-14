@@ -80,6 +80,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
     permission: 'content.categories.manage',
     group: 'Контент',
   },
+  { href: '/admin/media', label: 'Медиатека', permission: 'media.manage', group: 'Контент' },
   { href: '/admin/users', label: 'Пользователи', permission: 'users.read', group: 'Платформа' },
   {
     href: '/admin/analytics',

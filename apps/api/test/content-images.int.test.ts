@@ -20,7 +20,7 @@ describe('content photos', () => {
   const email = (name: string) => `${name}-${run}@example.test`;
 
   async function req(
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     url: string,
     opts: { cookie?: string; body?: unknown; raw?: Buffer; type?: string } = {},
   ) {
@@ -63,9 +63,6 @@ describe('content photos', () => {
       .join('; ');
     return { id: u.id, cookie };
   }
-
-  const avatarOf = async (id: string) =>
-    (await prisma.user.findUniqueOrThrow({ where: { id }, select: { avatarId: true } })).avatarId;
 
   beforeAll(async () => {
     app = await createApp('warn');
@@ -126,5 +123,55 @@ describe('content photos', () => {
 
     await prisma.organization.delete({ where: { id } });
     await prisma.mediaAsset.deleteMany({ where: { id: { in: [mine, theirs, hidden] } } });
+  });
+
+  it('media library lists usage, protects used photos and staff can delete content', async () => {
+    const editor = await user('mleditor', 'editor');
+    const resident = await user('mlres');
+    const upload = async () =>
+      (await req('POST', '/api/media', { cookie: editor.cookie, raw: PNG })).json<{ id: string }>()
+        .id;
+    const used = await upload();
+    const spare = await upload();
+    const created = await req('POST', '/api/staff/organizations', {
+      cookie: editor.cookie,
+      body: {
+        name: `Медиатека ${run}`,
+        description: 'Карточка для проверки медиатеки.',
+        imageIds: [used],
+      },
+    });
+    const { id } = created.json<{ id: string }>();
+
+    expect((await req('GET', '/api/staff/media', { cookie: resident.cookie })).statusCode).toBe(
+      403,
+    );
+    const unused = await req('GET', '/api/staff/media?unused=1', { cookie: editor.cookie });
+    const ids = unused.json<{ items: { id: string }[] }>().items.map((i) => i.id);
+    expect(ids).toContain(spare);
+    expect(ids).not.toContain(used);
+
+    const blocked = await req('DELETE', `/api/staff/media/${used}`, { cookie: editor.cookie });
+    expect(blocked.statusCode).toBe(409);
+    expect(blocked.json().code).toBe('MEDIA_IN_USE');
+    const alt = await req('PATCH', `/api/staff/media/${spare}`, {
+      cookie: editor.cookie,
+      body: { alt: 'Тестовая подпись' },
+    });
+    expect(alt.statusCode).toBe(200);
+
+    expect(
+      (await req('DELETE', `/api/staff/organizations/${id}`, { cookie: resident.cookie }))
+        .statusCode,
+    ).toBe(403);
+    expect(
+      (await req('DELETE', `/api/staff/organizations/${id}`, { cookie: editor.cookie })).statusCode,
+    ).toBe(200);
+    expect(await prisma.organization.count({ where: { id } })).toBe(0);
+    for (const m of [used, spare])
+      expect(
+        (await req('DELETE', `/api/staff/media/${m}`, { cookie: editor.cookie })).statusCode,
+      ).toBe(200);
+    expect(await prisma.mediaAsset.count({ where: { id: { in: [used, spare] } } })).toBe(0);
   });
 });

@@ -25,6 +25,7 @@ export const PERMISSIONS = {
   'issues.respond': 'Публичный ответ платформы по обращению',
   'polls.manage': 'Создание и проведение опросов',
   'business.review': 'Рассмотрение заявок бизнеса и изменений карточек владельцами',
+  'media.manage': 'Медиатека: просмотр всех публичных фото, подписи, удаление неиспользуемых',
 } as const;
 
 const CONTENT: readonly PermissionCode[] = [
@@ -32,6 +33,7 @@ const CONTENT: readonly PermissionCode[] = [
   'content.events.manage',
   'content.organizations.manage',
   'content.directory.manage',
+  'media.manage',
 ];
 
 export type PermissionCode = keyof typeof PERMISSIONS;

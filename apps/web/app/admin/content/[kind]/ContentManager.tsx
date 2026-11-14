@@ -2,7 +2,7 @@
 
 import { useAsk } from '../../../../components/ui/Dialog';
 import Link from 'next/link';
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { Button } from '../../../../components/ui/Button';
 import { Alert, Badge, Card, EmptyState, Skeleton } from '../../../../components/ui/Feedback';
 import { Checkbox, Select, TextArea, TextField } from '../../../../components/ui/Field';
@@ -34,6 +34,44 @@ export function ContentManager({ kind: kindKey }: { kind: string }) {
   const [editing, setEditing] = useState<Row | 'new' | null>(null);
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string }>();
   const [dialog, ask] = useAsk();
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [sort, setSort] = useState<'updated' | 'title'>('updated');
+  const rows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = (list.data ?? []).filter(
+      (row) =>
+        (!statusFilter || row.status === statusFilter) &&
+        (!q ||
+          String(row[kind.titleField] ?? '')
+            .toLowerCase()
+            .includes(q)),
+    );
+    return sort === 'title'
+      ? [...filtered].sort((a, b) =>
+          String(a[kind.titleField] ?? '').localeCompare(String(b[kind.titleField] ?? ''), 'ru'),
+        )
+      : filtered;
+  }, [list.data, query, statusFilter, sort, kind.titleField]);
+
+  async function remove(row: Row) {
+    const title = String(row[kind.titleField] ?? '');
+    const ok = await ask({
+      title: `Удалить «${title}»?`,
+      description:
+        'Запись удалится безвозвратно. Чтобы скрыть её с сайта, лучше перевести в архив.',
+      confirmLabel: 'Удалить',
+      danger: true,
+    });
+    if (ok === undefined) return;
+    const r = await apiRequest(`/api/staff/${kind.api}/${row.id}`, { method: 'DELETE' });
+    setMessage(
+      r.ok
+        ? { tone: 'success', text: 'Запись удалена.' }
+        : { tone: 'error', text: errorMessage(r) },
+    );
+    list.reload();
+  }
 
   async function verify(row: Row, verification: 'verified' | 'unverified') {
     const sourceName =
@@ -88,6 +126,39 @@ export function ContentManager({ kind: kindKey }: { kind: string }) {
         />
       )}
       {list.data && list.data.length > 0 && (
+        <div className={styles.toolbar}>
+          <TextField
+            label="Поиск по названию"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <Select
+            label="Статус"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">Все</option>
+            {kind.statuses.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="Сортировка"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as 'updated' | 'title')}
+          >
+            <option value="updated">Сначала изменённые</option>
+            <option value="title">По названию</option>
+          </Select>
+        </div>
+      )}
+      {list.data && list.data.length > 0 && rows.length === 0 && (
+        <EmptyState title="Ничего не найдено" description="Измените поиск или фильтр." />
+      )}
+      {rows.length > 0 && (
         <div
           className={styles.item}
           style={{ overflowX: 'auto', position: 'relative' }}
@@ -113,7 +184,7 @@ export function ContentManager({ kind: kindKey }: { kind: string }) {
               </tr>
             </thead>
             <tbody>
-              {list.data.map((row) => {
+              {rows.map((row) => {
                 const title = String(row[kind.titleField] ?? '');
                 const status = kind.statuses.find((s) => s.value === row.status);
                 return (
@@ -142,6 +213,9 @@ export function ContentManager({ kind: kindKey }: { kind: string }) {
                       <div className={styles.actions}>
                         <Button size="sm" variant="secondary" onClick={() => setEditing(row)}>
                           Изменить
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => void remove(row)}>
+                          Удалить
                         </Button>
                         {canVerify && 'verification' in row && (
                           <Button
