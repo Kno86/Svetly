@@ -1,3 +1,4 @@
+import { StaffMediaController } from './staff-media.controller.js';
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
 import { AccountController } from './account.controller.js';
@@ -24,6 +25,7 @@ import { LocalFileStorage } from './storage.service.js';
 @Module({
   imports: [AuthModule],
   controllers: [
+    StaffMediaController,
     AccountController,
     PublicContentController,
     AnnouncementsController,

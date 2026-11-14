@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   BadRequestException,
   Body,
   Controller,
@@ -290,6 +291,51 @@ export class StaffContentController {
     const item = await this.prisma.directoryEntry.update({ where: { id }, data });
     await this.log('directory', 'updated', p.userId, id, item.status);
     return item;
+  }
+  // ---- delete (any status; audit keeps the trace)
+  @Delete('news/:id')
+  @RequirePermission('content.news.manage')
+  deleteNews(@Param('id', ParseUUIDPipe) id: string, @CurrentPrincipal() p: Principal) {
+    return this.remove('news', id, p, () => this.prisma.newsArticle.delete({ where: { id } }));
+  }
+
+  @Delete('organizations/:id')
+  @RequirePermission('content.organizations.manage')
+  deleteOrganization(@Param('id', ParseUUIDPipe) id: string, @CurrentPrincipal() p: Principal) {
+    return this.remove('organization', id, p, () =>
+      this.prisma.organization.delete({ where: { id } }),
+    );
+  }
+
+  @Delete('events/:id')
+  @RequirePermission('content.events.manage')
+  deleteEvent(@Param('id', ParseUUIDPipe) id: string, @CurrentPrincipal() p: Principal) {
+    return this.remove('event', id, p, () => this.prisma.event.delete({ where: { id } }));
+  }
+
+  @Delete('directory/:id')
+  @RequirePermission('content.directory.manage')
+  deleteDirectory(@Param('id', ParseUUIDPipe) id: string, @CurrentPrincipal() p: Principal) {
+    return this.remove('directory', id, p, () =>
+      this.prisma.directoryEntry.delete({ where: { id } }),
+    );
+  }
+
+  private async remove(kind: Kind, id: string, p: Principal, run: () => Promise<unknown>) {
+    try {
+      await run();
+    } catch (e) {
+      const code = (e as { code?: string }).code;
+      if (code === 'P2025') throw new NotFoundException({ code: 'NOT_FOUND' });
+      if (code === 'P2003')
+        throw new ConflictException({
+          code: 'IN_USE',
+          message: 'Запись связана с другими данными — переведите её в архив',
+        });
+      throw e;
+    }
+    await this.log(kind, 'deleted', p.userId, id);
+    return { ok: true };
   }
 }
 

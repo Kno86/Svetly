@@ -70,6 +70,7 @@ TRUNCATE на уровне PostgreSQL (проверено тестом и вру
 - `issues.respond` — super_admin, admin (публичный ответ платформы по обращению).
 - `polls.manage` — super_admin, admin, editor.
 - `business.review` — super_admin, admin (заявки бизнеса и изменения карточек владельцами).
+- `media.manage` — super_admin, admin, editor (медиатека: все публичные фото, подписи, удаление неиспользуемых; вложения сообщений не видны).
 
 Владелец карточки — не роль: доступ к `/api/business/*` проверяется по `organizations.owner_id`. Подробнее — [COMMUNITY.md](COMMUNITY.md), [BUSINESS.md](BUSINESS.md).
 
