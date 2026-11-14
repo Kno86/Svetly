@@ -16,6 +16,14 @@
   display: inline-flex;
   flex-shrink: 0;
 }
+@media (max-width: 22.5rem) {
+  .headerInner {
+    gap: var(--space-3);
+  }
+  .headerActions {
+    gap: var(--space-1);
+  }
+}
 .desktopNav {
   display: none;
 }

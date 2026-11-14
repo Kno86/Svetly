@@ -25,6 +25,15 @@
     grid-template-columns: 2fr 1fr auto;
   }
 }
+/* Phones: a lone search box and «Найти» share one row (DOM order = visual order). */
+@media (max-width: 47.99rem) {
+  .filters {
+    margin-bottom: var(--space-5);
+  }
+  .filters:has(input[type='search']):not(:has(select)) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
 .searchTabs {
   margin-bottom: var(--space-5);
 }
@@ -55,6 +64,29 @@
   margin-block: var(--space-2);
   font-size: var(--font-size-lg);
   overflow-wrap: anywhere;
+}
+.cardText {
+  min-width: 0;
+}
+/* Phones: a card with a photo becomes a row — square preview on the left, text on the right. */
+@media (max-width: 47.99rem) {
+  .list {
+    gap: var(--space-3);
+  }
+  .cardTitle {
+    margin-block: var(--space-1);
+    font-size: var(--font-size-md);
+  }
+  .cardMedia {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: start;
+  }
+  .cardMedia .cardImage {
+    aspect-ratio: 1;
+    margin-bottom: 0;
+  }
 }
 .excerpt {
   color: var(--color-text-secondary);
@@ -497,7 +529,12 @@ a.tile:hover {
 .adGrid {
   display: grid;
   gap: var(--space-4);
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr));
+}
+@media (min-width: 40rem) {
+  .adGrid {
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  }
 }
 .adCard {
   overflow: hidden;
@@ -530,7 +567,7 @@ a.tile:hover {
 }
 .adPhoto {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 3 / 2;
   overflow: hidden;
   background: var(--color-surface-muted);
 }
@@ -563,19 +600,19 @@ a.tile:hover {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4) var(--space-4);
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3) var(--space-3);
 }
 .adPrice {
   margin: 0;
   font-weight: 800;
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
 }
 .adTitle {
   display: -webkit-box;
   margin: 0;
   overflow: hidden;
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-sm);
   line-height: 1.3;
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
@@ -590,8 +627,8 @@ a.tile:hover {
   font-size: var(--font-size-sm);
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 .adMeta {
   display: flex;
@@ -605,7 +642,7 @@ a.tile:hover {
   justify-content: space-between;
   margin: auto 0 0;
   color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
 }
 .photoMain {
   display: block;
