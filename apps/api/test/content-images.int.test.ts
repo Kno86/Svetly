@@ -174,4 +174,49 @@ describe('content photos', () => {
       ).toBe(200);
     expect(await prisma.mediaAsset.count({ where: { id: { in: [used, spare] } } })).toBe(0);
   });
+
+  it('staff browse, edit and delete resident records in any status', async () => {
+    const moderator = await user('rcmod', 'moderator');
+    const resident = await user('rcres');
+    const job = await req('POST', '/api/jobs', {
+      cookie: resident.cookie,
+      body: {
+        title: `Работа ${run}`,
+        employer: 'Частное лицо',
+        description: 'Описание вакансии для проверки записей.',
+      },
+    });
+    expect(job.statusCode).toBe(201);
+    const { id } = job.json<{ id: string }>();
+
+    expect(
+      (await req('GET', '/api/staff/records/jobs', { cookie: resident.cookie })).statusCode,
+    ).toBe(403);
+    expect(
+      (await req('GET', '/api/staff/records/polls', { cookie: moderator.cookie })).statusCode,
+    ).toBe(403);
+    expect(
+      (await req('GET', '/api/staff/records/nope', { cookie: moderator.cookie })).statusCode,
+    ).toBe(404);
+    const list = await req('GET', `/api/staff/records/jobs?q=${run}`, { cookie: moderator.cookie });
+    expect(list.json<{ items: { id: string }[] }>().items.map((i) => i.id)).toContain(id);
+
+    const bad = await req('PATCH', `/api/staff/records/jobs/${id}`, {
+      cookie: moderator.cookie,
+      body: { status: 'active' },
+    });
+    expect(bad.statusCode).toBe(409);
+    const ok = await req('PATCH', `/api/staff/records/jobs/${id}`, {
+      cookie: moderator.cookie,
+      body: { title: `Исправлено ${run}`, status: 'published' },
+    });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json()).toMatchObject({ title: `Исправлено ${run}`, status: 'published' });
+
+    expect(
+      (await req('DELETE', `/api/staff/records/jobs/${id}`, { cookie: moderator.cookie }))
+        .statusCode,
+    ).toBe(200);
+    expect(await prisma.job.count({ where: { id } })).toBe(0);
+  });
 });

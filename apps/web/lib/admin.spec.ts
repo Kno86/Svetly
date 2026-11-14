@@ -23,6 +23,7 @@ describe('admin navigation', () => {
       '/admin/moderation',
       '/admin/moderation/announcements',
       '/admin/complaints',
+      '/admin/records/announcements',
       '/admin/users',
     ]);
   });
@@ -82,7 +83,7 @@ describe('groupNav', () => {
     const groups = groupNav(
       navFor(['users.read', 'moderation.announcements', 'complaints.manage']),
     );
-    expect(groups.map((g) => g.group)).toEqual([null, 'Модерация', 'Платформа']);
+    expect(groups.map((g) => g.group)).toEqual([null, 'Модерация', 'Все записи', 'Платформа']);
     expect(groups[1]?.items.map((i) => i.href)).toEqual([
       '/admin/moderation',
       '/admin/moderation/announcements',

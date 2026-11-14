@@ -8,7 +8,7 @@ export interface AdminNavItem {
   group?: AdminNavGroup;
 }
 
-export type AdminNavGroup = 'Модерация' | 'Жители' | 'Контент' | 'Платформа';
+export type AdminNavGroup = 'Модерация' | 'Жители' | 'Контент' | 'Все записи' | 'Платформа';
 
 export const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin', label: 'Обзор', permission: null },
@@ -81,6 +81,48 @@ export const ADMIN_NAV: AdminNavItem[] = [
     group: 'Контент',
   },
   { href: '/admin/media', label: 'Медиатека', permission: 'media.manage', group: 'Контент' },
+  {
+    href: '/admin/records/announcements',
+    label: 'Объявления',
+    permission: 'moderation.announcements',
+    group: 'Все записи',
+  },
+  {
+    href: '/admin/records/jobs',
+    label: 'Вакансии',
+    permission: 'moderation.community',
+    group: 'Все записи',
+  },
+  {
+    href: '/admin/records/lost-found',
+    label: 'Потеряно и найдено',
+    permission: 'moderation.community',
+    group: 'Все записи',
+  },
+  {
+    href: '/admin/records/groups',
+    label: 'Группы',
+    permission: 'moderation.community',
+    group: 'Все записи',
+  },
+  {
+    href: '/admin/records/posts',
+    label: 'Посты ленты',
+    permission: 'moderation.community',
+    group: 'Все записи',
+  },
+  {
+    href: '/admin/records/polls',
+    label: 'Опросы',
+    permission: 'polls.manage',
+    group: 'Все записи',
+  },
+  {
+    href: '/admin/records/issues',
+    label: 'Обращения',
+    permission: 'issues.manage',
+    group: 'Все записи',
+  },
   { href: '/admin/users', label: 'Пользователи', permission: 'users.read', group: 'Платформа' },
   {
     href: '/admin/analytics',
@@ -393,4 +435,36 @@ export const EVENT_LABELS: Record<string, string> = {
   event_registration: 'Запись на событие',
   business_application: 'Заявка бизнеса на размещение',
   business_inquiry: 'Заявка жителя организации',
+};
+
+export interface RecordType {
+  label: string;
+  permission: string;
+}
+
+/** Resident and community records editable via `/api/staff/records/:type`. */
+export const RECORD_TYPES: Record<string, RecordType> = {
+  announcements: { label: 'Объявления', permission: 'moderation.announcements' },
+  jobs: { label: 'Вакансии', permission: 'moderation.community' },
+  'lost-found': { label: 'Потеряно и найдено', permission: 'moderation.community' },
+  groups: { label: 'Группы', permission: 'moderation.community' },
+  posts: { label: 'Посты ленты', permission: 'moderation.community' },
+  polls: { label: 'Опросы', permission: 'polls.manage' },
+  issues: { label: 'Обращения', permission: 'issues.manage' },
+};
+
+export const STATUS_LABELS: Record<string, string> = {
+  draft: 'Черновик',
+  pending: 'На проверке',
+  published: 'Опубликовано',
+  active: 'Активна',
+  rejected: 'Отклонено',
+  removed: 'Снято',
+  closed: 'Закрыто',
+  archived: 'В архиве',
+  resolved: 'Решено',
+  received: 'Получено',
+  reviewing: 'Рассматривается',
+  assigned: 'Назначено',
+  in_progress: 'В работе',
 };
