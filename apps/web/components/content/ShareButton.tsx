@@ -4,25 +4,25 @@ import { useState } from 'react';
 import { Button } from '../ui/Button';
 import styles from './content.module.css';
 
-/** Native share sheet on phones; copies the link elsewhere. */
+/** Native share sheet on phones; copies the link elsewhere or when sharing fails. */
 export function ShareButton({ title }: { title: string }) {
-  const [copied, setCopied] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; url: string }>();
 
   async function share() {
     const url = window.location.href;
     if (navigator.share) {
       try {
         await navigator.share({ title, url });
-      } catch {
-        // Dismissed share sheet: nothing to report.
+        return;
+      } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') return;
       }
-      return;
     }
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
+      setResult({ ok: true, url });
     } catch {
-      setCopied(false);
+      setResult({ ok: false, url });
     }
   }
 
@@ -32,7 +32,8 @@ export function ShareButton({ title }: { title: string }) {
         Поделиться
       </Button>
       <span role="status" className={styles.meta}>
-        {copied ? 'Ссылка скопирована' : ''}
+        {result?.ok && 'Ссылка скопирована'}
+        {result && !result.ok && <span>Скопируйте ссылку: {result.url}</span>}
       </span>
     </>
   );
