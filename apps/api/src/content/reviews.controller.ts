@@ -11,6 +11,7 @@ import {
   ParseUUIDPipe,
   Post,
 } from '@nestjs/common';
+import { Feature } from '../integrations/feature.guard.js';
 import { setting } from './settings.js';
 import { z } from 'zod';
 import { AuditService } from '../audit/audit.service.js';
@@ -47,6 +48,7 @@ export class ReviewsController {
     private readonly notifications: NotificationsService,
   ) {}
 
+  @Feature('reviews')
   @Get('organizations/:id/reviews')
   @OptionalAuth()
   async list(@Param('id', ParseUUIDPipe) id: string, @OptionalPrincipal() p?: Principal) {
@@ -109,6 +111,7 @@ export class ReviewsController {
   }
 
   /** Creates the caller's review or resubmits it after edits; either way it goes back to moderation. */
+  @Feature('reviews')
   @Post('organizations/:id/reviews')
   @HttpCode(200)
   @Authenticated()

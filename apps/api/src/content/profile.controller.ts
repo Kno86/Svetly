@@ -7,6 +7,7 @@ import {
   ParseUUIDPipe,
   Put,
 } from '@nestjs/common';
+import { Feature } from '../integrations/feature.guard.js';
 import { z } from 'zod';
 import { AuditService } from '../audit/audit.service.js';
 import { Authenticated, CurrentPrincipal } from '../auth/guards.js';
@@ -59,6 +60,7 @@ export class ProfileController {
     return { id: p.userId, isPublic: row.isPublic, bio: row.bio };
   }
 
+  @Feature('resident_profiles')
   @Get('residents/:id')
   async show(@Param('id', ParseUUIDPipe) id: string) {
     const user = await this.prisma.user.findFirst({

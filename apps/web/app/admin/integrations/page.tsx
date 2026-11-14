@@ -17,6 +17,7 @@ interface Feature {
   status: 'available' | 'not_configured' | 'not_implemented';
   enabled: boolean;
   blockedBy?: string;
+  section?: boolean;
 }
 interface Provider {
   key: string;
@@ -81,37 +82,69 @@ export default function IntegrationsPage() {
               ))}
             </ul>
           </Card>
-          <Card>
-            <h2>Функции платформы</h2>
-            <p>
-              Среда: {data.environment}. Отключённый раздел пропадает из меню, его API отвечает 404.
-            </p>
-            <ul>
-              {data.features.map((f) => (
-                <li key={f.key} className={styles.item}>
-                  <strong>{f.label}</strong>{' '}
-                  <Badge tone={f.enabled ? 'success' : 'neutral'}>
-                    {f.enabled ? 'включено' : 'выключено'}
-                  </Badge>{' '}
-                  <Badge tone="neutral">{STATUS[f.status]}</Badge>
-                  <div>{f.description}</div>
-                  <div>
-                    Ответственный: {f.owner}. По умолчанию:{' '}
-                    {f.defaultEnabled ? 'включено' : 'выключено'}.
-                    {f.dependsOn.length > 0 && ` Зависит от: ${f.dependsOn.join(', ')}.`}
-                  </div>
-                  {f.blockedBy && <div>{f.blockedBy}</div>}
-                  {f.status === 'available' && (
-                    <Button size="sm" variant="secondary" onClick={() => void toggle(f)}>
-                      {f.enabled ? 'Выключить' : 'Включить'}
-                    </Button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </Card>
+          <FeatureList
+            title="Разделы сайта"
+            note="Выключенный раздел пропадает из меню, с главной, из поиска и карты сайта; его страницы показывают «Раздел временно отключён», API отвечает 404. Записи не удаляются, редакция и модерация продолжают работать."
+            features={data.features.filter((f) => f.section)}
+            onToggle={toggle}
+          />
+          <FeatureList
+            title="Платформа и интеграции"
+            note={`Среда: ${data.environment}.`}
+            features={data.features.filter((f) => !f.section)}
+            onToggle={toggle}
+          />
         </>
       )}
     </>
+  );
+}
+
+function FeatureList({
+  title,
+  note,
+  features,
+  onToggle,
+}: {
+  title: string;
+  note: string;
+  features: Feature[];
+  onToggle: (f: Feature) => Promise<void>;
+}) {
+  return (
+    <Card>
+      <h2>{title}</h2>
+      <p>{note}</p>
+      <ul>
+        {features.map((f) => (
+          <li key={f.key} className={styles.item}>
+            <strong>{f.label}</strong>{' '}
+            <Badge tone={f.enabled ? 'success' : 'neutral'}>
+              {f.enabled ? 'включено' : 'выключено'}
+            </Badge>{' '}
+            {f.status !== 'available' && <Badge tone="neutral">{STATUS[f.status]}</Badge>}
+            <div>{f.description}</div>
+            {!f.section && (
+              <div>
+                Ответственный: {f.owner}. По умолчанию:{' '}
+                {f.defaultEnabled ? 'включено' : 'выключено'}.
+              </div>
+            )}
+            {f.dependsOn.length > 0 && (
+              <div>
+                Зависит от:{' '}
+                {f.dependsOn.map((d) => features.find((x) => x.key === d)?.label ?? d).join(', ')}.
+              </div>
+            )}
+            {f.blockedBy && <div>{f.blockedBy}</div>}
+            {f.status === 'available' && (
+              <Button size="sm" variant="secondary" onClick={() => void onToggle(f)}>
+                {f.enabled ? 'Выключить' : 'Включить'}
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }

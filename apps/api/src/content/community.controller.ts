@@ -12,6 +12,7 @@ import {
   Query,
   type Type,
 } from '@nestjs/common';
+import { Feature } from '../integrations/feature.guard.js';
 import { setting } from './settings.js';
 import { z } from 'zod';
 import { AuditService } from '../audit/audit.service.js';
@@ -84,6 +85,7 @@ interface KindConfig {
   delegate: (p: PrismaService) => Delegate;
   body: z.ZodType<Row>;
   ttlKey: 'jobs.ttlDays' | 'lostFound.ttlDays';
+  feature: 'jobs' | 'lost_found';
   text: string[];
   listSelect: Record<string, true>;
   /** Author-side final statuses besides "closed" (e.g. lost & found "resolved"). */
@@ -93,6 +95,7 @@ interface KindConfig {
 const JOB: KindConfig = {
   path: 'jobs',
   entity: 'job',
+  feature: 'jobs',
   delegate: (p) => p.job as unknown as Delegate,
   body: jobBody,
   ttlKey: 'jobs.ttlDays',
@@ -114,6 +117,7 @@ const JOB: KindConfig = {
 const LOST_FOUND: KindConfig = {
   path: 'lost-found',
   entity: 'lost_found',
+  feature: 'lost_found',
   delegate: (p) => p.lostFoundItem as unknown as Delegate,
   body: lostFoundBody,
   ttlKey: 'lostFound.ttlDays',
@@ -215,6 +219,7 @@ function communityController(cfg: KindConfig): Type<unknown> {
       });
     }
 
+    @Feature(cfg.feature)
     @Get(path)
     async list(@Query() query: unknown) {
       const { q, kind, subject, page, limit } = parse(listQuery, query);
@@ -239,6 +244,7 @@ function communityController(cfg: KindConfig): Type<unknown> {
     }
 
     /** Contact phone appears only on the published detail page, never in lists. */
+    @Feature(cfg.feature)
     @Get(`${path}/:slug`)
     async detail(@Param('slug') slug: string) {
       const item = await this.db.findFirst({
@@ -267,6 +273,7 @@ function communityController(cfg: KindConfig): Type<unknown> {
       return item;
     }
 
+    @Feature(cfg.feature)
     @Post(path)
     @Authenticated()
     async create(@Body() body: unknown, @CurrentPrincipal() p: Principal) {

@@ -12,7 +12,21 @@ interface FeatureSpec {
   dependsOn: readonly string[];
   status: FeatureStatus;
   reason?: string;
+  /** A public site section: switching it off hides it from menus, the home page, search and sitemap. */
+  section?: boolean;
 }
+
+const section = (label: string, description: string, dependsOn: readonly string[] = []) =>
+  ({
+    label,
+    owner: 'Редакция',
+    description,
+    defaultEnabled: true,
+    environments: BOTH,
+    dependsOn,
+    status: 'available',
+    section: true,
+  }) as const;
 
 const BOTH: readonly SvetlyEnvironment[] = ['local', 'production'];
 
@@ -21,6 +35,19 @@ const BOTH: readonly SvetlyEnvironment[] = ['local', 'production'];
  * are deliberately not flags. Dependencies must be declared before the flags that use them.
  */
 export const FEATURES = {
+  news: section('Новости', 'Лента новостей редакции и страницы новостей.'),
+  announcements: section('Объявления', 'Доска объявлений жителей: просмотр и подача новых.'),
+  jobs: section('Вакансии', 'Вакансии и подработка: просмотр и подача.'),
+  lost_found: section('Потеряно и найдено', 'Пропажи и находки: просмотр и подача.'),
+  organizations: section('Организации и услуги', 'Каталог организаций, услуг и места на карте.'),
+  reviews: section('Отзывы об организациях', 'Отзывы и оценки в карточках организаций.', [
+    'organizations',
+  ]),
+  directory: section('Справочник', 'Полезные телефоны, адреса и экстренные службы.'),
+  events: section('События', 'Афиша и календарь событий.'),
+  issues: section('Обращения жителей', 'Публичные обращения о проблемах и их статусы.'),
+  polls: section('Опросы', 'Опросы жителей и голосование.'),
+  resident_profiles: section('Профили жителей', 'Публичные страницы жителей, открывших профиль.'),
   recommendations: {
     label: 'Рекомендации',
     owner: 'Продукт',
@@ -31,17 +58,13 @@ export const FEATURES = {
     status: 'available',
   },
   groups: {
-    label: 'Группы и лента',
+    ...section('Группы и лента', 'Группы жителей, лента постов, комментарии и отметки «Нравится».'),
     owner: 'Сообщество',
-    description: 'Группы жителей, лента постов, комментарии и отметки «Нравится».',
-    defaultEnabled: true,
-    environments: BOTH,
-    dependsOn: [],
-    status: 'available',
   },
   chats: {
     label: 'Личные сообщения',
     owner: 'Сообщество',
+    section: true,
     description: 'Переписка один на один, блокировка собеседника, жалобы на сообщения.',
     defaultEnabled: true,
     environments: BOTH,
@@ -162,7 +185,8 @@ export function resolveFeatures(
       blockedBy = `Недоступно в среде ${environment}`;
     else {
       const missing = spec.dependsOn.find((d) => !enabled.get(d));
-      if (missing) blockedBy = `Требует включённого флага ${missing}`;
+      if (missing)
+        blockedBy = `Требует включённого раздела «${(FEATURES as Record<string, FeatureSpec>)[missing]!.label}»`;
     }
     const choice =
       typeof chosen[key] === 'boolean' ? (chosen[key] as boolean) : spec.defaultEnabled;

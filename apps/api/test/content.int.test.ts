@@ -1744,6 +1744,30 @@ describe('core content platform against a real PostgreSQL database', () => {
       }
       expect((await req('GET', '/api/groups')).statusCode).toBe(200);
     });
+
+    it('hides a switched-off section from its API, home, search and sitemap', async () => {
+      const admin = await user('p11-news-admin', 'admin');
+      const set = (enabled: boolean) =>
+        req('PATCH', '/api/admin/features/news', { cookie: admin.cookie, body: { enabled } });
+      try {
+        expect((await set(false)).statusCode).toBe(200);
+        const list = await req('GET', '/api/news');
+        expect(list.statusCode).toBe(404);
+        expect(list.json().code).toBe('FEATURE_DISABLED');
+        expect((await req('GET', '/api/home')).json().news).toEqual([]);
+        const found = (await req('GET', '/api/search?q=новость')).json().items as Array<{
+          type: string;
+        }>;
+        expect(found.some((i) => i.type === 'news')).toBe(false);
+        expect((await req('GET', '/api/sitemap')).json().news).toEqual([]);
+        expect((await req('GET', '/api/staff/news', { cookie: admin.cookie })).statusCode).toBe(
+          200,
+        );
+      } finally {
+        await set(true);
+      }
+      expect((await req('GET', '/api/news')).statusCode).toBe(200);
+    });
   });
 
   describe('PHASE 12: territories', () => {

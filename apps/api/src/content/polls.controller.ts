@@ -11,6 +11,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { Feature } from '../integrations/feature.guard.js';
 import { z } from 'zod';
 import { Prisma } from '../generated/prisma/client.js';
 import { AuditService } from '../audit/audit.service.js';
@@ -91,6 +92,7 @@ export class PollsController {
     return poll;
   }
 
+  @Feature('polls')
   @Get('polls')
   async list() {
     const polls = await this.prisma.poll.findMany({
@@ -113,6 +115,7 @@ export class PollsController {
     }));
   }
 
+  @Feature('polls')
   @Get('polls/:slug')
   async detail(@Param('slug') slug: string) {
     const poll = await this.findPublished(slug);
@@ -120,6 +123,7 @@ export class PollsController {
     return { ...poll, phase, results: phase === 'closed' ? await this.results(poll.id) : null };
   }
 
+  @Feature('polls')
   @Get('polls/:slug/me')
   @Authenticated()
   async myVote(@Param('slug') slug: string, @CurrentPrincipal() p: Principal) {
@@ -130,6 +134,7 @@ export class PollsController {
     return { optionId: vote?.optionId ?? null, results: vote ? await this.results(poll.id) : null };
   }
 
+  @Feature('polls')
   @Post('polls/:slug/vote')
   @HttpCode(200)
   @Authenticated()

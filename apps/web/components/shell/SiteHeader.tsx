@@ -23,7 +23,9 @@ export function SiteHeader() {
   const pathname = usePathname() ?? '/';
   const [open, setOpen] = useState(false);
   const account = useAccount();
-  const more = visibleWith(moreNav, useFeatures());
+  const features = useFeatures();
+  const more = visibleWith(moreNav, features);
+  const nav = visibleWith(primaryNav, features);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const login = loginHref(pathname);
@@ -58,7 +60,7 @@ export function SiteHeader() {
           </Link>
           <nav aria-label="Основные разделы" className={styles.desktopNav}>
             <ul className={styles.navList}>
-              {primaryNav.map((item) => (
+              {nav.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
@@ -190,7 +192,7 @@ export function SiteHeader() {
                 Главная
               </Link>
             </li>
-            {primaryNav.map((item) => (
+            {nav.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}

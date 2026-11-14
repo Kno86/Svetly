@@ -18,9 +18,4 @@ export function useFeatures(): Record<string, boolean> {
   return features;
 }
 
-export function visibleWith<T extends { feature?: string }>(
-  items: T[],
-  features: Record<string, boolean>,
-): T[] {
-  return items.filter((i) => !i.feature || features[i.feature] !== false);
-}
+export { visibleWith } from './feature-filter';

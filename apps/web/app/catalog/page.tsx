@@ -13,14 +13,26 @@ const items: HubItem[] = [
     label: 'Организации',
     href: '/organizations',
     text: 'Магазины, школы, медицина и сервисы территории.',
+    feature: 'organizations',
   },
-  { label: 'Услуги', href: '/services', text: 'Местные мастера и услуги — от ремонта до занятий.' },
+  {
+    label: 'Услуги',
+    href: '/services',
+    text: 'Местные мастера и услуги — от ремонта до занятий.',
+    feature: 'organizations',
+  },
   {
     label: 'Справочник',
     href: '/directory',
     text: 'Полезные телефоны, адреса и экстренные службы.',
+    feature: 'directory',
   },
-  { label: 'Места', href: '/map', text: 'Адреса организаций и мест списком.' },
+  {
+    label: 'Места',
+    href: '/map',
+    text: 'Адреса организаций и мест списком.',
+    feature: 'organizations',
+  },
 ];
 
 export default function CatalogPage() {

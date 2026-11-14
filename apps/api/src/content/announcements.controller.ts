@@ -11,6 +11,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { Feature } from '../integrations/feature.guard.js';
 import { setting } from './settings.js';
 import { z } from 'zod';
 import { AuditService } from '../audit/audit.service.js';
@@ -106,6 +107,7 @@ export class AnnouncementsController {
     return item;
   }
 
+  @Feature('announcements')
   @Post('announcements')
   @Authenticated()
   async create(@Body() body: unknown, @CurrentPrincipal() principal: Principal) {
