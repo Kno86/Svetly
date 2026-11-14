@@ -292,6 +292,19 @@
   border-top: 1px solid rgba(250, 246, 239, 0.14);
   font-size: var(--font-size-sm);
 }
+@media (max-width: 47.99rem) {
+  .footer {
+    margin-top: var(--space-12);
+  }
+  .footerGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-8) var(--space-4);
+    padding-block: var(--space-10) var(--space-8);
+  }
+  .footerBrand {
+    grid-column: 1 / -1;
+  }
+}
 @media (min-width: 768px) {
   .footerGrid {
     grid-template-columns: 2fr 1fr 1fr 1fr;

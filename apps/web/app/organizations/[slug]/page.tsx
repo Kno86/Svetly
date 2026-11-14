@@ -3,6 +3,7 @@ import { RichText } from '../../../components/content/RichText';
 import type { Metadata } from 'next';
 import { ReportButton } from '../../../components/content/ReportButton';
 import { FavoriteButton } from '../../../components/content/FavoriteButton';
+import { ShareButton } from '../../../components/content/ShareButton';
 import { InquiryButton } from '../../../components/content/InquiryButton';
 import { Reviews } from '../../../components/content/Reviews';
 import { notFound } from 'next/navigation';
@@ -138,7 +139,10 @@ export default async function OrganizationPage({ params }: Props) {
           <dd>{o.checkedAt ? formatDate(o.checkedAt) : 'нет данных'}</dd>
         </dl>
         {o.acceptsInquiries && <InquiryButton organizationId={o.id} />}
-        <FavoriteButton entityType="organization" entityId={o.id} />
+        <div className={styles.actions}>
+          <ShareButton title={o.name} />
+          <FavoriteButton entityType="organization" entityId={o.id} />
+        </div>
         <ReportButton entityType="organization" entityId={o.id} />
         <Reviews organizationId={o.id} />
       </article>

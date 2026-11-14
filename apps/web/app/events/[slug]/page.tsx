@@ -3,6 +3,7 @@ import { RichText } from '../../../components/content/RichText';
 import type { Metadata } from 'next';
 import { ReportButton } from '../../../components/content/ReportButton';
 import { FavoriteButton } from '../../../components/content/FavoriteButton';
+import { ShareButton } from '../../../components/content/ShareButton';
 import { notFound } from 'next/navigation';
 import { Alert, Badge } from '../../../components/ui/Feedback';
 import { ButtonLink, LoadError, PageHead, styles } from '../../../components/content/Blocks';
@@ -113,7 +114,10 @@ export default async function EventPage({ params }: Props) {
             />
           )}
         </div>
-        <FavoriteButton entityType="event" entityId={e.id} />
+        <div className={styles.actions}>
+          <ShareButton title={e.title} />
+          <FavoriteButton entityType="event" entityId={e.id} />
+        </div>
         <ReportButton entityType="event" entityId={e.id} />
       </article>
     </main>

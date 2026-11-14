@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ReportButton } from '../../../components/content/ReportButton';
 import { FavoriteButton } from '../../../components/content/FavoriteButton';
+import { ShareButton } from '../../../components/content/ShareButton';
 import { LoadError, PageHead, styles } from '../../../components/content/Blocks';
 import { Alert } from '../../../components/ui/Feedback';
 import { tel } from '../../../lib/community';
@@ -109,7 +110,10 @@ export default async function JobPage(p: Props) {
             Не платите за трудоустройство и не передавайте паспортные данные до личной встречи.
           </Alert>
         </div>
-        <FavoriteButton entityType="job" entityId={j.id} />
+        <div className={styles.actions}>
+          <ShareButton title={j.title} />
+          <FavoriteButton entityType="job" entityId={j.id} />
+        </div>
         <ReportButton entityType="job" entityId={j.id} />
       </article>
     </main>
