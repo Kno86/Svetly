@@ -38,7 +38,7 @@
   padding: var(--space-6);
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border);
-  background: var(--color-white);
+  background: var(--color-surface);
 }
 .logoTileDark {
   background: var(--color-ink);
@@ -69,7 +69,7 @@
   overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: var(--color-white);
+  background: var(--color-surface);
 }
 .swatchColor {
   height: 5rem;

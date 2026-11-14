@@ -1,4 +1,25 @@
 @import './styles/tokens.css';
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme inline {
+  --color-ink: var(--color-ink);
+  --color-primary: var(--color-primary);
+  --color-primary-soft: var(--color-primary-soft);
+  --color-sun: var(--color-sun);
+  --color-sky: var(--color-sky);
+  --color-sage: var(--color-sage);
+  --color-paper: var(--color-paper);
+  --color-surface: var(--color-surface);
+  --color-muted: var(--color-surface-muted);
+  --color-fg: var(--color-text-primary);
+  --color-fg-muted: var(--color-text-secondary);
+  --color-line: var(--color-border);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+}
 
 *,
 *::before,

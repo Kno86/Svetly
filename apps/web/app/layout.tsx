@@ -7,6 +7,7 @@ import { ServiceWorker } from '../components/pwa/ServiceWorker';
 import { SiteFooter } from '../components/shell/SiteFooter';
 import { SiteHeader } from '../components/shell/SiteHeader';
 import { SectionTabs } from '../components/shell/SectionTabs';
+import { themeScript } from '../components/shell/ThemeToggle';
 import { indexingEnabled } from '../lib/seo';
 import './globals.css';
 
@@ -23,7 +24,10 @@ export const viewport: Viewport = { themeColor: '#B4441E' };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ru">
+    <html lang="ru" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
         <a href="#main" className="skip-link">
           Перейти к содержанию
