@@ -1,3 +1,4 @@
+import { PhotoGallery } from '../../../components/content/PhotoGallery';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ReportButton } from '../../../components/content/ReportButton';
@@ -10,6 +11,7 @@ import { apiGet, formatDate, paragraphs } from '../../../lib/content';
 export const dynamic = 'force-dynamic';
 
 interface Job {
+  imageIds?: string[];
   id: string;
   title: string;
   employer: string;
@@ -64,6 +66,7 @@ export default async function JobPage(p: Props) {
       <article className={styles.article}>
         <PageHead title="" crumbs={[{ label: 'Вакансии', href: '/jobs' }, { label: j.title }]} />
         <h1>{j.title}</h1>
+        <PhotoGallery ids={j.imageIds ?? []} title={j.title} />
         <p className={styles.price}>{j.salary ?? 'Оплата не указана'}</p>
         <div className={styles.body}>
           {paragraphs(j.description).map((t, i) => (

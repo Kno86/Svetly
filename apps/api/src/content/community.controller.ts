@@ -53,6 +53,7 @@ const jobBody = z.object({
   contactPhone: phone,
   contactNote: optText(300),
   ttlDays: z.number().int().min(7).max(60).default(30),
+  imageIds: z.array(z.uuid()).max(6).default([]),
 });
 const lostFoundBody = z.object({
   kind: z.enum(['lost', 'found']),
@@ -103,6 +104,7 @@ const JOB: KindConfig = {
     salary: true,
     schedule: true,
     area: true,
+    imageIds: true,
     publishedAt: true,
     expiresAt: true,
   },

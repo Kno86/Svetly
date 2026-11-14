@@ -19,6 +19,7 @@ import { AuditService } from '../audit/audit.service.js';
 import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guards.js';
 import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
+import { assertPublicImages } from './media-refs.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { NotificationsService } from './notifications.controller.js';
 import { uniqueSlug } from './slug.js';
@@ -44,6 +45,7 @@ const cardBody = z.object({
   address: optText(200),
   serviceArea: optText(200),
   hours: optText(300),
+  imageIds: z.array(z.uuid()).max(10).default([]),
 });
 type Card = z.infer<typeof cardBody>;
 /** Changing these on a verified card drops the "verified" mark until staff re-check it. */
@@ -123,7 +125,11 @@ export class BusinessController {
     const orgs = await this.prisma.organization.findMany({
       where: { ownerId: p.userId },
       orderBy: { createdAt: 'desc' },
-      select: { ...ownerSelect, _count: { select: { inquiries: { where: { status: 'new' } } } } },
+      select: {
+        imageIds: true,
+        ...ownerSelect,
+        _count: { select: { inquiries: { where: { status: 'new' } } } },
+      },
     });
     return orgs.map(({ _count, ...o }) => ({ ...o, newInquiries: _count.inquiries }));
   }
@@ -138,6 +144,7 @@ export class BusinessController {
   @Authenticated()
   async apply(@Body() body: unknown, @CurrentPrincipal() p: Principal) {
     const data = parse(cardBody, body);
+    await assertPublicImages(this.prisma, data.imageIds, p.userId);
     await this.checkCategory(data);
     const pending = await this.prisma.organization.count({
       where: { ownerId: p.userId, status: { in: ['pending', 'needs_info'] } },
@@ -172,6 +179,7 @@ export class BusinessController {
     @CurrentPrincipal() p: Principal,
   ) {
     const data = parse(cardBody, body);
+    await assertPublicImages(this.prisma, data.imageIds, p.userId);
     const org = await this.own(id, p.userId);
     await this.checkCategory(data);
     if (org.status === 'archived' || org.status === 'draft')
@@ -301,7 +309,7 @@ export class BusinessController {
     const data = parse(inquiryBody, body);
     const org = await this.prisma.organization.findFirst({
       where: { id, status: 'published', ownerId: { not: null } },
-      select: { ownerId: true },
+      select: { imageIds: true, ownerId: true },
     });
     if (!org) throw new NotFoundException({ code: 'NOT_FOUND' });
     if (org.ownerId === p.userId) throw new ForbiddenException({ code: 'OWN_ORGANIZATION' });
@@ -357,7 +365,7 @@ export class BusinessController {
       },
       orderBy: { submittedAt: 'asc' },
       take: 100,
-      select: { ...ownerSelect, ownerId: true },
+      select: { imageIds: true, ...ownerSelect, ownerId: true },
     });
     const owners = await this.prisma.user.findMany({
       where: { id: { in: items.map((i) => i.ownerId!) } },

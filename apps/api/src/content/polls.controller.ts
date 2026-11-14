@@ -17,6 +17,7 @@ import { AuditService } from '../audit/audit.service.js';
 import { Authenticated, CurrentPrincipal, RequirePermission } from '../auth/guards.js';
 import type { Principal } from '../auth/principal.js';
 import { parse } from '../common/validation.js';
+import { assertPublicImages, imageIdsField } from './media-refs.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { uniqueSlug } from './slug.js';
 
@@ -30,6 +31,7 @@ const pollBody = z
     closesAt: z.iso.datetime({ offset: true }),
     status: z.enum(['draft', 'published', 'archived']).default('draft'),
     options: z.array(z.string().trim().min(1).max(200)).min(2).max(10),
+    imageIds: imageIdsField(),
   })
   .refine((v) => new Date(v.closesAt) > new Date(v.opensAt), 'Дата закрытия раньше открытия');
 const pollPatch = z.object({
@@ -41,10 +43,12 @@ const pollPatch = z.object({
   mode: z.enum(['anonymous', 'identified']).optional(),
   allowRevote: z.boolean().optional(),
   opensAt: z.iso.datetime({ offset: true }).optional(),
+  imageIds: z.array(z.uuid()).max(10).optional(),
 });
 const voteBody = z.object({ optionId: z.uuid() });
 
 const publicSelect = {
+  imageIds: true,
   id: true,
   slug: true,
   title: true,
@@ -184,6 +188,7 @@ export class PollsController {
   @RequirePermission('polls.manage')
   async create(@Body() body: unknown, @CurrentPrincipal() p: Principal) {
     const { options, opensAt, closesAt, ...data } = parse(pollBody, body);
+    await assertPublicImages(this.prisma, data.imageIds);
     const poll = await this.prisma.poll.create({
       data: {
         ...data,
@@ -208,6 +213,7 @@ export class PollsController {
     @CurrentPrincipal() p: Principal,
   ) {
     const { options, opensAt, closesAt, ...data } = parse(pollPatch, body);
+    await assertPublicImages(this.prisma, data.imageIds);
     const poll = await this.prisma.poll.findUnique({
       where: { id },
       include: { _count: { select: { votes: true } } },

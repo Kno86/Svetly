@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 interface PollItem {
+  imageIds?: string[];
   slug: string;
   title: string;
   opensAt: string;
@@ -42,6 +43,7 @@ export default async function PollsPage() {
             <ItemCard
               key={p.slug}
               href={`/polls/${p.slug}`}
+              imageId={p.imageIds?.[0]}
               title={p.title}
               badges={<Badge tone={POLL_PHASE[p.phase].tone}>{POLL_PHASE[p.phase].label}</Badge>}
               meta={

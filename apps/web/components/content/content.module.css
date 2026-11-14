@@ -651,3 +651,14 @@ a.tile:hover {
   outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
+
+.cardImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-md, 12px);
+  margin-bottom: var(--space-3, 12px);
+  background: var(--color-surface-muted);
+}

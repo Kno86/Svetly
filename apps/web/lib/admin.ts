@@ -131,7 +131,9 @@ export type FieldType =
   | 'date'
   | 'checkbox'
   | 'select'
-  | 'category';
+  | 'category'
+  | 'images'
+  | 'cover';
 
 export interface FieldDef {
   name: string;
@@ -175,6 +177,7 @@ export const CONTENT_KINDS: Record<string, ContentKind> = {
     categoryModules: ['news'],
     statuses: STATUS_BASE,
     fields: [
+      { name: 'coverId', label: 'Обложка', type: 'cover' },
       { name: 'title', label: 'Заголовок', type: 'text', required: true },
       { name: 'excerpt', label: 'Анонс', type: 'textarea', hint: 'До 500 символов' },
       {
@@ -202,6 +205,7 @@ export const CONTENT_KINDS: Record<string, ContentKind> = {
       STATUS_BASE[2]!,
     ],
     fields: [
+      { name: 'imageIds', label: 'Фото', type: 'images' },
       { name: 'title', label: 'Название', type: 'text', required: true },
       { name: 'description', label: 'Описание', type: 'textarea', required: true },
       { name: 'organizer', label: 'Организатор', type: 'text', required: true },
@@ -234,6 +238,7 @@ export const CONTENT_KINDS: Record<string, ContentKind> = {
     categoryModules: ['organizations', 'services'],
     statuses: STATUS_BASE,
     fields: [
+      { name: 'imageIds', label: 'Фото', type: 'images' },
       {
         name: 'kind',
         label: 'Тип',
@@ -273,6 +278,7 @@ export const CONTENT_KINDS: Record<string, ContentKind> = {
     categoryModules: ['directory'],
     statuses: STATUS_BASE,
     fields: [
+      { name: 'imageIds', label: 'Фото', type: 'images' },
       { name: 'title', label: 'Название', type: 'text', required: true },
       {
         name: 'kind',
@@ -297,7 +303,7 @@ export const CONTENT_KINDS: Record<string, ContentKind> = {
   },
 };
 
-export type FormValues = Record<string, string | boolean>;
+export type FormValues = Record<string, string | boolean | string[]>;
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -315,6 +321,8 @@ export function toFormValues(kind: ContentKind, record?: Record<string, unknown>
   for (const f of kind.fields) {
     const v = record?.[f.name];
     if (f.type === 'checkbox') values[f.name] = v === true;
+    else if (f.type === 'images') values[f.name] = Array.isArray(v) ? (v as string[]) : [];
+    else if (f.type === 'cover') values[f.name] = typeof v === 'string' && v ? [v] : [];
     else if (f.type === 'datetime' || f.type === 'date')
       values[f.name] = toInput(v as string | null, f.type);
     else if (f.type === 'select') values[f.name] = String(v ?? f.options?.[0]?.value ?? '');
@@ -330,6 +338,11 @@ export function toContentPayload(kind: ContentKind, values: FormValues): Record<
     const raw = values[f.name];
     if (f.type === 'checkbox') {
       body[f.name] = raw === true;
+      continue;
+    }
+    if (f.type === 'images' || f.type === 'cover') {
+      const ids = Array.isArray(raw) ? raw : [];
+      body[f.name] = f.type === 'cover' ? (ids[0] ?? null) : ids;
       continue;
     }
     const v = typeof raw === 'string' ? raw.trim() : '';

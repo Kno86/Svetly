@@ -227,6 +227,7 @@ export class PublicContentController {
         orderBy: { name: 'asc' },
         take: 500,
         select: {
+          imageIds: true,
           slug: true,
           kind: true,
           name: true,
@@ -242,6 +243,7 @@ export class PublicContentController {
         orderBy: { startsAt: 'asc' },
         take: 200,
         select: {
+          imageIds: true,
           slug: true,
           title: true,
           location: true,
@@ -299,6 +301,7 @@ export class PublicContentController {
         skip: (p - 1) * limit,
         take: limit,
         select: {
+          imageIds: true,
           id: true,
           slug: true,
           kind: true,
@@ -321,6 +324,7 @@ export class PublicContentController {
     const item = await this.prisma.organization.findFirst({
       where: { slug, status: 'published' },
       select: {
+        imageIds: true,
         id: true,
         slug: true,
         kind: true,
@@ -368,6 +372,7 @@ export class PublicContentController {
         skip: (p - 1) * limit,
         take: limit,
         select: {
+          imageIds: true,
           id: true,
           slug: true,
           title: true,
@@ -402,6 +407,7 @@ export class PublicContentController {
       orderBy: { startsAt: 'asc' },
       take: CALENDAR_LIMIT,
       select: {
+        imageIds: true,
         id: true,
         slug: true,
         title: true,
@@ -421,6 +427,7 @@ export class PublicContentController {
     const item = await this.prisma.event.findFirst({
       where: { slug, status: { in: ['published', 'cancelled'] } },
       select: {
+        imageIds: true,
         id: true,
         slug: true,
         title: true,
@@ -451,6 +458,7 @@ export class PublicContentController {
       orderBy: [{ position: 'asc' }, { title: 'asc' }],
       take: 200,
       select: {
+        imageIds: true,
         id: true,
         slug: true,
         title: true,
@@ -506,6 +514,7 @@ export class PublicContentController {
         orderBy: { updatedAt: 'desc' },
         take: 4,
         select: {
+          imageIds: true,
           slug: true,
           kind: true,
           name: true,
@@ -520,13 +529,20 @@ export class PublicContentController {
         where: { status: 'published', startsAt: { gte: now } },
         orderBy: { startsAt: 'asc' },
         take: 3,
-        select: { slug: true, title: true, location: true, startsAt: true, isDemo: true },
+        select: {
+          imageIds: true,
+          slug: true,
+          title: true,
+          location: true,
+          startsAt: true,
+          isDemo: true,
+        },
       }),
       this.prisma.directoryEntry.findMany({
         where: { status: 'published', kind: 'emergency' },
         orderBy: { position: 'asc' },
         take: 6,
-        select: { slug: true, title: true, phone: true, isDemo: true },
+        select: { imageIds: true, slug: true, title: true, phone: true, isDemo: true },
       }),
     ]);
     return {

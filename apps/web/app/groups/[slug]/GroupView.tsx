@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
+import { PhotoGallery } from '../../../components/content/PhotoGallery';
 import { PageHead, styles } from '../../../components/content/Blocks';
 import { ReportButton } from '../../../components/content/ReportButton';
 import { Composer } from '../../../components/social/Composer';
@@ -14,6 +15,7 @@ import { formatDate, paragraphs } from '../../../lib/content';
 import { GROUP_TOPICS, MEMBER_ROLE, MEMBER_STATUS } from '../../../lib/social';
 
 interface Group {
+  imageIds?: string[];
   id: string;
   slug: string;
   name: string;
@@ -93,6 +95,7 @@ export function GroupView({ slug }: { slug: string }) {
         description={`${GROUP_TOPICS[group.topic] ?? group.topic} · ${group.visibility === 'open' ? 'открытая' : 'закрытая'} группа · участников: ${group.members}`}
         crumbs={[{ label: 'Группы', href: '/groups' }, { label: group.name }]}
       />
+      <PhotoGallery ids={group.imageIds ?? []} title={group.name} />
       {GROUP_STATUS[group.status] && (
         <Alert tone="warning" title={GROUP_STATUS[group.status]!}>
           {group.moderationNote && <p>Комментарий модератора: {group.moderationNote}</p>}

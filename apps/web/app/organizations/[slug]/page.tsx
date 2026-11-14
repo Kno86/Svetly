@@ -1,3 +1,4 @@
+import { PhotoGallery } from '../../../components/content/PhotoGallery';
 import type { Metadata } from 'next';
 import { ReportButton } from '../../../components/content/ReportButton';
 import { FavoriteButton } from '../../../components/content/FavoriteButton';
@@ -12,6 +13,7 @@ import { apiGet, formatDate, paragraphs, type CategoryRef } from '../../../lib/c
 export const dynamic = 'force-dynamic';
 
 interface Org {
+  imageIds?: string[];
   id: string;
   kind: 'organization' | 'service';
   name: string;
@@ -65,6 +67,7 @@ export default async function OrganizationPage({ params }: Props) {
           {o.isDemo && <Badge tone="warning">демо</Badge>}
         </div>
         <h1>{o.name}</h1>
+        <PhotoGallery ids={o.imageIds ?? []} title={o.name} />
         <div className={styles.body}>
           {paragraphs(o.description).map((p, i) => (
             <p key={i}>{p}</p>

@@ -316,10 +316,12 @@ model Organization {
   reviewNote     String?   @map("review_note")
   submittedAt    DateTime? @map("submitted_at") @db.Timestamptz(6)
   createdById    String?   @map("created_by_id") @db.Uuid
+  /// Public photos; the first one is the preview.
+  imageIds       String[]  @default([]) @map("image_ids") @db.Uuid
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  category  Category?         @relation(fields: [categoryId], references: [id])
+  category  Category?            @relation(fields: [categoryId], references: [id])
   inquiries BusinessInquiry[]
   reviews   OrganizationReview[]
 
@@ -346,6 +348,8 @@ model Event {
   status          String    @default("draft")
   isDemo          Boolean   @default(false) @map("is_demo")
   createdById     String?   @map("created_by_id") @db.Uuid
+  /// Public photos; the first one is the preview.
+  imageIds        String[]  @default([]) @map("image_ids") @db.Uuid
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -383,6 +387,8 @@ model DirectoryEntry {
   status     String    @default("draft")
   position   Int       @default(0)
   isDemo     Boolean   @default(false) @map("is_demo")
+  /// Public photos; the first one is the preview.
+  imageIds   String[]  @default([]) @map("image_ids") @db.Uuid
   createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -449,6 +455,8 @@ model Job {
   authorId       String    @map("author_id") @db.Uuid
   publishedAt    DateTime? @map("published_at") @db.Timestamptz(6)
   expiresAt      DateTime  @map("expires_at") @db.Timestamptz(6)
+  /// Public photos; the first one is the preview.
+  imageIds       String[]  @default([]) @map("image_ids") @db.Uuid
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -535,6 +543,8 @@ model Poll {
   closesAt    DateTime @map("closes_at") @db.Timestamptz(6)
   status      String   @default("draft")
   createdById String?  @map("created_by_id") @db.Uuid
+  /// Public photos; the first one is the preview.
+  imageIds    String[] @default([]) @map("image_ids") @db.Uuid
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -586,6 +596,8 @@ model Group {
   status         String   @default("pending")
   moderationNote String?  @map("moderation_note")
   createdById    String   @map("created_by_id") @db.Uuid
+  /// Public photos; the first one is the preview.
+  imageIds       String[] @default([]) @map("image_ids") @db.Uuid
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 

@@ -1,3 +1,4 @@
+import { PhotoGallery } from '../../../components/content/PhotoGallery';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { LoadError, PageHead, styles } from '../../../components/content/Blocks';
@@ -9,6 +10,7 @@ import { PollVote, type PollResults } from './PollVote';
 export const dynamic = 'force-dynamic';
 
 interface Poll {
+  imageIds?: string[];
   slug: string;
   title: string;
   description: string;
@@ -51,6 +53,7 @@ export default async function PollPage(p: Props) {
           </span>
         </div>
         <h1>{poll.title}</h1>
+        <PhotoGallery ids={poll.imageIds ?? []} title={poll.title} />
         <div className={styles.body}>
           {paragraphs(poll.description).map((t, i) => (
             <p key={i}>{t}</p>

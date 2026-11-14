@@ -1,3 +1,4 @@
+import { MediaImage } from './MediaImage';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ButtonLink } from '../ui/Button';
@@ -147,8 +148,10 @@ export function ItemCard({
   meta,
   children,
   badges,
+  imageId,
 }: {
   href: string;
+  imageId?: string | null;
   title: string;
   meta?: ReactNode;
   children?: ReactNode;
@@ -157,6 +160,7 @@ export function ItemCard({
   return (
     <Card interactive>
       <Link href={href} className={styles.cardLink}>
+        {imageId && <MediaImage id={imageId} alt="" variant="card" className={styles.cardImage} />}
         {badges && <div className={styles.meta}>{badges}</div>}
         <h2 className={styles.cardTitle}>{title}</h2>
         {children}
