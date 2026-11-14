@@ -10,6 +10,8 @@ export interface NavItem {
 export interface Section extends NavItem {
   /** Path prefixes that belong to the section (for the «текущий раздел» marker). */
   match: string[];
+  /** Section shown while any of these is on; links to the first enabled one. */
+  options?: Array<{ feature: string; href: string }>;
 }
 
 /** Five top-level sections shown in the header. */
@@ -19,8 +21,12 @@ export const primaryNav: Section[] = [
     label: 'Объявления',
     href: '/announcements',
     available: true,
-    feature: 'announcements',
     match: ['/announcements', '/jobs', '/lost-found'],
+    options: [
+      { feature: 'announcements', href: '/announcements' },
+      { feature: 'jobs', href: '/jobs' },
+      { feature: 'lost_found', href: '/lost-found' },
+    ],
   },
   {
     label: 'Услуги и бизнес',
@@ -130,4 +136,14 @@ export function tabsFor(pathname: string): { section: Section; items: NavItem[] 
     return { section: cabinetSection, items: cabinetTabs };
   }
   return null;
+}
+
+/** Header sections for the current feature map (`features[key] === false` means switched off). */
+export function visibleSections(features: Record<string, boolean>): Section[] {
+  return primaryNav.flatMap((s) => {
+    if (s.feature && features[s.feature] === false) return [];
+    if (!s.options) return [s];
+    const first = s.options.find((o) => features[o.feature] !== false);
+    return first ? [{ ...s, href: first.href }] : [];
+  });
 }

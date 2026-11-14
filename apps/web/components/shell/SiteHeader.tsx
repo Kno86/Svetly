@@ -9,7 +9,7 @@ import { buttonClass } from '../ui/Button';
 import { cx } from '../ui/cx';
 import { Icon } from '../ui/Icon';
 import { useFeatures, visibleWith } from '../../lib/features';
-import { isActive, loginHref, moreNav, primaryNav, safeNext } from './navigation';
+import { isActive, loginHref, moreNav, safeNext, visibleSections } from './navigation';
 import { useAccount } from './useAccount';
 import styles from './shell.module.css';
 
@@ -25,7 +25,7 @@ export function SiteHeader() {
   const account = useAccount();
   const features = useFeatures();
   const more = visibleWith(moreNav, features);
-  const nav = visibleWith(primaryNav, features);
+  const nav = visibleSections(features);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const login = loginHref(pathname);
