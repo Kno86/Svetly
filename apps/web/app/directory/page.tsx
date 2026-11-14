@@ -1,4 +1,5 @@
 import { MediaImage } from '../../components/content/MediaImage';
+import { RichText } from '../../components/content/RichText';
 import type { Metadata } from 'next';
 import { Badge } from '../../components/ui/Feedback';
 import { Empty, Filters, LoadError, PageHead, styles } from '../../components/content/Blocks';
@@ -98,7 +99,11 @@ export default async function DirectoryPage({
                   <h3 className={styles.cardTitle}>
                     {e.title} {e.isDemo && <Badge tone="warning">демо</Badge>}
                   </h3>
-                  {e.body && <p className={styles.excerpt}>{e.body}</p>}
+                  {e.body && (
+                    <div className={styles.excerpt}>
+                      <RichText text={e.body} />
+                    </div>
+                  )}
                   <div className={styles.meta}>
                     {e.phone && <a href={`tel:${e.phone.replace(/[^+0-9]/g, '')}`}>{e.phone}</a>}
                     {e.url && (
