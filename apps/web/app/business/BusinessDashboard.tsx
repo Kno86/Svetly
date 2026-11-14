@@ -52,7 +52,7 @@ export function BusinessDashboard() {
         title="Кабинет бизнеса"
         description="Карточки организаций и услуг, заявки жителей. Размещение бесплатное; каждая карточка и каждое изменение проходят проверку администратором."
         crumbs={[{ label: 'Кабинет бизнеса' }]}
-        action={add}
+        action={items?.length ? add : undefined}
       />
       {saved && (
         <Alert

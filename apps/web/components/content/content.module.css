@@ -362,6 +362,18 @@ a.tile:hover {
   font-size: var(--font-size-3xl);
   line-height: 1.1;
 }
+@media (max-width: 47.99rem) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-block: var(--space-4);
+  }
+  .tile {
+    padding: var(--space-3);
+  }
+  .tile b {
+    font-size: var(--font-size-2xl);
+  }
+}
 
 .switch {
   display: inline-flex;
@@ -715,4 +727,9 @@ a.tile:hover {
   padding-left: var(--space-4);
   border-left: 3px solid var(--color-primary);
   color: var(--color-fg-muted);
+}
+
+.list > section > h2 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-xl);
 }

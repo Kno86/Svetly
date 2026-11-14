@@ -144,3 +144,46 @@
   opacity: 0;
   cursor: pointer;
 }
+
+.cabinetHero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+.cabinetHero h1 {
+  margin: 0;
+  font-size: clamp(1.75rem, 7vw, var(--font-size-3xl));
+}
+.cabinetWho .hint {
+  margin: var(--space-1) 0 0;
+  overflow-wrap: anywhere;
+}
+.cabinetHero > nav {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin: var(--space-2) 0 0;
+}
+@media (min-width: 48rem) {
+  .cabinetHero {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .cabinetHero > nav {
+    grid-column: auto;
+    margin: 0;
+  }
+}
+@media (max-width: 30rem) {
+  .dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .dl dd {
+    margin-bottom: var(--space-3);
+  }
+}
+
+.wide :global([role='tabpanel']) h2 {
+  font-size: var(--font-size-xl);
+}

@@ -68,8 +68,27 @@ export function AccountView() {
   return (
     <main id="main" className={`container ${styles.page}`}>
       <div className={styles.wide}>
-        <CabinetSwitch current="resident" />
-        <h1>Личный кабинет</h1>
+        <header className={styles.cabinetHero}>
+          {me ? (
+            <Avatar name={me.user.name} avatarId={me.user.avatarId} size="md" />
+          ) : (
+            <Skeleton height="3rem" width="3rem" />
+          )}
+          <div className={styles.cabinetWho}>
+            <h1>Личный кабинет</h1>
+            {me && (
+              <p className={styles.hint}>
+                {me.user.name} · {me.user.email}
+              </p>
+            )}
+          </div>
+          <CabinetSwitch current="resident" />
+        </header>
+        {me && me.permissions.length > 0 && (
+          <ButtonLink href="/admin" variant="secondary" size="sm">
+            Открыть админ-платформу
+          </ButtonLink>
+        )}
         {me && <Overview />}
         {loadError && (
           <Alert tone="error" title="Не удалось загрузить данные">
@@ -90,6 +109,7 @@ export function AccountView() {
                       <Profile
                         me={me}
                         onSaved={(name) => setMe({ ...me, user: { ...me.user, name } })}
+                        onAvatar={(avatarId) => setMe({ ...me, user: { ...me.user, avatarId } })}
                       />
                     ),
                   },
@@ -189,8 +209,15 @@ function Overview() {
 
 const AVATAR_TYPES = 'image/jpeg,image/png,image/webp';
 
-function AvatarSettings({ name, initial }: { name: string; initial: string | null }) {
-  const [avatarId, setAvatarId] = useState(initial);
+function AvatarSettings({
+  name,
+  avatarId,
+  onChange: setAvatarId,
+}: {
+  name: string;
+  avatarId: string | null;
+  onChange: (avatarId: string | null) => void;
+}) {
   const [status, setStatus] = useState<{ tone: 'success' | 'error'; text: string }>();
   const [busy, setBusy] = useState(false);
 
@@ -248,7 +275,15 @@ function AvatarSettings({ name, initial }: { name: string; initial: string | nul
   );
 }
 
-function Profile({ me, onSaved }: { me: Me; onSaved: (name: string) => void }) {
+function Profile({
+  me,
+  onSaved,
+  onAvatar,
+}: {
+  me: Me;
+  onSaved: (name: string) => void;
+  onAvatar: (avatarId: string | null) => void;
+}) {
   const [status, setStatus] = useState<{ tone: 'success' | 'error'; text: string }>();
   const [busy, setBusy] = useState(false);
 
@@ -267,7 +302,7 @@ function Profile({ me, onSaved }: { me: Me; onSaved: (name: string) => void }) {
   return (
     <Card className={styles.section}>
       <h2>Профиль</h2>
-      <AvatarSettings name={me.user.name} initial={me.user.avatarId} />
+      <AvatarSettings name={me.user.name} avatarId={me.user.avatarId} onChange={onAvatar} />
       <dl className={styles.dl}>
         <dt>Email</dt>
         <dd>
@@ -283,20 +318,6 @@ function Profile({ me, onSaved }: { me: Me; onSaved: (name: string) => void }) {
         <dt>Роли</dt>
         <dd>{me.roles.length ? me.roles.map((r) => ROLE_NAMES[r] ?? r).join(', ') : 'Житель'}</dd>
       </dl>
-      <p>
-        <Link href="/messages">Сообщения</Link> · <Link href="/notifications">Уведомления</Link> ·{' '}
-        <Link href="/account/announcements">Мои объявления</Link> ·{' '}
-        <Link href="/account/recommendations">Рекомендации и интересы</Link> ·{' '}
-        <Link href="/account/community">Обращения, вакансии и находки</Link> ·{' '}
-        <Link href="/favorites">Избранное</Link> ·{' '}
-        <Link href="/groups/mine">Мои группы и посты</Link> ·{' '}
-        <Link href="/business">Кабинет бизнеса</Link>
-      </p>
-      {me.permissions.length > 0 && (
-        <p>
-          <Link href="/admin">Открыть админ-платформу</Link>
-        </p>
-      )}
       <form className={styles.form} onSubmit={onSubmit}>
         {status && <Alert tone={status.tone} title={status.text} />}
         <TextField
