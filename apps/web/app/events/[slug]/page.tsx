@@ -1,18 +1,12 @@
 import { PhotoGallery } from '../../../components/content/PhotoGallery';
+import { RichText } from '../../../components/content/RichText';
 import type { Metadata } from 'next';
 import { ReportButton } from '../../../components/content/ReportButton';
 import { FavoriteButton } from '../../../components/content/FavoriteButton';
 import { notFound } from 'next/navigation';
 import { Alert, Badge } from '../../../components/ui/Feedback';
 import { ButtonLink, LoadError, PageHead, styles } from '../../../components/content/Blocks';
-import {
-  apiGet,
-  dateParts,
-  eventPhase,
-  formatDate,
-  paragraphs,
-  type CategoryRef,
-} from '../../../lib/content';
+import { apiGet, dateParts, eventPhase, formatDate, type CategoryRef } from '../../../lib/content';
 import { EventRegistration } from './EventRegistration';
 
 export const dynamic = 'force-dynamic';
@@ -103,9 +97,7 @@ export default async function EventPage({ params }: Props) {
           )}
         </dl>
         <div className={styles.body}>
-          {paragraphs(e.description).map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
+          <RichText text={e.description} />
         </div>
         <div className={styles.actions}>
           {e.status === 'cancelled' ? (

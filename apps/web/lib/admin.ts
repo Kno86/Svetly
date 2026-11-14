@@ -167,6 +167,7 @@ export function navFor(permissions: readonly string[]): AdminNavItem[] {
 export type FieldType =
   | 'text'
   | 'textarea'
+  | 'richtext'
   | 'url'
   | 'tel'
   | 'number'
@@ -226,9 +227,8 @@ export const CONTENT_KINDS: Record<string, ContentKind> = {
       {
         name: 'body',
         label: 'Текст',
-        type: 'textarea',
+        type: 'richtext',
         required: true,
-        hint: 'Абзацы разделяйте пустой строкой',
       },
       { name: 'categoryId', label: 'Категория', type: 'category' },
       { name: 'pinned', label: 'Закрепить вверху ленты', type: 'checkbox' },
@@ -250,7 +250,7 @@ export const CONTENT_KINDS: Record<string, ContentKind> = {
     fields: [
       { name: 'imageIds', label: 'Фото', type: 'images' },
       { name: 'title', label: 'Название', type: 'text', required: true },
-      { name: 'description', label: 'Описание', type: 'textarea', required: true },
+      { name: 'description', label: 'Описание', type: 'richtext', required: true },
       { name: 'organizer', label: 'Организатор', type: 'text', required: true },
       { name: 'location', label: 'Место', type: 'text', required: true },
       {
@@ -292,7 +292,7 @@ export const CONTENT_KINDS: Record<string, ContentKind> = {
         ],
       },
       { name: 'name', label: 'Название', type: 'text', required: true },
-      { name: 'description', label: 'Описание', type: 'textarea', required: true },
+      { name: 'description', label: 'Описание', type: 'richtext', required: true },
       { name: 'services', label: 'Услуги и цены', type: 'textarea' },
       { name: 'categoryId', label: 'Категория', type: 'category' },
       { name: 'phone', label: 'Телефон', type: 'tel' },
@@ -335,7 +335,7 @@ export const CONTENT_KINDS: Record<string, ContentKind> = {
           { value: 'document', label: 'Документ' },
         ],
       },
-      { name: 'body', label: 'Описание', type: 'textarea' },
+      { name: 'body', label: 'Описание', type: 'richtext' },
       { name: 'phone', label: 'Телефон', type: 'tel' },
       { name: 'url', label: 'Ссылка', type: 'url' },
       { name: 'categoryId', label: 'Категория', type: 'category' },

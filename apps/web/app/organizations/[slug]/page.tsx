@@ -1,4 +1,5 @@
 import { PhotoGallery } from '../../../components/content/PhotoGallery';
+import { RichText } from '../../../components/content/RichText';
 import type { Metadata } from 'next';
 import { ReportButton } from '../../../components/content/ReportButton';
 import { FavoriteButton } from '../../../components/content/FavoriteButton';
@@ -8,7 +9,7 @@ import { notFound } from 'next/navigation';
 import { Badge } from '../../../components/ui/Feedback';
 import { LoadError, PageHead, styles } from '../../../components/content/Blocks';
 import { VerificationBadge } from '../../../components/content/OrganizationList';
-import { apiGet, formatDate, paragraphs, type CategoryRef } from '../../../lib/content';
+import { apiGet, formatDate, type CategoryRef } from '../../../lib/content';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,9 +70,7 @@ export default async function OrganizationPage({ params }: Props) {
         <h1>{o.name}</h1>
         <PhotoGallery ids={o.imageIds ?? []} title={o.name} />
         <div className={styles.body}>
-          {paragraphs(o.description).map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
+          <RichText text={o.description} />
         </div>
         {o.services && (
           <>

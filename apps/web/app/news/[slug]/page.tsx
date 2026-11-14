@@ -1,4 +1,5 @@
 import { MediaImage } from '../../../components/content/MediaImage';
+import { RichText } from '../../../components/content/RichText';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ReportButton } from '../../../components/content/ReportButton';
@@ -6,7 +7,7 @@ import { FavoriteButton } from '../../../components/content/FavoriteButton';
 import { notFound } from 'next/navigation';
 import { Badge } from '../../../components/ui/Feedback';
 import { LoadError, PageHead, styles } from '../../../components/content/Blocks';
-import { apiGet, formatDate, paragraphs, type CategoryRef, type Paged } from '../../../lib/content';
+import { apiGet, formatDate, type CategoryRef, type Paged } from '../../../lib/content';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,9 +73,7 @@ export default async function NewsArticlePage({ params }: Props) {
             />
           )}
           <div className={styles.body}>
-            {paragraphs(res.data.body).map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
+            <RichText text={res.data.body} />
           </div>
           <dl className={styles.facts}>
             {res.data.sourceName && (
