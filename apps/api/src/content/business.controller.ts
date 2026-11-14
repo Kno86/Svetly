@@ -12,6 +12,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { Feature } from '../integrations/feature.guard.js';
 import { setting } from './settings.js';
 import { z } from 'zod';
 import { Prisma } from '../generated/prisma/client.js';
@@ -298,6 +299,7 @@ export class BusinessController {
     return { id, status: 'answered' };
   }
 
+  @Feature('organizations')
   @Post('organizations/:id/inquiries')
   @HttpCode(201)
   @Authenticated()
