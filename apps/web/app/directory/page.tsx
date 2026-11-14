@@ -1,3 +1,4 @@
+import { MediaImage } from '../../components/content/MediaImage';
 import type { Metadata } from 'next';
 import { Badge } from '../../components/ui/Feedback';
 import { Empty, Filters, LoadError, PageHead, styles } from '../../components/content/Blocks';
@@ -17,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 interface Entry {
+  imageIds?: string[];
   id: string;
   slug: string;
   title: string;
@@ -85,6 +87,14 @@ export default async function DirectoryPage({
             <div className={styles.list}>
               {g.items.map((e) => (
                 <article key={e.id} id={e.slug} className={styles.dirItem}>
+                  {e.imageIds?.[0] && (
+                    <MediaImage
+                      id={e.imageIds[0]}
+                      alt=""
+                      variant="card"
+                      className={styles.cardImage}
+                    />
+                  )}
                   <h3 className={styles.cardTitle}>
                     {e.title} {e.isDemo && <Badge tone="warning">демо</Badge>}
                   </h3>

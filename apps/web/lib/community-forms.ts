@@ -43,6 +43,7 @@ export const JOB_FIELDS: FieldSpec[] = [
     kind: 'text',
     maxLength: 300,
   },
+  { name: 'imageIds', label: 'Фото', kind: 'images', max: 6 },
 ];
 
 export const LOST_FOUND_FIELDS: FieldSpec[] = [
@@ -173,4 +174,5 @@ export const BUSINESS_FIELDS: FieldSpec[] = [
   { name: 'address', label: 'Адрес', kind: 'text', maxLength: 200 },
   { name: 'serviceArea', label: 'География обслуживания', kind: 'text', maxLength: 200 },
   { name: 'hours', label: 'График работы', kind: 'text', maxLength: 300 },
+  { name: 'imageIds', label: 'Фото', kind: 'images', max: 10 },
 ];

@@ -1,3 +1,4 @@
+import { PhotoGallery } from '../../../components/content/PhotoGallery';
 import type { Metadata } from 'next';
 import { ReportButton } from '../../../components/content/ReportButton';
 import { FavoriteButton } from '../../../components/content/FavoriteButton';
@@ -17,6 +18,7 @@ import { EventRegistration } from './EventRegistration';
 export const dynamic = 'force-dynamic';
 
 interface EventDetail {
+  imageIds?: string[];
   id: string;
   title: string;
   description: string;
@@ -77,6 +79,7 @@ export default async function EventPage({ params }: Props) {
           </time>
           <h1>{e.title}</h1>
         </div>
+        <PhotoGallery ids={e.imageIds ?? []} title={e.title} />
         <dl className={styles.facts}>
           <dt>Начало</dt>
           <dd>{formatDate(e.startsAt, true)} (Новосибирск)</dd>

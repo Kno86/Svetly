@@ -7,6 +7,7 @@ import { Button } from '../../../../components/ui/Button';
 import { Alert, Badge, Card, EmptyState, Skeleton } from '../../../../components/ui/Feedback';
 import { Checkbox, Select, TextArea, TextField } from '../../../../components/ui/Field';
 import { useCan } from '../../../../components/admin/AdminShell';
+import { ImageUploader } from '../../../../components/ui/ImageUploader';
 import { useApi } from '../../../../components/admin/useApi';
 import { apiRequest, errorMessage } from '../../../../lib/auth-client';
 import {
@@ -185,7 +186,7 @@ function Editor({
   const [busy, setBusy] = useState(false);
   const categories = useApi<Category[]>('/api/categories');
   const options = categories.data?.filter((c) => kind.categoryModules.includes(c.module));
-  const set = (name: string, value: string | boolean) =>
+  const set = (name: string, value: string | boolean | string[]) =>
     setValues((v) => ({ ...v, [name]: value }));
 
   async function submit(e: FormEvent) {
@@ -214,6 +215,18 @@ function Editor({
             const value = values[f.name];
             const common = { key: f.name, label: f.label, hint: f.hint, required: f.required };
             switch (f.type) {
+              case 'images':
+              case 'cover':
+                return (
+                  <ImageUploader
+                    key={f.name}
+                    label={f.label}
+                    hint={f.hint}
+                    max={f.type === 'cover' ? 1 : 10}
+                    value={Array.isArray(value) ? value : []}
+                    onChange={(ids) => set(f.name, ids)}
+                  />
+                );
               case 'checkbox':
                 return (
                   <Checkbox

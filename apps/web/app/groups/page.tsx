@@ -1,3 +1,5 @@
+import { MediaImage } from '../../components/content/MediaImage';
+import content from '../../components/content/content.module.css';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
@@ -21,6 +23,7 @@ export const metadata: Metadata = {
 };
 
 interface GroupItem {
+  imageIds?: string[];
   id: string;
   slug: string;
   name: string;
@@ -75,6 +78,14 @@ export default async function GroupsPage({
           <div className={styles.list}>
             {list.data.items.map((g) => (
               <Card key={g.id} interactive>
+                {g.imageIds?.[0] && (
+                  <MediaImage
+                    id={g.imageIds[0]}
+                    alt=""
+                    variant="card"
+                    className={content.cardImage}
+                  />
+                )}
                 <h2>
                   <Link href={`/groups/${g.slug}`}>{g.name}</Link>
                 </h2>

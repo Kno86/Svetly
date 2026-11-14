@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 };
 
 interface JobItem {
+  imageIds?: string[];
   id: string;
   slug: string;
   title: string;
@@ -76,6 +77,7 @@ export default async function JobsPage({
               <ItemCard
                 key={j.id}
                 href={`/jobs/${j.slug}`}
+                imageId={j.imageIds?.[0]}
                 title={j.title}
                 meta={
                   <>

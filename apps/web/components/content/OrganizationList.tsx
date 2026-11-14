@@ -11,6 +11,7 @@ import {
 } from '../../lib/content';
 
 interface Org {
+  imageIds?: string[];
   id: string;
   slug: string;
   kind: 'organization' | 'service';
@@ -72,6 +73,7 @@ export async function OrganizationList({
               <ItemCard
                 key={o.id}
                 href={`/organizations/${o.slug}`}
+                imageId={o.imageIds?.[0]}
                 title={o.name}
                 badges={
                   <>
